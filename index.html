@@ -1429,7 +1429,14 @@ function _ghWrite(path, data, sha, msg, cb) {
       if(t){GH_TOKEN=t.trim();try{localStorage.setItem('cx-gh-token',GH_TOKEN);}catch(e){}}
     }
     btn.classList.add('busy');
-    _ghRead('data/calendar.json',function(remote,sha){
+    fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/data/calendar.json?ref=main&t='+Date.now(),{headers:{'Accept':'application/vnd.github+json'}})
+    .then(function(r){return r.ok?r.json():null;})
+    .then(function(d){
+      var remote=null,sha=d&&d.sha?d.sha:null;
+      if(d&&d.content){try{remote=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\s/g,'')))));}catch(e){}}
+      return {remote:remote,sha:sha};
+    },function(){return {remote:null,sha:null};})
+    .then(function(o){var remote=o.remote,sha=o.sha;
       if(!GH_TOKEN){
         btn.classList.remove('busy');
         if(Array.isArray(remote)){_calGHSha=sha;try{localStorage.setItem(STORE_KEY,JSON.stringify(remote));}catch(e){} renderCal();alert('저장소에서 일정을 불러왔습니다.');}
