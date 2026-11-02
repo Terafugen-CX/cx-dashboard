@@ -3438,7 +3438,7 @@ if(!window._cssKey){window._cssKey=1;document.addEventListener('keydown',functio
 var _CSS_WEEK_SHEET='https://docs.google.com/spreadsheets/d/1Hd-7fGV10525r-CnMHf0nXLneNWv5xjoktRi_NFPYT0/export?format=csv&gid=';
 var _CSS_WEEK_GIDS={'2026-11-1':'542426019'};
 var _cssWkTok=0;
-var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 ~ 11월 06일'};
+var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 - 11월 06일'};
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkRows(csv){
   var rows=_parseCSV(csv),out=[],range='',orders=[],cb='';
@@ -3571,7 +3571,7 @@ function _cssWeekHTML(wk,label,pv){
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
   var incl=rows.length-skipped,ordTot=wk.orders.filter(function(o){return !_CSS_RATE_EXCL.length||_CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
   var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비 상대 변화(%), 괄호는 %p 차이 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
-  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-fg)">'+(wk.disp||wk.range||label)+'</span></div></div>'
+  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<div class="csd-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto">'
     +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:12px 0;padding:12px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot},tot)+'</div>'
     +card('브랜드 · 플랫폼별 취소율','<div class="csd-ch" style="font-size:11px;opacity:.8">브랜드</div>'+_cssWkRate(wk,'brand',pv)+'<div style="border-top:1px solid var(--c-line);margin:4px 0"></div><div class="csd-ch" style="font-size:11px;opacity:.8">플랫폼</div>'+_cssWkRate(wk,'plat',pv),2)
