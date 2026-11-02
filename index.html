@@ -206,7 +206,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-mid .csd-donut-svg{width:clamp(190px,18vw,250px);margin-left:6px}
 .csd-col{font-size:13px;color:var(--c-fg);flex:1;min-width:0;text-align:center;font-style:normal}
 .csd-vcard .csd-vchart{min-height:0}
-.csd-vdem{flex:1;display:flex;flex-direction:column;justify-content:center;border-top:1px solid var(--c-line);margin-top:8px}
+.csd-vdem{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:8px}
+.csd-prow{cursor:pointer}
+.csd-prow.sel{background:var(--c-line)}
 .csd-vdem .csd-row{font-size:16px}
 .csd-vdem .csd-row i{font-style:normal;font-weight:700;width:56px;flex:none}
 .csd-vdem .csd-row em{font-style:normal;flex:1;text-align:center}
@@ -3269,6 +3271,7 @@ function _cssPick(name){
   _cssShow(window._cssSel);
 }
 if(!window._cssClk){window._cssClk=1;document.addEventListener('click',function(e){
+  var tp=e.target&&e.target.closest?e.target.closest('[data-pickp]'):null;if(tp){_cssPickP(tp.getAttribute('data-pickp'));return;}
   var tr=e.target&&e.target.closest?e.target.closest('[data-pickr]'):null;if(tr){_cssPickR(tr.getAttribute('data-pickr'));return;}
   var t=e.target&&e.target.closest?e.target.closest('.csd-seg,[data-pick]'):null;if(!t)return;
   _cssPick(t.getAttribute('data-pick')||t.getAttribute('data-l'));
@@ -3279,12 +3282,21 @@ function _cssShowR(name){
   var b=name?r.byBrand.filter(function(x){return x.n===name})[0]:null;
   var prods=b?b.prod:r.prod,rs=b?b.reasons:r.reasons,tot=b?b.t:r.total,pre=b?b.n+' ':'';
   p.innerHTML='<div class="csd-ch">'+pre+'제품별 교환 · 반품</div>'+prods.map(function(x,i){
-    return '<div class="csd-row"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b>'+(x[5]?'<small>'+x[5]+'</small>':'')+'</span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+x[1]+'건</b></div>';}).join('');
+    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b>'+(x[5]?'<small>'+x[5]+'</small>':'')+'</span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+x[1]+'건</b></div>';}).join('');
   q.innerHTML='<div class="csd-ch">'+pre+'사유별</div>'+_cssRows(rs.map(function(x){return [x[0],x[1],_cssRc(x[0])]}),tot);
   var sm=document.getElementById('csd-rsum');if(sm){var ex=b?b.exc:r.exc,rt=b?b.ret:r.ret;var gf=b?b.gift:r.gift;sm.innerHTML='<span>교환 <b style="color:var(--c-blue)">'+ex+'</b>건</span><span>반품 <b style="color:var(--c-red)">'+rt+'</b>건</span>'+(gf?'<span>반품 (사은품) <b style="color:var(--c-gold)">'+gf+'</b>건</span>':'');}
   document.querySelectorAll('#csd-vp .csd-vb').forEach(function(g){g.classList.toggle('dim',!!name&&g.getAttribute('data-pickr')!==name);});
+  _cssDemoUpd();
 }
-function _cssPickR(name){window._cssSelR=(window._cssSelR===name)?null:name;_cssShowR(window._cssSelR);}
+function _cssPickR(name){window._cssSelR=(window._cssSelR===name)?null:name;window._cssSelP=null;_cssShowR(window._cssSelR);}
+function _cssPickP(p){window._cssSelP=(window._cssSelP===p)?null:p;_cssShowR(window._cssSelR);}
+function _cssDemoUpd(){
+  var box=document.getElementById('csd-vdem'),r=window._cssCurR;if(!box||!r)return;
+  var d=r.demo||{},b=window._cssSelR,p=window._cssSelP;
+  var v=(p&&d[(b||'')+'|'+p])||(p&&d['|'+p])||(b&&d[b])||d['']||{};
+  function row(l,x){return '<div class="csd-row"><i>'+l+'</i><em>'+(x||'-')+'</em></div>';}
+  box.innerHTML=row('나이',v.a)+row('성별',v.g)+row('금액',v.m);
+}
 function _cssPct(a,b){return b?(a/b*100).toFixed(1)+'%':'-';}
 function _cssN(n){return Number(n).toLocaleString('ko-KR');}
 function _cssPrint(){
@@ -3383,7 +3395,7 @@ function cssUpdate(){
   }).join('');
   window._cssCurR=r;window._cssSelR=null;
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">02 · 교환 · 반품</div><h2>브랜드별 교환 · 반품</h2></div></div>'
-  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div><div class="csd-vdem"><div class="csd-row"><i>나이</i><em>-</em></div><div class="csd-row"><i>성별</i><em>-</em></div><div class="csd-row"><i>금액</i><em>-</em></div></div></div>'
+  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div><div class="csd-vdem" id="csd-vdem"></div></div>'
   +'<div class="csd-card" id="csd-rp"></div><div class="csd-card" id="csd-rr"></div></div>'
   +'<p class="csd-note">'+r.note+'</p></div>');
   var dots=S.map(function(_,k){return '<i class="csd-dot'+(k?'':' on')+'"></i>'}).join('');
