@@ -174,6 +174,21 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-vp.csd-wk{height:auto;min-height:0;overflow:visible;background:transparent}
 .csd-vp.csd-wk .csd-slide{position:relative;inset:auto;transform:none!important;overflow:visible;border-radius:16px}
 .csd-wkd .csd-donut-svg{width:100%;height:auto}
+.csd-wk .csd-slide{padding:22px 28px}
+.csd-wk .csd-head{padding-bottom:12px;margin-bottom:12px}
+.csd-wk .csd-eb{font-size:12px;margin-bottom:4px}
+.csd-wk h2{font-size:clamp(22px,2.3vw,30px)}
+.csd-wk .csd-tot b{font-size:clamp(20px,2vw,26px)}
+.csd-wk .csd-tot span{font-size:13px}
+.csd-wk .csd-grid{gap:10px}
+.csd-wk .csd-card{padding:12px 16px;gap:6px;border-radius:10px}
+.csd-wk .csd-ch{font-size:12px}
+.csd-wk .csd-br{font-size:13px;padding:3px 0;gap:10px;grid-template-columns:minmax(100px,34%) minmax(0,1fr) 38px 36px}
+.csd-wk .csd-br .t{height:8px}
+.csd-wk .csd-br small{font-size:11px}
+.csd-wk .csd-dl{font-size:11px}
+.csd-wk .csd-row{font-size:13px;padding:5px 0}
+.csd-wk .csd-note{font-size:12px;margin-top:10px;padding:0}
 .csd-vp{position:relative;height:calc(100vh - 140px);min-height:520px;overflow:hidden;border-radius:16px;background:#080808}
 .csd-vp .csd-slide{position:absolute;inset:0;border-radius:0;overflow-y:auto;transition:transform .65s cubic-bezier(.77,0,.18,1)}
 .csd-vp .csd-cover{min-height:0}
@@ -3447,14 +3462,14 @@ function _cssWkAgeGender(rows){
   list.forEach(function(x){if(x.u)items.push(['확인 불가 · '+(x.n==='확인 불가'?'나이 불명':x.n),x.u,CU]);});
   var tm=rows.filter(function(r){return r.gender==='남성'}).length,tf=rows.filter(function(r){return r.gender==='여성'}).length,tu=rows.length-tm-tf;
   function pill(l,v,c){return '<span style="display:inline-flex;align-items:center;gap:6px"><s style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+'"></s>'+l+' <b style="font-variant-numeric:tabular-nums">'+v+'</b><small style="color:var(--c-mut)">'+Math.round(v/n*100)+'%</small></span>';}
-  var head='<div style="display:flex;gap:6px 22px;flex-wrap:wrap;font-size:15px;padding-bottom:10px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM[1])+pill('여성',tf,CF[1])+(tu?pill('확인 불가',tu,CU):'')+'</div>';
-  var hd='<div class="csd-row" style="padding:4px 0 6px;font-size:13px;color:var(--c-mut)"><span>나이대</span><span style="flex:none;width:120px">남 · 여</span><b style="font-weight:700;color:var(--c-mut)">건</b><small style="opacity:0">%</small></div>';
-  var rowsH=known.concat(unk).map(function(x,i){var dim=x.n==='확인 불가';return '<div class="csd-row" style="padding:7px 0;font-size:15px"><span'+(dim?' style="color:var(--c-mut)"':'')+'>'+x.n+'</span><span style="flex:none;width:120px;color:var(--c-mut);font-size:14px">'+x.m+' · '+x.f+(x.u?' · 불명 '+x.u:'')+'</span><b>'+x.t+'</b><small>'+Math.round(x.t/n*100)+'%</small></div>';}).join('');
-  return '<div style="display:flex;gap:24px 40px;flex-wrap:wrap;align-items:center"><div class="csd-wkd" style="flex:0 0 clamp(200px,17vw,260px)">'+_cssDonut(items,rows.length,'건','svg','나이 · 성별')+'</div><div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:6px">'+head+hd+rowsH+'</div></div>';
+  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM[1])+pill('여성',tf,CF[1])+(tu?pill('확인 불가',tu,CU):'')+'</div>';
+  var hd='<div class="csd-row" style="padding:4px 0 6px;font-size:11px;color:var(--c-mut)"><span>나이대</span><span style="flex:none;width:100px">남 · 여</span><b style="font-weight:700;color:var(--c-mut)">건</b><small style="opacity:0">%</small></div>';
+  var rowsH=known.concat(unk).map(function(x,i){var dim=x.n==='확인 불가';return '<div class="csd-row" style="padding:4px 0;font-size:13px"><span'+(dim?' style="color:var(--c-mut)"':'')+'>'+x.n+'</span><span style="flex:none;width:100px;color:var(--c-mut);font-size:12px">'+x.m+' · '+x.f+(x.u?' · 불명 '+x.u:'')+'</span><b>'+x.t+'</b><small>'+Math.round(x.t/n*100)+'%</small></div>';}).join('');
+  return '<div style="display:flex;gap:16px 28px;flex-wrap:wrap;align-items:center"><div class="csd-wkd" style="flex:0 0 clamp(150px,12vw,190px)">'+_cssDonut(items,rows.length,'건','svg','나이 · 성별')+'</div><div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:6px">'+head+hd+rowsH+'</div></div>';
 }
 function _cssWkKpi(incl,ordTot,pv,amt){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
-  function cell(l,v,sub,first){return '<div style="flex:1 1 200px;min-width:0;padding:2px 24px;'+(first?'':'border-left:1px solid var(--c-line);')+'display:flex;flex-direction:column;gap:6px"><div class="csd-ch">'+l+'</div><div style="font-size:clamp(26px,2.8vw,40px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+v+'</div><div style="font-size:14px;color:var(--c-mut);min-height:20px;line-height:1.5">'+sub+'</div></div>';}
+  function cell(l,v,sub,first){return '<div style="flex:1 1 200px;min-width:0;padding:2px 24px;'+(first?'':'border-left:1px solid var(--c-line);')+'display:flex;flex-direction:column;gap:6px"><div class="csd-ch">'+l+'</div><div style="font-size:clamp(20px,2vw,28px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+v+'</div><div style="font-size:12px;color:var(--c-mut);min-height:20px;line-height:1.5">'+sub+'</div></div>';}
   return cell('전체 취소율',(cur*100).toFixed(1)+'%',_cssDl(cur,prev)+(prev==null?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>'),1)
     +cell('취소율 기준',_cssN(incl)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">건</span>','주문 '+_cssN(ordTot)+'건 중 취소')
     +cell('총 취소금액',_cssN(amt.sum)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">원</span>','취소 주문 금액 합계')
@@ -3502,7 +3517,7 @@ function _cssWeekHTML(wk,label,pv){
   var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비 상대 변화(%), 괄호는 %p 차이 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><b>'+tot+'</b><span>건 · 취소금액 '+_cssN(sum)+'원</span></div></div>'
     +'<div class="csd-grid" style="grid-template-columns:repeat(3,minmax(0,1fr));grid-template-rows:auto">'
-    +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:16px 0;padding:20px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot})+'</div>'
+    +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:12px 0;padding:12px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot})+'</div>'
     +card('브랜드별 취소율',_cssWkRate(wk,'brand',pv))
     +card('플랫폼별 취소율',_cssWkRate(wk,'plat',pv))
     +card('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
