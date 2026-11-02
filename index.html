@@ -3507,17 +3507,19 @@ function _cssWkDaily(rows){
   var days={},top={};
   rows.forEach(function(r){var m=/^(\d{4})(\d{2})(\d{2})/.exec(r.ord||'');if(!m)return;var k=m[1]+'-'+m[2]+'-'+m[3];(days[k]=days[k]||{a:0,b:{}}).a++;days[k].b[r.brand]=(days[k].b[r.brand]||0)+1;top[r.brand]=(top[r.brand]||0)+1;});
   var keys=Object.keys(days).sort();if(!keys.length)return '<div class="csd-empty">주문일 데이터가 없습니다.</div>';
-  var tb=Object.keys(top).sort(function(p,q){return top[q]-top[p]})[0];
+  var brands=Object.keys(top).sort(function(p,q){return top[q]-top[p]}),FB=['#14a58a','#f08a24','#8a8f98'];
   var list=[],d=new Date(keys[0]+'T00:00:00'),end=new Date(keys[keys.length-1]+'T00:00:00');
-  for(;d<=end;d.setDate(d.getDate()+1)){var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var x=days[k];list.push({l:(d.getMonth()+1)+'/'+d.getDate(),a:x?x.a:0,b:x?(x.b[tb]||0):0});}
+  for(;d<=end;d.setDate(d.getDate()+1)){var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var x=days[k],o={l:(d.getMonth()+1)+'/'+d.getDate(),a:x?x.a:0};brands.forEach(function(b){o[b]=x?(x.b[b]||0):0;});list.push(o);}
   var mx=Math.max.apply(null,list.map(function(x){return x.a}))||1,st=mx<=5?1:mx<=10?2:Math.ceil(mx/5),yt=Math.ceil(mx/st)*st;
-  var W=640,H=230,L=40,R=96,T=14,B=30,pw=W-L-R,ph=H-T-B,n=list.length;
+  var W=640,H=230,L=40,R=118,T=14,B=30,pw=W-L-R,ph=H-T-B,n=list.length;
   function X(i){return L+(n>1?i*pw/(n-1):pw/2);}function Y(v){return T+ph-v/yt*ph;}
   var g='';for(var v=0;v<=yt;v+=st){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e6e8eb"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#6b7076">'+v+'</text>';}
   list.forEach(function(x,i){g+='<text x="'+X(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="#6b7076">'+x.l+'</text>';});
-  function line(key,col){var pts=list.map(function(x,i){return X(i)+','+Y(x[key])}).join(' ');return (n>1?'<polyline points="'+pts+'" fill="none" stroke="'+col+'" stroke-width="2"/>':'')+list.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x[key])+'" r="3.5" fill="'+col+'"/><text x="'+X(i)+'" y="'+(Y(x[key])-9)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+col+'">'+x[key]+'</text>';}).join('');}
-  var lg='<g font-size="12" fill="#444"><line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+(T+10)+'" y2="'+(T+10)+'" stroke="#d6203a" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+(T+10)+'" r="3" fill="#d6203a"/><text x="'+(W-R+40)+'" y="'+(T+14)+'">전체</text><line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+(T+32)+'" y2="'+(T+32)+'" stroke="#2b7de0" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+(T+32)+'" r="3" fill="#2b7de0"/><text x="'+(W-R+40)+'" y="'+(T+36)+'">'+tb+'</text></g>';
-  return '<div style="background:#fff;border:1px solid var(--c-line);border-radius:8px;padding:10px 12px 6px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img"><title>일자별 취소 건수</title>'+g+'<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/>'+line('b','#2b7de0')+line('a','#d6203a')+lg+'</svg><div style="font-size:11px;color:var(--c-mut);text-align:right">주문일 기준 취소 건수 · 일별 주문 수가 시트에 없어 건수로 표시</div></div>';
+  var series=brands.map(function(b,bi){return {k:b,n:b,c:_cssBrandCol[b]||FB[bi%FB.length],w:2,lab:false};});
+  series.push({k:'a',n:'전체',c:'#1a1c1f',w:2.6,lab:true});
+  function line(se){var pts=list.map(function(x,i){return X(i)+','+Y(x[se.k])}).join(' ');return (n>1?'<polyline points="'+pts+'" fill="none" stroke="'+se.c+'" stroke-width="'+se.w+'" stroke-linejoin="round"/>':'')+list.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x[se.k])+'" r="'+(se.lab?4:3.2)+'" fill="'+se.c+'"><title>'+se.n+' '+x.l+' · '+x[se.k]+'건</title></circle>'+(se.lab?'<text x="'+X(i)+'" y="'+(Y(x[se.k])-10)+'" text-anchor="middle" font-size="12" font-weight="700" fill="'+se.c+'">'+x[se.k]+'</text>':'');}).join('');}
+  var lg='<g font-size="12" fill="#444">'+series.slice().reverse().map(function(se,i){var y=T+10+i*21;return '<line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+y+'" y2="'+y+'" stroke="'+se.c+'" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+y+'" r="3" fill="'+se.c+'"/><text x="'+(W-R+40)+'" y="'+(y+4)+'">'+se.n+'</text>';}).join('')+'</g>';
+  return '<div style="background:#fff;border:1px solid var(--c-line);border-radius:8px;padding:10px 12px 6px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img"><title>일자별 취소 건수</title>'+g+'<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/>'+series.map(line).join('')+lg+'</svg><div style="font-size:11px;color:var(--c-mut);text-align:right">주문일 기준 취소 건수 · 일별 주문 수가 시트에 없어 건수로 표시</div></div>';
 }
 function _cssWeekHTML(wk,label,pv){
   var rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
