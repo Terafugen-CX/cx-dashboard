@@ -174,6 +174,17 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-vp.csd-wk{height:auto;min-height:0;overflow:visible;background:transparent}
 .csd-vp.csd-wk .csd-slide{position:relative;inset:auto;transform:none!important;overflow:visible;border-radius:16px}
 .csd-wkd .csd-donut-svg{width:100%;height:auto}
+.wkd .wkd-s,.wkd .wkd-lg{transition:opacity .15s}
+.wkd .wkd-s polyline{transition:stroke-width .15s}
+.wkd .wkd-p{transition:r .12s}
+.wkd .wkd-p.hv{r:6px}
+.wkd .wkd-lg{cursor:pointer}
+.wkd[data-sel] .wkd-s,.wkd[data-sel] .wkd-lg{opacity:.18}
+.wkd[data-sel] .wkd-s.on,.wkd[data-sel] .wkd-lg.on{opacity:1}
+.wkd .wkd-s.on polyline{stroke-width:3.6}
+#wkd-tip{position:fixed;z-index:9999;display:none;pointer-events:none;background:rgba(18,18,28,.92);color:#fff;font-size:12px;line-height:1.7;padding:8px 12px;border-radius:8px;white-space:nowrap}
+#wkd-tip b{display:block;margin-bottom:2px}
+#wkd-tip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
 .csd-wk .csd-slide{padding:22px 28px}
 .csd-wk .csd-head{padding-bottom:12px;margin-bottom:12px}
 .csd-wk .csd-eb{font-size:12px;margin-bottom:4px}
@@ -3517,9 +3528,36 @@ function _cssWkDaily(rows){
   var g='';for(var v=0;v<=yt;v+=st){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e6e8eb"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#6b7076">'+v+'</text>';}
   list.forEach(function(x,i){g+='<text x="'+X(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="#6b7076">'+x.l+'</text>';});
   var series=brands.map(function(b,bi){return {k:b,n:b,c:_cssBrandCol[b]||FB[bi%FB.length],w:2.2,lab:true};});
-  function line(se){var pts=list.map(function(x,i){return X(i)+','+Y(x[se.k])}).join(' ');return (n>1?'<polyline points="'+pts+'" fill="none" stroke="'+se.c+'" stroke-width="'+se.w+'" stroke-linejoin="round"/>':'')+list.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x[se.k])+'" r="'+(se.lab?4:3.2)+'" fill="'+se.c+'"><title>'+se.n+' '+x.l+' · '+x[se.k]+'건</title></circle>'+(se.lab?'<text x="'+X(i)+'" y="'+(Y(x[se.k])-10)+'" text-anchor="middle" font-size="12" font-weight="700" fill="'+se.c+'">'+x[se.k]+'</text>':'');}).join('');}
-  var lg='<g font-size="12" fill="#444">'+series.slice().reverse().map(function(se,i){var y=T+10+i*21;return '<line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+y+'" y2="'+y+'" stroke="'+se.c+'" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+y+'" r="3" fill="'+se.c+'"/><text x="'+(W-R+40)+'" y="'+(y+4)+'">'+se.n+'</text>';}).join('')+'</g>';
-  return '<div style="background:#fff;border:1px solid var(--c-line);border-radius:8px;padding:10px 12px 6px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img"><title>일자별 취소 건수</title>'+g+'<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/>'+series.map(line).join('')+lg+'</svg><div style="font-size:11px;color:var(--c-mut);text-align:right">주문일 기준 취소 건수 · 일별 주문 수가 시트에 없어 건수로 표시</div></div>';
+  var dj=JSON.stringify({d:list.map(function(x){var v={};brands.forEach(function(b){v[b]=x[b]});return {l:x.l,v:v}}),c:series.reduce(function(o,se){o[se.k]=se.c;return o},{}),x:list.map(function(x,i){return X(i)}),L:L,W:W}).replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+  function line(se){var pts=list.map(function(x,i){return X(i)+','+Y(x[se.k])}).join(' ');return '<g class="wkd-s" data-b="'+se.k+'">'+(n>1?'<polyline points="'+pts+'" fill="none" stroke="'+se.c+'" stroke-width="'+se.w+'" stroke-linejoin="round"/>':'')+list.map(function(x,i){return '<circle class="wkd-p wkd-c'+i+'" cx="'+X(i)+'" cy="'+Y(x[se.k])+'" r="3.4" fill="'+se.c+'"/>'+(x[se.k]>0?'<text x="'+X(i)+'" y="'+(Y(x[se.k])-10)+'" text-anchor="middle" font-size="12" font-weight="700" fill="'+se.c+'">'+x[se.k]+'</text>':'');}).join('')+'</g>';}
+  var lg='<g font-size="12" fill="#444">'+series.slice().reverse().map(function(se,i){var y=T+10+i*21;return '<g class="wkd-lg" data-b="'+se.k+'"><rect x="'+(W-R+8)+'" y="'+(y-10)+'" width="'+(R-10)+'" height="20" fill="transparent"/><line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+y+'" y2="'+y+'" stroke="'+se.c+'" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+y+'" r="3" fill="'+se.c+'"/><text x="'+(W-R+40)+'" y="'+(y+4)+'">'+se.n+'</text></g>';}).join('')+'</g>';
+  var cw=n>1?pw/(n-1):pw,hits=list.map(function(x,i){return '<rect class="wkd-hit" data-i="'+i+'" x="'+(X(i)-cw/2)+'" y="'+T+'" width="'+cw+'" height="'+ph+'" fill="transparent"/>';}).join('');
+  return '<div style="background:#fff;border:1px solid var(--c-line);border-radius:8px;padding:10px 12px 6px"><svg class="wkd" data-j="'+dj+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img"><title>일자별 취소 건수</title>'+g+'<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/>'+'<line class="wkd-g" x1="0" x2="0" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6" stroke-dasharray="3 3" style="display:none"/>'+series.map(line).join('')+hits+lg+'</svg></div>';
+}
+if(!window._wkdB){window._wkdB=1;
+  var _wt=document.createElement('div');_wt.id='wkd-tip';document.body.appendChild(_wt);
+  function _wkdClear(svg){svg.querySelectorAll('.wkd-p.hv').forEach(function(c){c.classList.remove('hv')});var g=svg.querySelector('.wkd-g');if(g)g.style.display='none';_wt.style.display='none';}
+  document.addEventListener('mousemove',function(e){
+    var h=e.target&&e.target.classList&&e.target.classList.contains('wkd-hit')?e.target:null;
+    if(!h){document.querySelectorAll('.wkd .wkd-g').forEach(function(g){if(g.style.display!=='none')_wkdClear(g.ownerSVGElement)});return;}
+    var svg=h.ownerSVGElement,j;try{j=JSON.parse(svg.getAttribute('data-j'));}catch(x){return;}
+    var i=+h.getAttribute('data-i'),d=j.d[i],sel=svg.getAttribute('data-sel');
+    svg.querySelectorAll('.wkd-p.hv').forEach(function(c){c.classList.remove('hv')});
+    svg.querySelectorAll('.wkd-c'+i).forEach(function(c){c.classList.add('hv')});
+    var g=svg.querySelector('.wkd-g');g.setAttribute('x1',j.x[i]);g.setAttribute('x2',j.x[i]);g.style.display='';
+    var ks=Object.keys(d.v).sort(function(a,b){return d.v[b]-d.v[a]});
+    _wt.innerHTML='<b>'+d.l+'</b>'+ks.map(function(k){return '<div style="'+(sel&&sel!==k?'opacity:.4':'')+'"><i style="background:'+j.c[k]+'"></i>'+k+' '+d.v[k]+'건</div>';}).join('');
+    _wt.style.display='block';
+    var w=_wt.offsetWidth,x=e.clientX+16,y=e.clientY-_wt.offsetHeight-10;
+    if(x+w>window.innerWidth-8)x=e.clientX-w-16;if(y<8)y=e.clientY+16;
+    _wt.style.left=x+'px';_wt.style.top=y+'px';
+  });
+  document.addEventListener('click',function(e){
+    var lg=e.target&&e.target.closest?e.target.closest('.wkd-lg'):null;if(!lg)return;
+    var svg=lg.ownerSVGElement,b=lg.getAttribute('data-b'),on=svg.getAttribute('data-sel')===b;
+    svg.querySelectorAll('.wkd-s,.wkd-lg').forEach(function(el){el.classList.toggle('on',!on&&el.getAttribute('data-b')===b);});
+    if(on)svg.removeAttribute('data-sel');else svg.setAttribute('data-sel',b);
+  });
 }
 function _cssWeekHTML(wk,label,pv){
   var rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
