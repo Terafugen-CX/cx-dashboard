@@ -3523,7 +3523,7 @@ function _cssWeekHTML(wk,label,pv){
     +card('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
     +card('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1,col:'var(--c-blue)'}))
     +card('나이대별 · 성별',_cssWkAgeGender(rows),2)
-    +'</div><p class="csd-note">'+note+'</p></div>';
+    +'</div></div>';
   return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
 }
 function _cssWeekLoad(box,y,m,w){
