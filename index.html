@@ -186,7 +186,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-fill .csd-grid{flex:1;grid-template-rows:1fr}
 .csd-fill .csd-card .csd-donut{flex:1}
 .csd-fill .csd-card>.csd-row{flex:1}
-.csd-fill .csd-note{margin-top:auto}
+.csd-fill .csd-note{margin-top:auto;background:none;border-left:none;padding-left:0;border-radius:0}
 .csd-donut-top{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:34px}
 .csd-donut-top .csd-donut-svg{width:clamp(260px,30vw,400px);margin-left:6px}
 .csd-line{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:17px}
@@ -203,7 +203,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-br small{font-size:13px;color:var(--c-mut);text-align:right}
 .csd-main{justify-content:flex-start}
 .csd-mid{flex:1;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
-.csd-mid .csd-donut-svg{width:clamp(240px,24vw,340px);margin-left:6px}
+.csd-mid .csd-donut-svg{width:clamp(190px,18vw,250px);margin-left:6px}
+.csd-col{font-size:13px;color:var(--c-mut);width:46px;text-align:center;flex:none;font-style:normal}
 .csd-rs{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
 #csd-detail{justify-content:flex-start;gap:8px;overflow-y:auto;min-height:0}
 .csd-fill .csd-grid{min-height:0}
@@ -3161,7 +3162,7 @@ function _cssPopWeek(){
 var _CSS_DATA={'2026-10':{
   cancel:{orders:8605,total:945,paid:437,dep:508,pRe:47,pSim:43,
     brands:[["테라퓨젠",701],["덴티플라",119],["프로즌랩",77],["파미코젠",42],["메디그로우",6],["셀로핏",0]],
-    reasons:[["입금 전 취소 (사유 미기재)",508,'var(--c-gold)'],["재주문",207,'var(--c-blue)'],["단순 변심",190,'var(--c-fg)'],["오주문",37,'var(--c-red)'],["기타 (배송 지연·내부 테스트)",3,'var(--c-dim)']],
+    reasons:[["입금 전 취소 (사유 미기재)",508,'var(--c-gold)','-','-','-'],["재주문",207,'var(--c-blue)','-','-','-'],["단순 변심",190,'var(--c-fg)','-','-','-'],["오주문",37,'var(--c-red)','-','-','-'],["기타 (배송 지연·내부 테스트)",3,'var(--c-dim)','-','-','-']],
     note:"쿠팡 · EMS · CJ온스타일을 제외한 취소율 집계.<br>재주문 · 재결제 취소건은 동일 주문자가 쿠폰 미적용·결제수단 변경 등을 이유로 이전 주문 취소한 건으로, 순수 이탈로 보기 어려우나 취소율 지표에 영향",
     byBrand:[
      {n:"테라퓨젠",o:6091,t:701,p:331,g:[["입금 전 취소 (사유 미기재)",370,"var(--c-gold)"],["재주문",192,"var(--c-blue)"],["단순 변심",113,"var(--c-fg)"],["오주문",25,"var(--c-red)"],["기타 (배송 지연)",1,"var(--c-dim)"]],d:[["단순 변심",108],["재주문",107],["오주문",21],["재주문 (할인 링크에서 구매)",19],["재주문 (결제 수단 변경)",19],["재주문 (쿠폰 미적용)",13],["재주문 (수량 변경)",13],["재주문 (다른 상품 함께 구매)",13],["재주문 (배송지 오기재)",3],["단순 변심 (타사 가격 저렴)",3],["단순 변심 (가격 비쌈)",2],["오주문 (결제 오류)",2],["재주문 (할인 쿠폰 적용)",2],["오주문 (다른 상품 잘못 구매)",2],["재주문 (배송지 오입력)",2],["재결제",1],["배송 지연",1]]},
@@ -3185,7 +3186,8 @@ var _CSS_DATA={'2026-10':{
 }};
 function _cssBars(a){var mx=Math.max.apply(null,a.map(function(x){return x[1]}))||1;
   return a.map(function(x){return '<div class="csd-bar"><i>'+x[0]+'</i><div><u style="width:'+(x[1]/mx*100)+'%"></u></div><em>'+x[1]+'</em></div>'}).join('');}
-function _cssRows(a,tot){return a.map(function(x){return '<div class="csd-row"><s style="background:'+x[2]+'"></s><span>'+x[0]+'</span><b>'+x[1]+'</b><small>'+Math.round(x[1]/tot*100)+'%</small></div>'}).join('');}
+function _cssRows(a,tot){return a.map(function(x){var ex=x.length>3?'<em class="csd-col">'+(x[3]||'-')+'</em><em class="csd-col">'+(x[4]||'-')+'</em><em class="csd-col">'+(x[5]||'-')+'</em>':'';return '<div class="csd-row"><s style="background:'+x[2]+'"></s><span>'+x[0]+'</span><b>'+x[1]+'</b><small>'+Math.round(x[1]/tot*100)+'%</small>'+ex+'</div>'}).join('');}
+function _cssRowsEx(a,tot){var hd='<div class="csd-row" style="padding:3px 0 5px;border-bottom:1px solid var(--c-line)"><s style="opacity:0"></s><span></span><b style="opacity:0">0</b><small style="opacity:0">%</small><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700;color:var(--c-dim)">나이</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700;color:var(--c-dim)">성별</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700;color:var(--c-dim)">금액</em></div>';return hd+_cssRows(a,tot);}
 function _cssDrows(a,tot){return a.map(function(x){return '<div class="csd-row"><span>'+x[0]+'</span><b>'+x[1]+'</b><small>'+Math.round(x[1]/tot*100)+'%</small></div>'}).join('');}
 var _cssBrandCol={'테라퓨젠':'#2b7de0','프로즌랩':'#f4808f','덴티플라':'#7ec8f0','파미코젠':'#b79cf0','메디그로우':'#f6d36b'};
 var _cssPal=['#14a58a','var(--c-blue)','var(--c-gold)','var(--c-red)','var(--c-dim)'];
@@ -3233,7 +3235,7 @@ function _cssLine(items,total){
 function _cssShow(name){
   var c=window._cssCur,box=document.getElementById('csd-detail'),rs=document.getElementById('csd-rs');if(!c||!box)return;
   var b=name?c.byBrand.filter(function(x){return x.n===name})[0]:null;
-  if(rs)rs.innerHTML='<div class="csd-ch">'+(b?b.n+' 사유별':'사유별')+'</div>'+(b?_cssRows(b.g,b.t):_cssRows(c.reasons,c.total));
+  if(rs)rs.innerHTML='<div class="csd-ch">'+(b?b.n+' 사유별':'사유별')+'</div>'+(b?_cssRows(b.g,b.t):_cssRowsEx(c.reasons,c.total));
   if(b){
     box.innerHTML='<div class="csd-dh">'+b.n+' 취소 사유 <small>'+b.p+'건</small></div><div class="csd-rate">총 주문 '+_cssN(b.o)+'건 중 취소 '+b.t+'건 · 취소율 <b>'+_cssPct(b.t,b.o)+'</b></div>'+_cssTopBars(b.d,b.p,_cssBrandCol[b.n]);
   }else{
@@ -3357,7 +3359,7 @@ function cssUpdate(){
   var live=c.brands.filter(function(x){return x[1]>0}).map(function(x,i){return [x[0],x[1],_cssBrandCol[x[0]]||_cssPal[i]]});
   window._cssCur=c;window._cssSel=null;
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">01 · 취소 현황</div><h2>브랜드별 주문 취소</h2></div></div>'
-  +'<div class="csd-grid csd-g01"><div class="csd-card csd-main">'+_cssLine(live,c.total)+'<div class="csd-mid">'+_cssDonut(live,c.total,'건','svg','취소율 '+_cssPct(c.total,c.orders))+'<div class="csd-rs" id="csd-rs"><div class="csd-ch">사유별</div>'+_cssRows(c.reasons,c.total)+'</div></div></div>'
+  +'<div class="csd-grid csd-g01"><div class="csd-card csd-main">'+_cssLine(live,c.total)+'<div class="csd-mid">'+_cssDonut(live,c.total,'건','svg','취소율 '+_cssPct(c.total,c.orders))+'<div class="csd-rs" id="csd-rs"><div class="csd-ch">사유별</div>'+_cssRowsEx(c.reasons,c.total)+'</div></div></div>'
   +'<div class="csd-card" id="csd-detail"></div></div>'
   +'<p class="csd-note">'+c.note+'</p></div>');
   var rmax=Math.max.apply(null,r.byBrand.map(function(x){return x.t}))||1;
