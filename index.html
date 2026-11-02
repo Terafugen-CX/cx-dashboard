@@ -204,7 +204,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-main{justify-content:flex-start}
 .csd-mid{flex:1;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
 .csd-mid .csd-donut-svg{width:clamp(190px,18vw,250px);margin-left:6px}
-.csd-col{font-size:13px;color:var(--c-fg);width:46px;text-align:center;flex:none;font-style:normal}
+.csd-col{font-size:13px;color:var(--c-fg);width:64px;text-align:center;flex:none;font-style:normal}
+.csd-nm{flex:none!important;width:clamp(200px,20vw,280px)}
+.csd-cn{flex:none;width:44px;text-align:right}
+.csd-cp{flex:none;width:40px;margin:0 24px 0 0!important}
 .csd-rs{flex:1;min-width:0;display:flex;flex-direction:column;gap:8px}
 #csd-detail{justify-content:flex-start;gap:8px;overflow-y:auto;min-height:0}
 .csd-fill .csd-grid{min-height:0}
@@ -3149,7 +3152,7 @@ function _cssPopWeek(){
   wEl.innerHTML='';
   // 현재 연/월 또는 10월(주차 데이터 없음)이면 주차 선택 비활성
   var isCurrent=(selY===curY&&selM===curM);
-  var isWeekDisabled=isCurrent||(selY===2026&&selM===10);
+  var isWeekDisabled=(selY===2026&&selM===10);
   var weeks=['1주차','2주차','3주차','4주차'];
   for(var i=0;i<4;i++){
     var o=document.createElement('option');o.value=i+1;o.textContent=weeks[i];
@@ -3189,8 +3192,8 @@ function _cssBars(a){var mx=Math.max.apply(null,a.map(function(x){return x[1]}))
   return a.map(function(x){return '<div class="csd-bar"><i>'+x[0]+'</i><div><u style="width:'+(x[1]/mx*100)+'%"></u></div><em>'+x[1]+'</em></div>'}).join('');}
 function _cssRows(a,tot){return a.map(function(x){return '<div class="csd-row"><s style="background:'+x[2]+'"></s><span>'+x[0]+'</span><b>'+x[1]+'</b><small>'+Math.round(x[1]/tot*100)+'%</small></div>'}).join('');}
 function _cssRowsEx(a,tot){
-  var hd='<div class="csd-row" style="padding:3px 0 5px;border-bottom:1px solid var(--c-line)"><s style="opacity:0"></s><span></span><b style="font-size:12px;font-weight:700;color:var(--c-fg)">건수</b><small style="margin-right:32px;opacity:0">%</small><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">나이</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">성별</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">금액</em></div>';
-  var rows=a.map(function(x){return '<div class="csd-row"><s style="background:'+x[2]+'"></s><span>'+x[0]+'</span><b>'+x[1]+'</b><small style="margin-right:32px">'+Math.round(x[1]/tot*100)+'%</small><em class="csd-col">'+(x[3]||'-')+'</em><em class="csd-col">'+(x[4]||'-')+'</em><em class="csd-col">'+(x[5]||'-')+'</em></div>'}).join('');
+  var hd='<div class="csd-row" style="padding:3px 0 5px;border-bottom:1px solid var(--c-line)"><s style="opacity:0"></s><span class="csd-nm"></span><b class="csd-cn" style="font-size:12px;font-weight:700;color:var(--c-fg)">건수</b><small class="csd-cp" style="opacity:0">%</small><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">나이</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">성별</em><em class="csd-col" style="font-style:normal;font-size:12px;font-weight:700">금액</em></div>';
+  var rows=a.map(function(x){return '<div class="csd-row"><s style="background:'+x[2]+'"></s><span class="csd-nm">'+x[0]+'</span><b class="csd-cn">'+x[1]+'</b><small class="csd-cp">'+Math.round(x[1]/tot*100)+'%</small><em class="csd-col">'+(x[3]||'-')+'</em><em class="csd-col">'+(x[4]||'-')+'</em><em class="csd-col">'+(x[5]||'-')+'</em></div>'}).join('');
   return hd+rows;
 }
 function _cssDrows(a,tot){return a.map(function(x){return '<div class="csd-row"><span>'+x[0]+'</span><b>'+x[1]+'</b><small>'+Math.round(x[1]/tot*100)+'%</small></div>'}).join('');}
