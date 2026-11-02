@@ -3402,9 +3402,70 @@ if(!window._cssKey){window._cssKey=1;document.addEventListener('keydown',functio
   if(e.key==='ArrowDown'||e.key==='PageDown'){if(_cssStep(1))e.preventDefault();}
   else if(e.key==='ArrowUp'||e.key==='PageUp'){if(_cssStep(-1))e.preventDefault();}
 });}
+var _CSS_WEEK_SHEET='https://docs.google.com/spreadsheets/d/1Hd-7fGV10525r-CnMHf0nXLneNWv5xjoktRi_NFPYT0/export?format=csv&gid=';
+var _CSS_WEEK_GIDS={'2026-11-1':'542426019'};
+var _cssWkTok=0;
+function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
+function _cssWkRows(csv){
+  var rows=_parseCSV(csv),out=[],range='';
+  rows.forEach(function(r){
+    var lab=(r[10]||'').trim();if(!range&&/^\d{4}\.\s*\d+\.\s*\d+\s*~/.test(lab))range=lab.replace(/\s+/g,' ');
+    if(!(r[1]||'').trim()||!(r[2]||'').trim()||(r[0]||'').trim()==='날짜')return;
+    out.push({brand:r[2].trim(),plat:(r[3]||'').trim()||'미기재',gender:(r[4]||'').trim()||'확인 불가',age:(r[5]||'').trim()||'확인 불가',prod:(r[6]||'').trim()||'미기재',reason:(r[7]||'').trim()||'미기재',amt:_cssAmt(r[8])});
+  });
+  return {rows:out,range:range};
+}
+function _cssWkGroup(rows,key){
+  var m={};rows.forEach(function(r){var k=r[key];if(!m[k])m[k]={n:k,c:0,a:0};m[k].c++;m[k].a+=r.amt;});
+  return Object.keys(m).map(function(k){return m[k]});
+}
+function _cssWkBars(list,tot,opt){
+  opt=opt||{};
+  var known=list.filter(function(x){return x.n!=='확인 불가'}).sort(opt.sort||function(p,q){return q.c-p.c}),unk=list.filter(function(x){return x.n==='확인 불가'});
+  var mx=Math.max.apply(null,list.map(function(x){return x.c}))||1;
+  function row(x,dim){return '<div class="csd-br"><span class="l"'+(dim?' style="color:var(--c-mut)"':'')+'>'+x.n+(opt.amt?'<small style="margin-left:6px">'+_cssN(x.a)+'원</small>':'')+'</span><div class="t"><u style="width:'+(x.c/mx*100)+'%;background:'+(dim?'var(--c-dim)':(opt.col||'var(--c-fg)'))+'"></u></div><b>'+x.c+'</b><small>'+Math.round(x.c/tot*100)+'%</small></div>';}
+  var h=known.map(function(x){return row(x,false)}).join('');
+  if(unk.length)h+='<div style="border-top:1px dashed var(--c-line);margin:6px 0 2px"></div>'+unk.map(function(x){return row(x,true)}).join('');
+  return h;
+}
+function _cssWeekHTML(wk,label){
+  var rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
+  var tones=['csd-lt','csd-lt'];
+  function slide(i,eb,title,c1,c2,note){
+    return '<div class="csd-slide '+tones[i%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">'+eb+'</div><h2>'+title+'</h2></div><div class="csd-tot"><b>'+tot+'</b><span>건 · 취소금액 '+_cssN(sum)+'원</span></div></div>'
+    +'<div class="csd-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:1fr">'
+    +'<div class="csd-card" style="overflow-y:auto;min-height:0;justify-content:flex-start;gap:8px">'+c1+'</div><div class="csd-card" style="overflow-y:auto;min-height:0;justify-content:flex-start;gap:8px">'+c2+'</div></div>'
+    +'<p class="csd-note">'+note+'</p></div>';
+  }
+  function card(t,list,opt){return '<div class="csd-ch">'+t+'</div>'+_cssWkBars(list,tot,opt);}
+  var ageSort=function(p,q){return (parseInt(p.n,10)||0)-(parseInt(q.n,10)||0)};
+  var unkG=rows.filter(function(r){return r.gender==='확인 불가'}).length,unkA=rows.filter(function(r){return r.age==='확인 불가'}).length;
+  var S=[
+    slide(0,label+' · 취소 현황','브랜드 · 플랫폼별 취소',card('브랜드별',_cssWkGroup(rows,'brand'),{amt:1,col:'var(--c-blue)'}),card('플랫폼별',_cssWkGroup(rows,'plat'),{amt:1}),'기간: '+(wk.range||label)+' · 금액은 취소 주문 금액 합계'),
+    slide(1,label+' · 취소 현황','제품 · 사유별 취소',card('제품별',_cssWkGroup(rows,'prod'),{amt:1,col:'var(--c-blue)'}),card('사유별',_cssWkGroup(rows,'reason'),{}),'사유는 시트 H열 기재 그대로 집계'),
+    slide(2,label+' · 취소 현황','성별 · 나이별 취소',card('성별',_cssWkGroup(rows,'gender'),{col:'var(--c-blue)'}),card('나이별',_cssWkGroup(rows,'age'),{sort:ageSort}),'확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)')
+  ];
+  var dots=S.map(function(_,k){return '<i class="csd-dot'+(k?'':' on')+'"></i>'}).join('');
+  return '<div class="csd"><div class="csd-vp" id="csd-vp">'+S.join('')+'<div class="csd-dots">'+dots+'</div></div></div>';
+}
+function _cssWeekLoad(box,y,m,w){
+  var gid=_CSS_WEEK_GIDS[y+'-'+m+'-'+w];
+  if(!gid){box.innerHTML='<div class="csd-empty">'+m+'월 '+w+'주차 데이터는 아직 시트가 연결되지 않았습니다.</div>';return;}
+  var tok=++_cssWkTok;
+  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  fetch(_CSS_WEEK_SHEET+gid+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+  .then(function(t){
+    if(tok!==_cssWkTok)return;
+    var wk=_cssWkRows(t);
+    if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
+    box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차');
+    var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssGo(0);_cssBind(vp);
+  }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
+}
 function cssUpdate(){
   var box=document.getElementById('css-content');if(!box)return;
   var y=document.getElementById('css-year').value,m=+document.getElementById('css-month').value,w=document.getElementById('css-week').value;
+  if(w!=='total'&&!(y==='2026'&&m===10)){_cssWeekLoad(box,y,m,w);return;}
   var d=_CSS_DATA[y+'-'+m];
   if(!d||w!=='total'){box.innerHTML='<div class="csd-empty">'+(d?'주차별 데이터는 준비 중입니다. “한달 통합”을 선택해 주세요.':'해당 기간의 CS SUMMARY 데이터가 없습니다.')+'</div>';return;}
   var c=d.cancel,r=d.ret,mm=String(m).padStart(2,'0'),tones=['csd-lt','csd-lt'],ti=0;
