@@ -3356,7 +3356,7 @@ function _cssShowR(name){
   var b=name?r.byBrand.filter(function(x){return x.n===name})[0]:null;
   var prods=b?b.prod:r.prod,rs=b?b.reasons:r.reasons,tot=b?b.t:r.total,pre=b?b.n+' ':'';
   p.innerHTML='<div class="csd-ch">'+pre+'제품별 교환 · 반품</div>'+prods.map(function(x,i){
-    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b>'+(x[5]?'<small>'+x[5]+'</small>':'')+'</span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+(x[6]!=null?_cssN(x[6]):'-')+' 원</b></div>';}).join('');
+    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b></span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+(x[6]!=null?_cssN(x[6]):'-')+' 원</b></div>';}).join('');
   q.innerHTML='<div class="csd-ch">'+pre+'사유별</div>'+_cssRows(rs.map(function(x){return [x[0],x[1],_cssRc(x[0])]}),tot);
   var sm=document.getElementById('csd-rsum');if(sm){var ex=b?b.exc:r.exc,rt=b?b.ret:r.ret;var gf=b?b.gift:r.gift;sm.innerHTML='<span>교환 <b style="color:var(--c-blue)">'+ex+'</b>건</span><span>반품 <b style="color:var(--c-red)">'+rt+'</b>건</span>'+(gf?'<span>반품 (사은품) <b style="color:var(--c-gold)">'+gf+'</b>건</span>':'');}
   document.querySelectorAll('#csd-vp .csd-vb').forEach(function(g){g.classList.toggle('dim',!!name&&g.getAttribute('data-pickr')!==name);});
