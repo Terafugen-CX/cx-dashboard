@@ -290,7 +290,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-g02 .csd-row{padding:4px 0;font-size:14px}
 #csd-rp{max-height:clamp(240px,40vh,380px);overflow-y:auto;overflow-x:hidden}
 .csd-g02 .csd-prow>span{flex:none;width:clamp(110px,32%,170px);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.csd-g02 .csd-prow .csd-pt{flex:none;margin:0}
+.csd-g02 .csd-prow .csd-pt{flex:none;margin:0;display:inline-flex;align-items:center}
+.csd-g02 .csd-prow .csd-pt i{font-style:normal;display:block;width:4.6em;text-align:left;white-space:nowrap}
+.csd-g02 .csd-prow .csd-pt s{text-decoration:none;display:block;width:1.6em;text-align:center}
 .csd-g02 .csd-prow>b{margin-left:auto;flex:none;padding-left:12px;white-space:nowrap}
 .csd-vl{cursor:pointer}
 .csd-vbar.dim{opacity:.35}
@@ -3356,7 +3358,7 @@ function _cssShowR(name){
   var b=name?r.byBrand.filter(function(x){return x.n===name})[0]:null;
   var prods=b?b.prod:r.prod,rs=b?b.reasons:r.reasons,tot=b?b.t:r.total,pre=b?b.n+' ':'';
   p.innerHTML='<div class="csd-ch">'+pre+'제품별 교환 · 반품</div>'+prods.map(function(x,i){
-    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b></span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+(x[6]!=null?_cssN(x[6]):'-')+' 원</b></div>';}).join('');
+    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b></span><em class="csd-pt"><i>반품 '+x[2]+'</i><s>·</s><i>교환 '+x[3]+'</i>'+(x[4]?'<s>·</s><i style="width:auto">반품 (사은품) '+x[4]+'</i>':'')+'</em><b>'+(x[6]!=null?_cssN(x[6]):'-')+' 원</b></div>';}).join('');
   q.innerHTML='<div class="csd-ch">'+pre+'사유별</div>'+_cssRows(rs.map(function(x){return [x[0],x[1],_cssRc(x[0])]}),tot);
   var sm=document.getElementById('csd-rsum');if(sm){var ex=b?b.exc:r.exc,rt=b?b.ret:r.ret;var gf=b?b.gift:r.gift;sm.innerHTML='<span>교환 <b style="color:var(--c-blue)">'+ex+'</b>건</span><span>반품 <b style="color:var(--c-red)">'+rt+'</b>건</span>'+(gf?'<span>반품 (사은품) <b style="color:var(--c-gold)">'+gf+'</b>건</span>':'');}
   document.querySelectorAll('#csd-vp .csd-vb').forEach(function(g){g.classList.toggle('dim',!!name&&g.getAttribute('data-pickr')!==name);});
