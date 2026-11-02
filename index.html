@@ -285,7 +285,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-seg,.csd-vbar,.csd-line span{outline:none}
 .csd-donut-svg *::selection{background:transparent}
 #csd-tip span{display:block}
-.csd-g02 .csd-card{overflow-y:auto;min-height:0}
+.csd-g02 .csd-card{overflow:visible;min-height:0}
+.csd-g02 .csd-row{padding:4px 0;font-size:14px}
+.csd-g02 .csd-prow .csd-pt{flex:1;text-align:center;margin-right:0}
+.csd-g02 .csd-prow>b{width:56px;text-align:right;flex:none}
 .csd-vl{cursor:pointer}
 .csd-vbar.dim{opacity:.35}
 .csd-vbar.dim:hover{opacity:.6}
@@ -294,7 +297,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-top .csd-meta{text-align:right;font-size:16px;font-weight:500;letter-spacing:0;color:var(--c-mut)}
 .csd-top .csd-meta b{display:block;color:var(--c-fg);font-size:19px;margin-top:3px;font-weight:700}
 .csd-cover .csd-bot{justify-content:flex-end;text-align:right}
-.csd-fill .csd-g02{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:1fr 1fr}
+.csd-fill .csd-g02{grid-template-columns:repeat(2,minmax(0,1fr));grid-template-rows:auto auto;align-content:start}
 .csd-vcard{grid-row:1/3}
 .csd-vtop{display:flex;justify-content:space-between;align-items:flex-start;gap:20px}
 .csd-plat{display:flex;flex-direction:column;gap:6px;font-size:15px;min-width:170px}
@@ -2120,13 +2123,15 @@ function _fetchReturnData(){
       results.forEach(function(res){
         var isNew=res.ym>=_RETURN_NEW_FMT_FROM;
         var isPrevSheet=(prevMonthYm===res.ym);
-        var lastDate=null;
+        var lastDate=null,lastPlat='';
         for(var i=1;i<res.rows.length;i++){
           var row=isNew?_parseRetRow_new(res.rows[i]):_parseRetRow_old(res.rows[i]);
           if(!row) continue;
           // 날짜 병합셀: A열 빈 행은 직전 행 날짜 이어받기
           if(row.date) lastDate=row.date;
           else if(lastDate) row.date=lastDate;
+          if(row.platform) lastPlat=row.platform;
+          else if(lastPlat&&!row.orderNo) row.platform=lastPlat;
           var d=row.date;
           if(isTotalMode){
             if(isPrevSheet){
@@ -3253,10 +3258,10 @@ var _CSS_DATA={'2026-10':{
     prod:[['헬리코컷',19,17,2,0,'테라퓨젠'],['콜레스컷',13,12,1,0,'테라퓨젠'],['구강케어정',6,6,0,0,'덴티플라'],['조인트본',5,4,1,0,'테라퓨젠'],['콜라겐',3,3,0,0,'프로즌랩'],['오메가3',3,3,0,0,'테라퓨젠'],['코티프로',2,2,0,0,'파미코젠'],['알코프로',2,1,1,0,'파미코젠'],['실톡스 SET',1,1,0,0,'프로즌랩'],['잇몸케어 치약',1,1,0,0,'덴티플라'],['아나모나',1,1,0,0,'메디그로우']],
     reasons:[['단순 변심',49],['배송 문제 / 상품 파손',4],['오주문',1],['다른 상품 교환',1],['재발송(주소 오기재)',1]],
     byBrand:[
-     {n:'테라퓨젠',t:40,ret:36,exc:4,gift:0,plat:[['자사몰',24],['쿠팡',10],['G마켓',1],['옥션',1]],prod:[['헬리코컷',19,17,2,0],['콜레스컷',13,12,1,0],['조인트본',5,4,1,0],['오메가3',3,3,0,0]],reasons:[['단순 변심',35],['배송 문제 / 상품 파손',3],['오주문',1],['다른 상품 교환',1]]},
-     {n:'덴티플라',t:7,ret:7,exc:0,gift:0,plat:[['자사몰',2],['옥션',2],['쿠팡',1],['G마켓',1]],prod:[['구강케어정',6,6,0,0],['잇몸케어 치약',1,1,0,0]],reasons:[['단순 변심',6],['배송 문제 / 상품 파손',1]]},
-     {n:'파미코젠',t:4,ret:3,exc:1,gift:0,plat:[['자사몰',3]],prod:[['코티프로',2,2,0,0],['알코프로',2,1,1,0]],reasons:[['단순 변심',3],['재발송(주소 오기재)',1]]},
-     {n:'프로즌랩',t:4,ret:4,exc:0,gift:0,plat:[['자사몰',3]],prod:[['콜라겐',3,3,0,0],['실톡스 SET',1,1,0,0]],reasons:[['단순 변심',4]]},
+     {n:'테라퓨젠',t:40,ret:36,exc:4,gift:0,plat:[['자사몰',28],['쿠팡',10],['G마켓',1],['옥션',1]],prod:[['헬리코컷',19,17,2,0],['콜레스컷',13,12,1,0],['조인트본',5,4,1,0],['오메가3',3,3,0,0]],reasons:[['단순 변심',35],['배송 문제 / 상품 파손',3],['오주문',1],['다른 상품 교환',1]]},
+     {n:'덴티플라',t:7,ret:7,exc:0,gift:0,plat:[['자사몰',3],['옥션',2],['쿠팡',1],['G마켓',1]],prod:[['구강케어정',6,6,0,0],['잇몸케어 치약',1,1,0,0]],reasons:[['단순 변심',6],['배송 문제 / 상품 파손',1]]},
+     {n:'파미코젠',t:4,ret:3,exc:1,gift:0,plat:[['자사몰',4]],prod:[['코티프로',2,2,0,0],['알코프로',2,1,1,0]],reasons:[['단순 변심',3],['재발송(주소 오기재)',1]]},
+     {n:'프로즌랩',t:4,ret:4,exc:0,gift:0,plat:[['자사몰',4]],prod:[['콜라겐',3,3,0,0],['실톡스 SET',1,1,0,0]],reasons:[['단순 변심',4]]},
      {n:'메디그로우',t:1,ret:1,exc:0,gift:0,plat:[['쿠팡',1]],prod:[['아나모나',1,1,0,0]],reasons:[['단순 변심',1]]}
     ],
     note:'헬리코컷·콜레스컷(테라퓨젠) 2개 제품이 전체의 절반 이상(32건, 57%). 플랫폼은 자사몰이 가장 많음(32건). 플랫폼 미기재 합배송 동봉 상품 7건은 플랫폼 집계에서 제외.'}
@@ -3625,7 +3630,7 @@ function cssUpdate(){
   }).join('');
   window._cssCurR=r;window._cssSelR=null;
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">02 · 교환 · 반품</div><h2>브랜드별 교환 · 반품</h2></div></div>'
-  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div><div class="csd-vdem" id="csd-vdem"></div></div>'
+  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div></div>'
   +'<div class="csd-card" id="csd-rp"></div><div class="csd-card" id="csd-rr"></div></div>'
   +'</div>');
   var dots=S.map(function(_,k){return '<i class="csd-dot'+(k?'':' on')+'"></i>'}).join('');
