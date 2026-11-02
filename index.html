@@ -3407,13 +3407,27 @@ var _CSS_WEEK_GIDS={'2026-11-1':'542426019'};
 var _cssWkTok=0;
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkRows(csv){
-  var rows=_parseCSV(csv),out=[],range='';
+  var rows=_parseCSV(csv),out=[],range='',orders=[],cb='';
   rows.forEach(function(r){
     var lab=(r[10]||'').trim();if(!range&&/^\d{4}\.\s*\d+\.\s*\d+\s*~/.test(lab))range=lab.replace(/\s+/g,' ');
+    if((r[13]||'').trim()!=='주문 수량'&&(r[13]||'').trim()!=='주문건수'){
+      if((r[11]||'').trim())cb=r[11].trim();
+      var op=(r[12]||'').trim();
+      if(cb&&op)orders.push({brand:cb,plat:op,n:_cssAmt(r[13])});
+    }
     if(!(r[1]||'').trim()||!(r[2]||'').trim()||(r[0]||'').trim()==='날짜')return;
     out.push({brand:r[2].trim(),plat:(r[3]||'').trim()||'미기재',gender:(r[4]||'').trim()||'확인 불가',age:(r[5]||'').trim()||'확인 불가',prod:(r[6]||'').trim()||'미기재',reason:(r[7]||'').trim()||'미기재',amt:_cssAmt(r[8])});
   });
-  return {rows:out,range:range};
+  return {rows:out,range:range,orders:orders};
+}
+var _CSS_RATE_EXCL=['쿠팡','EMS','CJ온스타일'];
+function _cssWkRate(wk,key){
+  var m={};
+  wk.orders.forEach(function(o){if(_CSS_RATE_EXCL.indexOf(o.plat)>=0)return;var k=o[key==='brand'?'brand':'plat'];(m[k]=m[k]||{n:k,o:0,c:0}).o+=o.n;});
+  wk.rows.forEach(function(r){if(_CSS_RATE_EXCL.indexOf(r.plat)>=0)return;var k=r[key];if(m[k])m[k].c++;});
+  var list=Object.keys(m).map(function(k){return m[k]}).filter(function(x){return x.o>0||x.c>0}).sort(function(p,q){return q.o-p.o});
+  var mx=Math.max.apply(null,list.map(function(x){return x.o?x.c/x.o:0}))||1;
+  return list.map(function(x){var r=x.o?x.c/x.o:0;return '<div class="csd-br"><span class="l">'+x.n+'<small style="margin-left:6px">주문 '+_cssN(x.o)+'건</small></span><div class="t"><u style="width:'+(r/mx*100)+'%;background:var(--c-red)"></u></div><b>'+(x.o?(r*100).toFixed(1)+'%':'-')+'</b><small>'+x.c+'건</small></div>';}).join('')||'<div class="csd-empty" style="margin-top:20px">주문 수량 데이터가 없습니다.</div>';
 }
 function _cssWkGroup(rows,key){
   var m={};rows.forEach(function(r){var k=r[key];if(!m[k])m[k]={n:k,c:0,a:0};m[k].c++;m[k].a+=r.amt;});
@@ -3440,7 +3454,9 @@ function _cssWeekHTML(wk,label){
   function card(t,list,opt){return '<div class="csd-ch">'+t+'</div>'+_cssWkBars(list,tot,opt);}
   var ageSort=function(p,q){return (parseInt(p.n,10)||0)-(parseInt(q.n,10)||0)};
   var unkG=rows.filter(function(r){return r.gender==='확인 불가'}).length,unkA=rows.filter(function(r){return r.age==='확인 불가'}).length;
+  var incl=rows.filter(function(r){return _CSS_RATE_EXCL.indexOf(r.plat)<0}).length,ordTot=wk.orders.filter(function(o){return _CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
   var S=[
+    slide(0,label+' · 취소율','브랜드 · 플랫폼별 취소율','<div class="csd-ch">브랜드별 취소율</div>'+_cssWkRate(wk,'brand'),'<div class="csd-ch">플랫폼별 취소율</div>'+_cssWkRate(wk,'plat'),'쿠팡 · EMS · CJ온스타일을 제외한 집계 · 총 주문 '+_cssN(ordTot)+'건 중 취소 '+incl+'건 · 취소율 '+_cssPct(incl,ordTot)),
     slide(0,label+' · 취소 현황','브랜드 · 플랫폼별 취소',card('브랜드별',_cssWkGroup(rows,'brand'),{amt:1,col:'var(--c-blue)'}),card('플랫폼별',_cssWkGroup(rows,'plat'),{amt:1}),'기간: '+(wk.range||label)+' · 금액은 취소 주문 금액 합계'),
     slide(1,label+' · 취소 현황','제품 · 사유별 취소',card('제품별',_cssWkGroup(rows,'prod'),{amt:1,col:'var(--c-blue)'}),card('사유별',_cssWkGroup(rows,'reason'),{}),'사유는 시트 H열 기재 그대로 집계'),
     slide(2,label+' · 취소 현황','성별 · 나이별 취소',card('성별',_cssWkGroup(rows,'gender'),{col:'var(--c-blue)'}),card('나이별',_cssWkGroup(rows,'age'),{sort:ageSort}),'확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)')
