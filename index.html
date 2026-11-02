@@ -3627,7 +3627,7 @@ function cssUpdate(){
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">02 · 교환 · 반품</div><h2>브랜드별 교환 · 반품</h2></div></div>'
   +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div><div class="csd-vdem" id="csd-vdem"></div></div>'
   +'<div class="csd-card" id="csd-rp"></div><div class="csd-card" id="csd-rr"></div></div>'
-  +'<p class="csd-note">'+r.note+'</p></div>');
+  +'</div>');
   var dots=S.map(function(_,k){return '<i class="csd-dot'+(k?'':' on')+'"></i>'}).join('');
   box.innerHTML='<div class="csd"><div class="csd-vp" id="csd-vp">'+S.join('')+'<div class="csd-dots">'+dots+'</div></div></div>';
   _cssIdx=0;_cssBusy=false;
