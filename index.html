@@ -261,6 +261,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-ppi .csd-slide{border-radius:0;overflow:hidden;padding:30px 40px;transform:none}
 .csd-ppi .csd-card{overflow:visible!important;min-height:0;padding:16px 20px}
 .csd-ppi #csd-detail,.csd-ppi .csd-g02 .csd-card{overflow:visible!important}
+.csd-ppi #csd-rp{max-height:none}
 .csd-ppi .csd-grid{min-height:0}
 .csd-ppi .csd-head{padding-bottom:14px;margin-bottom:14px}
 .csd-ppi .csd-note{font-size:13px;padding:8px 14px;margin-top:12px}
@@ -287,8 +288,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 #csd-tip span{display:block}
 .csd-g02 .csd-card{overflow:visible;min-height:0}
 .csd-g02 .csd-row{padding:4px 0;font-size:14px}
-.csd-g02 .csd-prow .csd-pt{flex:1;text-align:center;margin-right:0}
-.csd-g02 .csd-prow>b{width:56px;text-align:right;flex:none}
+#csd-rp{max-height:clamp(240px,40vh,380px);overflow-y:auto;overflow-x:hidden}
+.csd-g02 .csd-prow>span{flex:0 1 auto;min-width:0}
+.csd-g02 .csd-prow .csd-pt{flex:none;margin:0 0 0 12px}
+.csd-g02 .csd-prow>b{margin-left:auto;flex:none;padding-left:12px;white-space:nowrap}
 .csd-vl{cursor:pointer}
 .csd-vbar.dim{opacity:.35}
 .csd-vbar.dim:hover{opacity:.6}
@@ -3353,7 +3356,7 @@ function _cssShowR(name){
   var b=name?r.byBrand.filter(function(x){return x.n===name})[0]:null;
   var prods=b?b.prod:r.prod,rs=b?b.reasons:r.reasons,tot=b?b.t:r.total,pre=b?b.n+' ':'';
   p.innerHTML='<div class="csd-ch">'+pre+'제품별 교환 · 반품</div>'+prods.map(function(x,i){
-    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b>'+(x[5]?'<small>'+x[5]+'</small>':'')+'</span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+x[1]+'건</b></div>';}).join('');
+    return '<div class="csd-row csd-prow'+(window._cssSelP===x[0]?' sel':'')+'" data-pickp="'+x[0]+'"><small style="margin:0;width:22px">'+(i<9?'0':'')+(i+1)+'</small><span><b>'+x[0]+'</b>'+(x[5]?'<small>'+x[5]+'</small>':'')+'</span><em class="csd-pt">반품 '+x[2]+' · 교환 '+x[3]+(x[4]?' · 반품 (사은품) '+x[4]:'')+'</em><b>'+(x[6]!=null?_cssN(x[6]):'-')+' 원</b></div>';}).join('');
   q.innerHTML='<div class="csd-ch">'+pre+'사유별</div>'+_cssRows(rs.map(function(x){return [x[0],x[1],_cssRc(x[0])]}),tot);
   var sm=document.getElementById('csd-rsum');if(sm){var ex=b?b.exc:r.exc,rt=b?b.ret:r.ret;var gf=b?b.gift:r.gift;sm.innerHTML='<span>교환 <b style="color:var(--c-blue)">'+ex+'</b>건</span><span>반품 <b style="color:var(--c-red)">'+rt+'</b>건</span>'+(gf?'<span>반품 (사은품) <b style="color:var(--c-gold)">'+gf+'</b>건</span>':'');}
   document.querySelectorAll('#csd-vp .csd-vb').forEach(function(g){g.classList.toggle('dim',!!name&&g.getAttribute('data-pickr')!==name);});
