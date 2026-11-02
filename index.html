@@ -3427,6 +3427,7 @@ if(!window._cssKey){window._cssKey=1;document.addEventListener('keydown',functio
 var _CSS_WEEK_SHEET='https://docs.google.com/spreadsheets/d/1Hd-7fGV10525r-CnMHf0nXLneNWv5xjoktRi_NFPYT0/export?format=csv&gid=';
 var _CSS_WEEK_GIDS={'2026-11-1':'542426019'};
 var _cssWkTok=0;
+var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 ~ 11월 06일'};
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkRows(csv){
   var rows=_parseCSV(csv),out=[],range='',orders=[],cb='';
@@ -3467,11 +3468,11 @@ function _cssWkAgeGender(rows){
   var rowsH=known.concat(unk).map(function(x,i){var dim=x.n==='확인 불가';return '<div class="csd-row" style="padding:4px 0;font-size:13px"><span'+(dim?' style="color:var(--c-mut)"':'')+'>'+x.n+'</span><span style="flex:none;width:100px;color:var(--c-mut);font-size:12px">'+x.m+' · '+x.f+(x.u?' · 불명 '+x.u:'')+'</span><b>'+x.t+'</b><small>'+Math.round(x.t/n*100)+'%</small></div>';}).join('');
   return '<div style="display:flex;gap:16px 28px;flex-wrap:wrap;align-items:center"><div class="csd-wkd" style="flex:0 0 clamp(150px,12vw,190px)">'+_cssDonut(items,rows.length,'건','svg','나이 · 성별')+'</div><div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:6px">'+head+hd+rowsH+'</div></div>';
 }
-function _cssWkKpi(incl,ordTot,pv,amt){
+function _cssWkKpi(incl,ordTot,pv,amt,tot){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
   function cell(l,v,sub,first){return '<div style="flex:1 1 200px;min-width:0;padding:2px 24px;'+(first?'':'border-left:1px solid var(--c-line);')+'display:flex;flex-direction:column;gap:6px"><div class="csd-ch">'+l+'</div><div style="font-size:clamp(20px,2vw,28px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+v+'</div><div style="font-size:12px;color:var(--c-mut);min-height:20px;line-height:1.5">'+sub+'</div></div>';}
   return cell('전체 취소율',(cur*100).toFixed(1)+'%',_cssDl(cur,prev)+(prev==null?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>'),1)
-    +cell('취소율 기준',_cssN(incl)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">건</span>','주문 '+_cssN(ordTot)+'건 중 취소')
+    +cell('취소율 기준',_cssN(incl)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">건</span>','총 취소 '+_cssN(tot)+'건 · 주문 '+_cssN(ordTot)+'건 기준')
     +cell('총 취소금액',_cssN(amt.sum)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">원</span>','취소 주문 금액 합계')
     +cell('건당 평균',_cssN(amt.cnt?Math.round(amt.sum/amt.cnt):0)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">원</span>','취소 '+amt.cnt+'건 기준');
 }
@@ -3510,13 +3511,12 @@ function _cssWkDaily(rows){
   var brands=Object.keys(top).sort(function(p,q){return top[q]-top[p]}),FB=['#14a58a','#f08a24','#8a8f98'];
   var list=[],d=new Date(keys[0]+'T00:00:00'),end=new Date(keys[keys.length-1]+'T00:00:00');
   for(;d<=end;d.setDate(d.getDate()+1)){var k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');var x=days[k],o={l:(d.getMonth()+1)+'/'+d.getDate(),a:x?x.a:0};brands.forEach(function(b){o[b]=x?(x.b[b]||0):0;});list.push(o);}
-  var mx=Math.max.apply(null,list.map(function(x){return x.a}))||1,st=mx<=5?1:mx<=10?2:Math.ceil(mx/5),yt=Math.ceil(mx/st)*st;
+  var mx=Math.max.apply(null,list.map(function(x){return Math.max.apply(null,brands.map(function(b){return x[b]}))}))||1,st=mx<=5?1:mx<=10?2:Math.ceil(mx/5),yt=Math.ceil(mx/st)*st;
   var W=640,H=230,L=40,R=118,T=14,B=30,pw=W-L-R,ph=H-T-B,n=list.length;
   function X(i){return L+(n>1?i*pw/(n-1):pw/2);}function Y(v){return T+ph-v/yt*ph;}
   var g='';for(var v=0;v<=yt;v+=st){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e6e8eb"/><text x="'+(L-8)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="11" fill="#6b7076">'+v+'</text>';}
   list.forEach(function(x,i){g+='<text x="'+X(i)+'" y="'+(H-10)+'" text-anchor="middle" font-size="11" fill="#6b7076">'+x.l+'</text>';});
-  var series=brands.map(function(b,bi){return {k:b,n:b,c:_cssBrandCol[b]||FB[bi%FB.length],w:2,lab:false};});
-  series.push({k:'a',n:'전체',c:'#1a1c1f',w:2.6,lab:true});
+  var series=brands.map(function(b,bi){return {k:b,n:b,c:_cssBrandCol[b]||FB[bi%FB.length],w:2.2,lab:true};});
   function line(se){var pts=list.map(function(x,i){return X(i)+','+Y(x[se.k])}).join(' ');return (n>1?'<polyline points="'+pts+'" fill="none" stroke="'+se.c+'" stroke-width="'+se.w+'" stroke-linejoin="round"/>':'')+list.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x[se.k])+'" r="'+(se.lab?4:3.2)+'" fill="'+se.c+'"><title>'+se.n+' '+x.l+' · '+x[se.k]+'건</title></circle>'+(se.lab?'<text x="'+X(i)+'" y="'+(Y(x[se.k])-10)+'" text-anchor="middle" font-size="12" font-weight="700" fill="'+se.c+'">'+x[se.k]+'</text>':'');}).join('');}
   var lg='<g font-size="12" fill="#444">'+series.slice().reverse().map(function(se,i){var y=T+10+i*21;return '<line x1="'+(W-R+14)+'" x2="'+(W-R+34)+'" y1="'+y+'" y2="'+y+'" stroke="'+se.c+'" stroke-width="2"/><circle cx="'+(W-R+24)+'" cy="'+y+'" r="3" fill="'+se.c+'"/><text x="'+(W-R+40)+'" y="'+(y+4)+'">'+se.n+'</text>';}).join('')+'</g>';
   return '<div style="background:#fff;border:1px solid var(--c-line);border-radius:8px;padding:10px 12px 6px"><svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img"><title>일자별 취소 건수</title>'+g+'<line x1="'+L+'" x2="'+L+'" y1="'+T+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/><line x1="'+L+'" x2="'+(W-R)+'" y1="'+(T+ph)+'" y2="'+(T+ph)+'" stroke="#9aa0a6"/>'+series.map(line).join('')+lg+'</svg><div style="font-size:11px;color:var(--c-mut);text-align:right">주문일 기준 취소 건수 · 일별 주문 수가 시트에 없어 건수로 표시</div></div>';
@@ -3533,9 +3533,9 @@ function _cssWeekHTML(wk,label,pv){
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
   var incl=rows.length-skipped,ordTot=wk.orders.filter(function(o){return !_CSS_RATE_EXCL.length||_CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
   var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비 상대 변화(%), 괄호는 %p 차이 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
-  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><b>'+tot+'</b><span>건 · 취소금액 '+_cssN(sum)+'원</span></div></div>'
+  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-fg)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<div class="csd-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto">'
-    +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:12px 0;padding:12px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot})+'</div>'
+    +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:12px 0;padding:12px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot},tot)+'</div>'
     +card('브랜드 · 플랫폼별 취소율','<div class="csd-ch" style="font-size:11px;opacity:.8">브랜드</div>'+_cssWkRate(wk,'brand',pv)+'<div style="border-top:1px solid var(--c-line);margin:4px 0"></div><div class="csd-ch" style="font-size:11px;opacity:.8">플랫폼</div>'+_cssWkRate(wk,'plat',pv),2)
     +card('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}),2)
     +card('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1,col:'var(--c-blue)'}),2)
@@ -3555,6 +3555,7 @@ function _cssWeekLoad(box,y,m,w){
     var wk=_cssWkRows(t);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
+    wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd?pd.cancel:null);
     var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
