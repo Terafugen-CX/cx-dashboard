@@ -153,8 +153,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-lt{--c-bg:#fff;--c-fg:#1a1c1f;--c-mut:rgba(26,28,31,.55);--c-dim:rgba(26,28,31,.25);--c-line:rgba(0,0,0,.09);--c-sf:#f4f5f7;--c-red:#d6203a;--c-blue:#2b7de0;--c-gold:#d98e0b;border:1px solid rgba(0,0,0,.06)}
 .csd-tint{--c-bg:#dfe5ee;--c-fg:#1a1c1f;--c-mut:rgba(26,28,31,.55);--c-dim:rgba(26,28,31,.28);--c-line:rgba(0,0,0,.1);--c-sf:#fff;--c-red:#d6203a;--c-blue:#2b7de0;--c-gold:#d98e0b}
 .csd h2{font-size:clamp(30px,3.6vw,50px);font-weight:900;letter-spacing:-.03em;margin:0}
-.csd-tot b{font-size:clamp(44px,5.4vw,76px);font-weight:900;letter-spacing:-.05em}
-.csd-tot span{font-size:20px;color:var(--c-mut);margin-left:6px}
+.csd-tot b{font-size:clamp(26px,2.8vw,40px);font-weight:900;letter-spacing:-.05em}
+.csd-tot span{font-size:16px;color:var(--c-mut);margin-left:6px}
 .csd-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 @media(max-width:800px){.csd-grid{grid-template-columns:1fr}.csd-slide{padding:24px 20px}}
 .csd-card{background:var(--c-sf);border:1px solid var(--c-line);border-radius:12px;padding:24px;display:flex;flex-direction:column;gap:12px;min-width:0}
@@ -3447,7 +3447,7 @@ function _cssWkAgeGender(rows){
 }
 function _cssWkKpi(incl,ordTot,pv,amt){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
-  return '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--c-line);margin-bottom:6px"><div><div class="csd-ch">전체 취소율</div><div style="font-size:clamp(40px,4.6vw,64px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+(cur*100).toFixed(1)+'%</div></div><div style="font-size:16px;line-height:1.7">'+_cssDl(cur,prev)+'<div style="color:var(--c-mut);font-size:14px">전월 '+(prev==null?'-':(prev*100).toFixed(1)+'%')+' → 이번 주 '+(cur*100).toFixed(1)+'%</div><div style="color:var(--c-mut);font-size:14px">주문 '+_cssN(ordTot)+'건 중 취소 '+incl+'건</div></div></div>'
+  return '<div style="display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-bottom:12px;border-bottom:1px solid var(--c-line);margin-bottom:6px"><div><div class="csd-ch">전체 취소율</div><div style="font-size:clamp(26px,2.8vw,40px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+(cur*100).toFixed(1)+'%</div></div><div style="font-size:16px;line-height:1.7">'+_cssDl(cur,prev)+'<div style="color:var(--c-mut);font-size:14px">전월 '+(prev==null?'-':(prev*100).toFixed(1)+'%')+' → 이번 주 '+(cur*100).toFixed(1)+'%</div><div style="color:var(--c-mut);font-size:14px">주문 '+_cssN(ordTot)+'건 중 취소 '+incl+'건</div></div></div>'
     +'<div style="display:flex;gap:22px;flex-wrap:wrap;padding-bottom:10px;border-bottom:1px solid var(--c-line);margin-bottom:6px"><div><div class="csd-ch">총 취소금액</div><div style="font-size:clamp(20px,2vw,28px);font-weight:900;letter-spacing:-.03em">'+_cssN(amt.sum)+'원</div></div><div><div class="csd-ch">건당 평균</div><div style="font-size:clamp(20px,2vw,28px);font-weight:900;letter-spacing:-.03em">'+_cssN(amt.cnt?Math.round(amt.sum/amt.cnt):0)+'원</div></div></div>';
 }
 function _cssWkPairs(wk){
