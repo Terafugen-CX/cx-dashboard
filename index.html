@@ -323,7 +323,10 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 .cal-nav{background:none;border:1px solid var(--line);border-radius:8px;width:32px;height:32px;cursor:pointer;font-size:18px;color:var(--fg);display:flex;align-items:center;justify-content:center;line-height:1}
 .cal-nav:hover{background:var(--surface-2)}
 .cal-add-btn{padding:6px 16px;border-radius:8px;border:none;background:var(--accent);color:#fff;font-size:13px;font-weight:600;cursor:pointer}
-.cal-add-btn:hover{opacity:.88}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto repeat(6,1fr);gap:4px;flex:1}
+.cal-add-btn:hover{opacity:.88}
+.cal-sync-btn{padding:6px 10px;margin-left:6px;display:inline-flex;align-items:center}
+.cal-sync-btn.busy svg{animation:calspin .8s linear infinite}
+@keyframes calspin{to{transform:scaleY(-1) rotate(360deg)}}.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);grid-template-rows:auto repeat(6,1fr);gap:4px;flex:1}
 .cal-dow{text-align:center;font-size:11px;font-weight:600;color:var(--muted);padding:4px 0}
 .cal-dow:first-child{color:#e05252}
 .cal-dow:last-child{color:#4a90d9}
@@ -730,6 +733,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <span class="cal-title" id="cal-title"></span>
         <button class="cal-nav" id="cal-next">&#8250;</button>
         <button class="cal-add-btn" id="cal-add">+ 등록</button>
+        <button class="cal-add-btn cal-sync-btn" id="cal-sync" title="저장소에 일정 올리기 (토큰 없으면 저장소에서 불러오기)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="transform:scaleY(-1);display:block"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 3v5h-5"/></svg></button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
     </section>
@@ -1417,6 +1421,27 @@ function _ghWrite(path, data, sha, msg, cb) {
   document.getElementById('cal-modal-close').addEventListener('click',()=>{ document.getElementById('cal-modal').hidden=true; });
   document.getElementById('cal-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('cal-modal')) document.getElementById('cal-modal').hidden=true; });
   document.getElementById('cal-add').addEventListener('click',openAdd);
+  document.getElementById('cal-sync').addEventListener('click',function(){
+    var btn=this;
+    if(!GH_TOKEN){
+      var t=prompt('GitHub 토큰을 입력하면 저장소에 올립니다.\n(취소하면 저장소에서 불러오기만 합니다)');
+      if(t){GH_TOKEN=t.trim();try{localStorage.setItem('cx-gh-token',GH_TOKEN);}catch(e){}}
+    }
+    btn.classList.add('busy');
+    _ghRead('data/calendar.json',function(remote,sha){
+      if(!GH_TOKEN){
+        btn.classList.remove('busy');
+        if(Array.isArray(remote)){_calGHSha=sha;try{localStorage.setItem(STORE_KEY,JSON.stringify(remote));}catch(e){} renderCal();alert('저장소에서 일정을 불러왔습니다.');}
+        else alert('저장소에 data/calendar.json이 없습니다.');
+        return;
+      }
+      _ghWrite('data/calendar.json',loadEvents(),sha,'캘린더 업데이트',function(newSha){
+        btn.classList.remove('busy');
+        if(newSha){_calGHSha=newSha;alert('저장소에 일정 '+loadEvents().length+'건을 올렸습니다.');}
+        else alert('올리기 실패: 토큰 권한(Contents 읽기·쓰기)을 확인하세요.');
+      });
+    });
+  });
   document.getElementById('cal-prev').addEventListener('click',()=>{ curMonth--; if(curMonth<0){curMonth=11;curYear--;} renderCal(); });
   document.getElementById('cal-next').addEventListener('click',()=>{ curMonth++; if(curMonth>11){curMonth=0;curYear++;} renderCal(); });
 
