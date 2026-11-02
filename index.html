@@ -1044,6 +1044,7 @@ function _ghRead(path, cb) {
   .then(function(r){ return r.ok ? r.json() : null; })
   .then(function(d){
     if (d && d.content) { try { cb(JSON.parse(atob(d.content.replace(/\s/g,''))), d.sha); } catch(e){ cb(null,null); } }
+    else if (d && d.sha) { cb(null, d.sha); }
     else { cb(null,null); }
   })
   .catch(function(){ cb(null,null); });
