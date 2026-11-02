@@ -204,7 +204,12 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-main{justify-content:flex-start}
 .csd-mid{flex:1;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
 .csd-mid .csd-donut-svg{width:clamp(190px,18vw,250px);margin-left:6px}
-.csd-col{font-size:13px;color:var(--c-fg);width:64px;text-align:center;flex:none;font-style:normal}
+.csd-col{font-size:13px;color:var(--c-fg);flex:1;min-width:0;text-align:center;font-style:normal}
+.csd-vcard .csd-vchart{min-height:0}
+.csd-vdem{flex:1;display:flex;flex-direction:column;justify-content:center;border-top:1px solid var(--c-line);margin-top:8px}
+.csd-vdem .csd-row{font-size:16px}
+.csd-vdem .csd-row i{font-style:normal;font-weight:700;width:56px;flex:none}
+.csd-vdem .csd-row em{font-style:normal;flex:1;text-align:center}
 .csd-nm{flex:none!important;width:clamp(200px,20vw,280px)}
 .csd-cn{flex:none;width:44px;text-align:right}
 .csd-cp{flex:none;width:40px;margin:0 24px 0 0!important}
@@ -3378,7 +3383,7 @@ function cssUpdate(){
   }).join('');
   window._cssCurR=r;window._cssSelR=null;
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">02 · 교환 · 반품</div><h2>브랜드별 교환 · 반품</h2></div></div>'
-  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div></div>'
+  +'<div class="csd-grid csd-g02"><div class="csd-card csd-vcard"><div class="csd-rsum" id="csd-rsum"></div><div class="csd-vchart">'+vbars+'</div><div class="csd-vdem"><div class="csd-row"><i>나이</i><em>-</em></div><div class="csd-row"><i>성별</i><em>-</em></div><div class="csd-row"><i>금액</i><em>-</em></div></div></div>'
   +'<div class="csd-card" id="csd-rp"></div><div class="csd-card" id="csd-rr"></div></div>'
   +'<p class="csd-note">'+r.note+'</p></div>');
   var dots=S.map(function(_,k){return '<i class="csd-dot'+(k?'':' on')+'"></i>'}).join('');
