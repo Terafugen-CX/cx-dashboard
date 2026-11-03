@@ -144,9 +144,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 .rs-tbl td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
 .rs-tbl tr:last-child td{border-bottom:none}
-.rs-seed td{background:var(--accent-soft)}
 .rs-tag{display:inline-block;font-size:11px;font-weight:600;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin-right:4px}
-.rs-tag-seed{color:var(--accent);border-color:transparent;background:var(--surface)}
 .csd{--c-bg:#080808;--c-fg:#f2f2f0;--c-mut:rgba(242,242,240,.5);--c-dim:rgba(242,242,240,.22);--c-line:rgba(255,255,255,.09);--c-sf:rgba(255,255,255,.055);--c-red:#e04040;--c-blue:#5eaeff;--c-gold:#f5b942;display:flex;flex-direction:column;gap:16px}
 .csd-slide{background:var(--c-bg);color:var(--c-fg);border-radius:16px;padding:36px 40px;display:flex;flex-direction:column}
 .csd-cover{min-height:min(560px,70vh);justify-content:space-between}
@@ -3818,17 +3816,6 @@ var _RS_LABEL={name:'이름',phone:'연락처',ip:'IP',addr:'주소'};
 function _rsDigits(v){return String(v||'').replace(/\D/g,'');}
 function _rsAddrKey(v){return String(v||'').toLowerCase().replace(/[\s,()·.\-]/g,'');}
 function _rsAddrBase(v){var t=String(v||'').replace(/\s+/g,''),m=/^(.*?(?:로|길)\d*(?:번길)?\d+(?:-\d+)?)/.exec(t);return m?m[1].replace(/-/g,''):'';}
-function _rsRel(r,S){
-  var out=[];
-  if(S.phone[_rsDigits(r.phone)]&&_rsDigits(r.phone).length>=8)out.push('연락처 일치');
-  var ak=_rsAddrKey(r.addr);
-  if(ak&&S.addr[ak])out.push('주소 일치');
-  else{var ab=_rsAddrBase(r.addr);if(ab&&S.base[ab])out.push('주소 유사');}
-  if(r.ip&&S.ip[r.ip])out.push('IP 일치');
-  if(r.id&&S.id[r.id])out.push('아이디 일치');
-  if(r.name&&r.name.length>=2&&S.name[r.name])out.push('이름 일치');
-  return out;
-}
 function rsSearch(){
   var box=document.getElementById('rs-result');if(!box)return;
   var type=document.getElementById('rs-type').value,q=(document.getElementById('rs-q').value||'').trim();
@@ -3838,32 +3825,27 @@ function rsSearch(){
   box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
   _rsLoad(gid).then(function(all){
     if(tok!==_rsTok)return;
-    var ql=q.toLowerCase(),qd=_rsDigits(q),qa=_rsAddrKey(q);
-    var seeds=all.filter(function(r){
-      if(type==='phone')return qd.length>0&&_rsDigits(r.phone).indexOf(qd)>=0;
-      if(type==='addr')return qa.length>0&&_rsAddrKey(r.addr).indexOf(qa)>=0;
-      return String(r[type]||'').toLowerCase().indexOf(ql)>=0;
+    var ql=q.toLowerCase(),qd=_rsDigits(q),qa=_rsAddrKey(q),qb=type==='addr'?_rsAddrBase(q):'';
+    var items=[];
+    all.forEach(function(r){
+      var lab='';
+      if(type==='phone'){if(qd.length>0&&_rsDigits(r.phone).indexOf(qd)>=0)lab='연락처 일치';}
+      else if(type==='addr'){
+        if(qa.length>0&&_rsAddrKey(r.addr).indexOf(qa)>=0)lab='주소 일치';
+        else if(qb&&_rsAddrBase(r.addr)===qb)lab='주소 유사';
+      }
+      else if(String(r[type]||'').toLowerCase().indexOf(ql)>=0)lab=_RS_LABEL[type]+' 일치';
+      if(lab)items.push({r:r,m:lab});
     });
-    if(!seeds.length){box.innerHTML='<div class="csd-empty">일치하는 결과가 없습니다.</div>';return;}
-    var S={phone:{},addr:{},base:{},ip:{},id:{},name:{}},isSeed=new Set(seeds);
-    seeds.forEach(function(r){
-      var d=_rsDigits(r.phone);if(d.length>=8)S.phone[d]=1;
-      var ak=_rsAddrKey(r.addr);if(ak)S.addr[ak]=1;
-      var ab=_rsAddrBase(r.addr);if(ab)S.base[ab]=1;
-      if(r.ip)S.ip[r.ip]=1;if(r.id)S.id[r.id]=1;if(r.name&&r.name.length>=2)S.name[r.name]=1;
-    });
-    var rel=[];
-    all.forEach(function(r){if(isSeed.has(r))return;var m=_rsRel(r,S);if(m.length)rel.push({r:r,m:m});});
-    rel.sort(function(a,b){return b.m.length-a.m.length});
-    var items=seeds.map(function(r){return {r:r,m:[_RS_LABEL[type]+' 일치'],seed:1};}).concat(rel.map(function(x){return {r:x.r,m:x.m};}));
+    if(!items.length){box.innerHTML='<div class="csd-empty">일치하는 결과가 없습니다.</div>';return;}
+    items.sort(function(a,b){return (a.m==='주소 유사')-(b.m==='주소 유사');});
     var shown=items.slice(0,200);
     var th='<tr><th>이름</th><th>아이디</th><th>주문번호</th><th>연락처</th><th>주소</th><th>IP</th><th>일치 정보</th></tr>';
     var tb=shown.map(function(it){
       var v=_rsView(it.r);
-      var tags=it.m.map(function(t){return '<span class="rs-tag'+(it.seed?' rs-tag-seed':'')+'">'+_rsEsc(t)+'</span>';}).join('');
-      return '<tr'+(it.seed?' class="rs-seed"':'')+'><td>'+_rsEsc(v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td>'+_rsEsc(v.ord)+'</td><td>'+_rsEsc(v.phone)+'</td><td>'+_rsEsc(v.addr)+'</td><td>'+_rsEsc(v.ip)+'</td><td>'+tags+'</td></tr>';
+      return '<tr><td>'+_rsEsc(v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td>'+_rsEsc(v.ord)+'</td><td>'+_rsEsc(v.phone)+'</td><td>'+_rsEsc(v.addr)+'</td><td>'+_rsEsc(v.ip)+'</td><td><span class="rs-tag">'+_rsEsc(it.m)+'</span></td></tr>';
     }).join('');
-    box.innerHTML='<div class="rs-count">추정 리셀러 <b>'+items.length+'</b>건 <span style="margin-left:6px">검색 일치 '+seeds.length+'건 · 연관 '+rel.length+'건</span>'+(items.length>shown.length?' · 상위 '+shown.length+'건 표시':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':'')+'</div><div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
+    box.innerHTML='<div class="rs-count">추정 리셀러 <b>'+items.length+'</b>건'+(items.length>shown.length?' (상위 '+shown.length+'건 표시)':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':'')+'</div><div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
   }).catch(function(e){if(tok===_rsTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+_rsEsc(e.message)+'). 시트 공유 설정을 확인하세요.</div>';});
 }
 
