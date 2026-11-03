@@ -3546,12 +3546,17 @@ var _cssWkTok=0;
 var _CSS_WEEK_ISO={'2026-11-1':['2026-10-31','2026-11-06']};
 var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 - 11월 06일'};
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
+function _cssWkDate(v){var m=/^(\d{2})-(\d{2})-(\d{2})$/.exec(String(v||'').trim());return m?'20'+m[1]+'-'+m[2]+'-'+m[3]:'';}
 function _cssWkRows(csv){
-  var rows=_parseCSV(csv),out=[],cd='';
-  rows.forEach(function(r){
-    var dm=/^(\d{2})-(\d{2})-(\d{2})$/.exec((r[0]||'').trim());if(dm)cd='20'+dm[1]+'-'+dm[2]+'-'+dm[3];
-    if(!(r[1]||'').trim()||!(r[2]||'').trim()||(r[0]||'').trim()==='날짜')return;
-    out.push({cd:cd,ord:r[1].trim(),brand:r[2].trim(),plat:(r[3]||'').trim()||'미기재',gender:(r[4]||'').trim()||'확인 불가',age:(r[5]||'').trim()||'확인 불가',prod:(r[6]||'').trim()||'미기재',reason:(r[7]||'').trim()||'미기재',amt:_cssAmt(r[8])});
+  var rows=_parseCSV(csv),out=[],blk='',H=null,hi=-1;
+  for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('주문번호')>=0&&t.indexOf('브랜드')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
+  if(!H)H={'날짜':0,'주문번호':1,'브랜드':2,'플랫폼':3,'성별':4,'나이':5,'제품':6,'사유':7,'금액':8};
+  function g(r,k){return H[k]==null?'':String(r[H[k]]||'').trim();}
+  rows.forEach(function(r,i){
+    if(i<=hi)return;
+    var b=_cssWkDate(g(r,'날짜'));if(b)blk=b;
+    if(!g(r,'주문번호')||!g(r,'브랜드'))return;
+    out.push({cd:_cssWkDate(g(r,'취소 접수일'))||blk,ord:g(r,'주문번호'),brand:g(r,'브랜드'),plat:g(r,'플랫폼')||'미기재',gender:g(r,'성별')||'확인 불가',age:g(r,'나이')||'확인 불가',prod:g(r,'제품')||'미기재',reason:g(r,'사유')||'미기재',amt:_cssAmt(g(r,'금액'))});
   });
   return {rows:out,range:'',orders:_cssWkOrders(csv)};
 }
