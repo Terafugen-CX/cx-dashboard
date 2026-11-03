@@ -200,13 +200,16 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-wk .csd-dl{font-size:11px}
 .csd-wk .csd-row{font-size:13px;padding:5px 0}
 .csd-wk .csd-note{font-size:12px;margin-top:10px;padding:0}
-.csd-wk .csd-slide{padding:28px 34px}
-.wk2-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 48px;border-top:1px solid var(--c-line);margin-top:22px;padding-top:22px}
+.csd-wk .csd-slide{padding:20px 28px}
+.wk2-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 36px;border-top:1px solid var(--c-line);margin-top:14px;padding-top:14px}
+.wk2-sub{font-size:11px;color:var(--c-mut);margin:2px 0 0}
+.wk2-s svg.wkd{max-height:230px}
+.csd-wk .wk2-s .csd-br{padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
 .wk2-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
 .wk2-s .csd-br .t{height:6px}
 .csd-wk .wk2-s .csd-br{grid-template-columns:minmax(150px,42%) minmax(0,1fr) 38px 36px}
-@media(max-width:900px){.wk2-g{grid-template-columns:1fr}}
+@media(max-width:1100px){.wk2-g{grid-template-columns:repeat(2,minmax(0,1fr))}.wk2-s{grid-column:auto!important}}@media(max-width:700px){.wk2-g{grid-template-columns:1fr}}
 .csd-vp{position:relative;height:calc(100vh - 140px);min-height:520px;overflow:hidden;border-radius:16px;background:#080808}
 .csd-vp .csd-slide{position:absolute;inset:0;border-radius:0;overflow-y:auto;transition:transform .65s cubic-bezier(.77,0,.18,1)}
 .csd-vp .csd-cover{min-height:0}
@@ -1573,7 +1576,7 @@ function _ghWrite(path, data, sha, msg, cb) {
     if(vocWrap) vocWrap.style.display='none';
     if(pageTitleEl) pageTitleEl.textContent='CS SUMMARY';
     navCal.classList.remove('on'); navCal.setAttribute('aria-current','false');
-    if(navCsSummary){ navCsSummary.classList.add('on'); navCsSummary.setAttribute('aria-current','page'); }
+    if(navCsSummary){ navCsSummary.classList.add('on'); navCsSummary.setAttribute('aria-current','page'); } if(window._cssWkFit) setTimeout(_cssWkFit,0);
   }
   if(navCsSummary) navCsSummary.addEventListener('click',e=>{
     e.preventDefault();
@@ -3545,9 +3548,9 @@ function _cssWkAgeGender(rows){
   function seg(v,c){return v?'<div style="width:'+(v/mx*100)+'%;background:'+c+';height:100%"></div>':'';}
   function row(x){
     var dim=x.n==='확인 불가';
-    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:13px;padding:3px 0">'
+    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:13px;padding:1px 0">'
       +'<span'+(dim?' style="color:var(--c-mut)"':'')+'>'+(dim?'나이 확인 불가':x.n)+'</span>'
-      +'<div style="display:flex;height:16px;background:var(--c-line);border-radius:4px;overflow:hidden">'+seg(x.m,CM)+seg(x.f,CF)+seg(x.u,CU)+'</div>'
+      +'<div style="display:flex;height:13px;background:var(--c-line);border-radius:3px;overflow:hidden">'+seg(x.m,CM)+seg(x.f,CF)+seg(x.u,CU)+'</div>'
       +'<b style="text-align:right;font-variant-numeric:tabular-nums">'+x.t+'</b>'
       +'<small style="color:var(--c-mut);text-align:right">'+Math.round(x.t/n*100)+'%</small>'
       +'<small style="color:var(--c-mut);font-size:12px">남 '+x.m+' · 여 '+x.f+(x.u?' · 불명 '+x.u:'')+'</small></div>';
@@ -3568,7 +3571,7 @@ function _cssWkRate(wk,key,pv){
   return list.map(function(x){var r=x.o?x.c/x.o:0;
     var pb=key==='brand'&&pv?pv.byBrand.filter(function(b){return b.n===x.n})[0]:null;
     var bd=key==='brand'&&pv?(x.o?_cssDl(r,pb&&pb.o?pb.t/pb.o:null):''):'';
-    return '<div class="csd-br"><span class="l">'+x.n+bd+'<small style="margin-left:6px;display:block">주문 '+_cssN(x.o)+'건 · 취소금액 '+_cssN(x.a)+'원</small></span><div class="t"><u style="width:'+(r/mx*100)+'%;background:var(--c-fg)"></u></div><b>'+(x.o?(r*100).toFixed(1)+'%':'-')+'</b><small>'+x.c+'건</small></div>';}).join('')||'<div class="csd-empty" style="margin-top:20px">주문 수량 데이터가 없습니다.</div>';
+    return '<div class="csd-br" title="주문 '+_cssN(x.o)+'건 · 취소 '+x.c+'건 · 취소금액 '+_cssN(x.a)+'원"><span class="l">'+x.n+bd+'</span><div class="t"><u style="width:'+(r/mx*100)+'%;background:var(--c-fg)"></u></div><b>'+(x.o?(r*100).toFixed(1)+'%':'-')+'</b><small style="white-space:nowrap">'+x.c+(x.o?'/'+_cssN(x.o):'')+'건</small></div>';}).join('')||'<div class="csd-empty" style="margin-top:20px">주문 수량 데이터가 없습니다.</div>';
 }
 function _cssWkGroup(rows,key){
   var m={};rows.forEach(function(r){var k=r[key];if(!m[k])m[k]={n:k,c:0,a:0};m[k].c++;m[k].a+=r.amt;});
@@ -3641,7 +3644,7 @@ function _cssWeekHTML(wk,label,pv){
   var headline='이번 주 취소율은 <b>'+(cur*100).toFixed(1)+'%</b>'+(rel===null?'입니다.':'로 전월('+(prev*100).toFixed(1)+'%)보다 <b style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');
   function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 22px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:12px">'+l+'</div><div style="font-size:clamp(20px,1.9vw,28px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;min-height:18px">'+sub+'</div></div>';}
   var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
-  var kpis='<div style="display:flex;flex-wrap:wrap;gap:14px 0;padding:16px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
+  var kpis='<div style="display:flex;flex-wrap:wrap;gap:14px 0;padding:12px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
     +kpi('전체 취소율',(cur*100).toFixed(1)+'%',prev==null?'':'전월 '+(prev*100).toFixed(1)+'% · '+_cssDl(cur,prev),1)
     +kpi('총 취소',_cssN(tot)+unit('건'),'주문 '+_cssN(ordTot)+'건 기준')
     +kpi('총 취소금액',_cssN(sum)+unit('원'),'건당 평균 '+_cssN(tot?Math.round(sum/tot):0)+'원')
@@ -3663,22 +3666,28 @@ function _cssWeekHTML(wk,label,pv){
     var ma=mode('age'),mg=mode('gender'),who=(ma||mg)?' · 확인된 건 중 주로 '+(ma?ma+' ':'')+(mg?mg.replace('성','')+'성':''):'';
     notes.push(['var(--c-fg)','‘'+pg.n+'’'+ga(pg.n)+' 가장 많아요',pg.c+'건 · 전체 취소의 '+Math.round(pg.c/tot*100)+'%'+who]);
   }
-  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 26px;margin-top:18px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:14px;font-weight:700">'+n[1]+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
-  function sec(t,body,full){return '<div class="wk2-s"'+(full?' style="grid-column:1/-1"':'')+'><div class="wk2-h">'+t+'</div>'+body+'</div>';}
+  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 26px;margin-top:12px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:14px;font-weight:700">'+n[1]+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
+  function sec(t,body,span){return '<div class="wk2-s"'+(span?' style="grid-column:span '+span+'"':'')+'><div class="wk2-h">'+t+'</div>'+body+'</div>';}
   var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비(%), 괄호는 %p 차이 · 사유 비중은 전월 결제 후 취소 기준 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
-    +'<p style="font-size:clamp(17px,1.7vw,22px);font-weight:600;line-height:1.55;margin:0 0 16px;letter-spacing:-.01em">'+headline+'</p>'
+    +'<p style="font-size:clamp(17px,1.7vw,22px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
     +kpis+nh
     +'<div class="wk2-g">'
     +sec('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
     +sec('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1}))
-    +sec('브랜드별 취소율',_cssWkRate(wk,'brand',pv))
-    +sec('플랫폼별 취소율',_cssWkRate(wk,'plat',pv))
-    +sec('나이대별 · 성별',_cssWkAgeGender(rows),1)
-    +sec('일자별 취소 추이',_cssWkDaily(rows),1)
+    +sec('브랜드 · 플랫폼별 취소율','<div class="wk2-sub">브랜드</div>'+_cssWkRate(wk,'brand',pv)+'<div class="wk2-sub">플랫폼</div>'+_cssWkRate(wk,'plat',pv))
+    +sec('나이대별 · 성별',_cssWkAgeGender(rows),2)
+    +sec('일자별 취소 추이',_cssWkDaily(rows))
     +'</div><p class="csd-note">'+note+'</p></div>';
   return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
 }
+function _cssWkFit(){
+  var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
+  sl.style.zoom=1;
+  var top=sl.getBoundingClientRect().top,avail=window.innerHeight-Math.max(top,0)-12;
+  for(var i=0;i<3;i++){var h=sl.getBoundingClientRect().height,z=parseFloat(sl.style.zoom)||1;if(h<=avail+1&&i>0)break;var nz=Math.max(.6,Math.min(1,z*avail/h));if(Math.abs(nz-z)<.005)break;sl.style.zoom=nz;}
+}
+if(!window._wkFitB){window._wkFitB=1;window.addEventListener('resize',function(){_cssWkFit();});}
 function _cssWkRetLoad(y,m,w,tok){
   var iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];if(!iso)return;
   var a=new Date(iso[0]+'T00:00:00'),b=new Date(iso[1]+'T23:59:59');
@@ -3718,7 +3727,7 @@ function _cssWeekLoad(box,y,m,w){
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd?pd.cancel:null);
-    var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkRetLoad(y,m,w,tok);
+    var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkRetLoad(y,m,w,tok);_cssWkFit();
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
 }
 function cssUpdate(){
