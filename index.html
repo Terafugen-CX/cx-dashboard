@@ -222,6 +222,14 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk2-s svg.wkd{max-height:230px}
 .csd-wk .wk2-s .csd-br{font-size:12px;padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
+.wk5{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid var(--c-line);border-top:1px solid var(--c-line)}
+.wk5-c{padding:12px 0 14px;min-width:0}
+.wk5-c+.wk5-c{border-left:1px solid var(--c-line);padding-left:20px}
+.wk5-c:first-child{padding-right:20px}
+.wk5-k{display:flex;flex-wrap:wrap;gap:12px 0}
+.wk5-t{margin-top:12px}
+.wk5-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 4px}
+@media(max-width:900px){.wk5{grid-template-columns:minmax(0,1fr)}.wk5-c+.wk5-c{border-left:none;padding-left:0}.wk5-c:first-child{padding-right:0}}
 .wk2-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
 .wk2-s .csd-br .t{height:6px}
 .csd-wk .wk2-s .csd-br{grid-template-columns:minmax(150px,42%) minmax(0,1fr) 38px 36px}
@@ -3633,6 +3641,31 @@ if(!window._wkdB){window._wkdB=1;
     if(on)svg.removeAttribute('data-sel');else svg.setAttribute('data-sel',b);
   });
 }
+function _wkDays(keys,iso){
+  var today=_fmtD(new Date()),s=iso?iso[0]:null,e=iso?iso[1]:null;
+  keys=keys.filter(Boolean).sort();
+  if(keys.length){if(!s||keys[0]<s)s=keys[0];}
+  if(!s)return [];
+  if(!e)e=keys.length?keys[keys.length-1]:s;
+  if(e>today)e=today;
+  if(keys.length&&keys[keys.length-1]>e)e=keys[keys.length-1];
+  var cnt={};keys.forEach(function(k){cnt[k]=(cnt[k]||0)+1;});
+  var out=[],d=new Date(s+'T00:00:00'),end=new Date(e+'T00:00:00');
+  for(;d<=end;d.setDate(d.getDate()+1)){var k=_fmtD(d);out.push({l:(d.getMonth()+1)+'/'+d.getDate(),v:cnt[k]||0});}
+  return out;
+}
+function _wkTrend(list,color){
+  if(!list.length)return '<div class="csd-empty" style="margin:8px 0 0;text-align:left">표시할 데이터가 없습니다.</div>';
+  var W=560,H=150,L=28,R=16,T=18,B=24,pw=W-L-R,ph=H-T-B,n=list.length;
+  var mx=Math.max.apply(null,list.map(function(x){return x.v;}).concat([1])),yt=mx<=4?mx:Math.ceil(mx/2)*2;
+  function X(i){return L+(n>1?i*pw/(n-1):pw/2);}function Y(v){return T+ph-v/yt*ph;}
+  var g='',tk=yt<=4?[0,yt]:[0,yt/2,yt];
+  tk.forEach(function(v){g+='<line x1="'+L+'" x2="'+(W-R)+'" y1="'+Y(v)+'" y2="'+Y(v)+'" stroke="#e6e8eb"/><text x="'+(L-6)+'" y="'+(Y(v)+4)+'" text-anchor="end" font-size="10" fill="#8a9099">'+v+'</text>';});
+  var pts=list.map(function(x,i){return X(i)+','+Y(x.v);}).join(' ');
+  var line=n>1?'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>':'';
+  var dots=list.map(function(x,i){return '<circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"><title>'+x.l+' · '+x.v+'건</title></circle><text x="'+X(i)+'" y="'+(Y(x.v)-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+color+'">'+x.v+'</text><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text>';}).join('');
+  return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;max-height:170px;display:block" role="img"><title>일자별 건수</title>'+g+line+dots+'</svg>';
+}
 function _cssWeekHTML(wk,label,pd){
   var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
@@ -3640,13 +3673,19 @@ function _cssWeekHTML(wk,label,pd){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null,rel=prev?(cur-prev)/prev*100:null;
   var prevRet=pd&&pd.ret&&pv&&pv.orders?pd.ret.ret/pv.orders:'';
   var headline='이번 주 취소율은 <b>'+(cur*100).toFixed(1)+'%</b>'+(rel===null?'입니다.':'로 전월('+(prev*100).toFixed(1)+'%)보다 <b style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');
-  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 20px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:11px">'+l+'</div><div style="font-size:clamp(18px,1.6vw,24px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;min-height:16px">'+sub+'</div></div>';}
+  function kpi(l,v,sub,first){return '<div style="flex:1 1 130px;min-width:0;padding:0 20px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:11px">'+l+'</div><div style="font-size:clamp(18px,1.6vw,24px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;min-height:16px">'+sub+'</div></div>';}
   var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
-  var kpis='<div style="display:flex;flex-wrap:wrap;gap:12px 0;padding:12px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
+  var cdays=rows.map(function(r){var m=/^(\d{4})(\d{2})(\d{2})/.exec(r.ord||'');return m?m[1]+'-'+m[2]+'-'+m[3]:'';});
+  var cmin=cdays.filter(Boolean).sort()[0]||'',axisStart=(cmin&&wk.iso&&cmin<wk.iso[0])?cmin:(wk.iso?wk.iso[0]:cmin);
+  var kpis='<div class="wk5">'
+    +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('취소율',(cur*100).toFixed(1)+'%',prev==null?'':_cssDl(cur,prev)+' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>',1)
     +kpi('취소',_cssN(tot)+unit('건'),'취소금액 '+_cssN(sum)+'원 · 건당 '+_cssN(tot?Math.round(sum/tot):0)+'원')
-    +kpi('반품율','<span id="wk-ret-v" data-ord="'+ordTot+'" data-prev="'+prevRet+'">-</span>','<span id="wk-ret-d"></span>')
+    +'</div><div class="wk5-t"><div class="wk5-h">주간 취소 추이</div>'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0')+'</div></div>'
+    +'<div class="wk5-c"><div class="wk5-k">'
+    +kpi('반품율','<span id="wk-ret-v" data-ord="'+ordTot+'" data-prev="'+prevRet+'">-</span>','<span id="wk-ret-d"></span>',1)
     +kpi('반품','<span id="wk-ret-n">-</span>'+unit('건'),'<span id="wk-ret-s">주문 '+_cssN(ordTot)+'건 기준</span>')
+    +'</div><div class="wk5-t"><div class="wk5-h">주간 반품 추이</div><div id="wk-ret-chart" data-start="'+axisStart+'"><div class="csd-empty" style="margin:8px 0 0;text-align:left">불러오는 중…</div></div></div></div>'
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
@@ -3677,7 +3716,7 @@ function _cssWkRetLoad(y,m,w,tok){
   Promise.all(yms.map(function(k){return fetch(_RETURN_SHEET_BASE+_RETURN_MONTH_GIDS[k]).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){return {ym:k,rows:_parseCSV(t)};});}))
   .then(function(res){
     if(tok!==_cssWkTok)return;
-    var n=0,seen={};
+    var days=[],seen={};
     res.forEach(function(rs){
       var isNew=rs.ym>=_RETURN_NEW_FMT_FROM,ld=null;
       for(var i=1;i<rs.rows.length;i++){
@@ -3685,15 +3724,17 @@ function _cssWkRetLoad(y,m,w,tok){
         if(row.date)ld=row.date;else if(ld)row.date=ld;
         if(!row.date||row.date<a||row.date>b||row.type!=='반품')continue;
         if(row.orderNo){if(seen[row.orderNo])continue;seen[row.orderNo]=1;}
-        n++;
+        days.push(_fmtD(row.date));
       }
     });
-    var v=document.getElementById('wk-ret-v');if(!v)return;
+    var n=days.length,v=document.getElementById('wk-ret-v');if(!v)return;
     var ord=+v.getAttribute('data-ord')||0,prev=parseFloat(v.getAttribute('data-prev')),cur=ord?n/ord:0;
     v.textContent=ord?(cur*100).toFixed(1)+'%':'-';
     var d=document.getElementById('wk-ret-d');if(d)d.innerHTML=ord?_cssDl(cur,isNaN(prev)?null:prev)+(isNaN(prev)?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>'):'';
     var nn=document.getElementById('wk-ret-n');if(nn)nn.textContent=_cssN(n);
     var sl=document.getElementById('wk-ret-s');if(sl)sl.textContent='주문 '+_cssN(ord)+'건 기준';
+    var ch=document.getElementById('wk-ret-chart');if(ch)ch.innerHTML=_wkTrend(_wkDays(days,[ch.getAttribute('data-start')||iso[0],iso[1]]),'#6b7280');
+    if(window._cssWkFit)_cssWkFit();
   }).catch(function(){});
 }
 function _cssWeekLoad(box,y,m,w){
@@ -3707,7 +3748,7 @@ function _cssWeekLoad(box,y,m,w){
     var wk=_cssWkRows(t);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
-    wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];
+    wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
     var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkRetLoad(y,m,w,tok);_cssWkFit();
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
