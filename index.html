@@ -219,15 +219,34 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-wk .csd-row{font-size:13px;padding:5px 0}
 .csd-wk .csd-note{font-size:12px;margin-top:10px;padding:0}
 .csd-wk .csd-slide{padding:20px 28px}
-.wk2-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 36px;border-top:1px solid var(--c-line);margin-top:14px;padding-top:14px}
-.wk2-sub{font-size:11px;color:var(--c-mut);margin:2px 0 0}
 .wk2-s svg.wkd{max-height:230px}
 .csd-wk .wk2-s .csd-br{font-size:12px;padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
+.wk3{display:grid;grid-template-columns:minmax(0,1.7fr) minmax(0,1fr);gap:22px 36px;border-top:1px solid var(--c-line);margin-top:14px;padding-top:16px;align-items:start}
+.wk3-l,.wk3-r{display:flex;flex-direction:column;gap:20px;min-width:0}
+.wk3-b{margin:0 0 8px}
+.wk3-row{display:grid;grid-template-columns:minmax(72px,104px) minmax(0,1fr) 40px minmax(0,150px);gap:4px 12px;align-items:center;font-size:12px;padding:3px 0}
+.wk3-brand{font-size:13px;font-weight:700;padding-top:5px;border-top:1px solid var(--c-line)}
+.wk3-brand .nm{font-weight:800}
+.wk3-prod .nm{padding-left:10px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.wk3-row b{text-align:right;font-variant-numeric:tabular-nums}
+.wk3-row .sd{font-size:11px;color:var(--c-mut);white-space:nowrap}
+.wk3-rt{font-weight:700;color:var(--c-fg);margin-right:4px}
+.wk3-rs{grid-column:2/-1;font-size:11px;color:var(--c-mut);line-height:1.5;margin-top:-2px}
+.wk3-rs b{color:var(--c-fg);font-weight:700}
+.wk3-ab,.wk3-gb,.wk3-cb{display:flex;background:var(--c-line);border-radius:3px;overflow:hidden}
+.wk3-ab{height:11px}.wk3-gb{height:4px;margin-top:3px}.wk3-cb{height:12px;margin:4px 0 6px}
+.wk3-ab i,.wk3-gb i,.wk3-cb i{display:block;height:100%}
+.wk3-lg,.wk3-cl{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:11px;color:var(--c-mut);margin:0 0 8px}
+.wk3-lg s,.wk3-cl s{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px;vertical-align:0}
+.wk3-lgs{margin-left:auto}
+.wk3-cn{font-size:11px;font-weight:700;color:var(--c-mut)}
+.wk3-cl b{color:var(--c-fg)}
+.wk3-dd summary{cursor:pointer;font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 8px}
+@media(max-width:1100px){.wk3{grid-template-columns:minmax(0,1fr)}}
 .wk2-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
 .wk2-s .csd-br .t{height:6px}
 .csd-wk .wk2-s .csd-br{grid-template-columns:minmax(150px,42%) minmax(0,1fr) 38px 36px}
-@media(max-width:1100px){.wk2-g{grid-template-columns:repeat(2,minmax(0,1fr))}.wk2-s{grid-column:auto!important}}@media(max-width:700px){.wk2-g{grid-template-columns:1fr}}
 .csd-vp{position:relative;height:calc(100vh - 140px);min-height:520px;overflow:hidden;border-radius:16px;background:#080808}
 .csd-vp .csd-slide{position:absolute;inset:0;border-radius:0;overflow-y:auto;transition:transform .65s cubic-bezier(.77,0,.18,1)}
 .csd-vp .csd-cover{min-height:0}
@@ -3563,29 +3582,6 @@ function _cssDl(cur,prev){
   var up=rel>0;
   return '<em class="csd-dl" style="color:'+(up?'var(--c-red)':'var(--c-blue)')+'">'+(up?'▲':'▼')+' '+Math.abs(rel).toFixed(1)+'%<span style="font-weight:500;opacity:.75"> ('+(up?'+':'-')+Math.abs(pp).toFixed(1)+'%p)</span></em>';
 }
-function _cssWkAgeGender(rows){
-  var CM='#2b7de0',CF='#f4808f',CU='#c9ccd1',n=rows.length||1;
-  var ages={};
-  rows.forEach(function(r){var a=ages[r.age]||(ages[r.age]={n:r.age,m:0,f:0,u:0,t:0});a.t++;if(r.gender==='남성')a.m++;else if(r.gender==='여성')a.f++;else a.u++;});
-  var list=Object.keys(ages).map(function(k){return ages[k]});
-  var known=list.filter(function(x){return x.n!=='확인 불가'}).sort(function(p,q){return (parseInt(p.n,10)||0)-(parseInt(q.n,10)||0)}),unk=list.filter(function(x){return x.n==='확인 불가'});
-  var mx=Math.max.apply(null,list.map(function(x){return x.t}))||1;
-  var tm=rows.filter(function(r){return r.gender==='남성'}).length,tf=rows.filter(function(r){return r.gender==='여성'}).length,tu=rows.length-tm-tf;
-  function pill(l,v,c){return '<span style="display:inline-flex;align-items:center;gap:6px"><s style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+'"></s>'+l+' <b style="font-variant-numeric:tabular-nums">'+v+'</b><small style="color:var(--c-mut)">'+Math.round(v/n*100)+'%</small></span>';}
-  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:12px;padding-bottom:8px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM)+pill('여성',tf,CF)+(tu?pill('성별 확인 불가',tu,CU):'')+'</div>';
-  function seg(v,c){return v?'<div style="width:'+(v/mx*100)+'%;background:'+c+';height:100%"></div>':'';}
-  function row(x){
-    var dim=x.n==='확인 불가';
-    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:12px;padding:1px 0">'
-      +'<span'+(dim?' style="color:var(--c-mut)"':'')+'>'+(dim?'나이 확인 불가':x.n)+'</span>'
-      +'<div style="display:flex;height:13px;background:var(--c-line);border-radius:3px;overflow:hidden">'+seg(x.m,CM)+seg(x.f,CF)+seg(x.u,CU)+'</div>'
-      +'<b style="text-align:right;font-variant-numeric:tabular-nums">'+x.t+'</b>'
-      +'<small style="color:var(--c-mut);text-align:right">'+Math.round(x.t/n*100)+'%</small>'
-      +'<small style="color:var(--c-mut);font-size:12px">남 '+x.m+' · 여 '+x.f+(x.u?' · 불명 '+x.u:'')+'</small></div>';
-  }
-  var body=known.map(row).join('')+(unk.length?'<div style="border-top:1px dashed var(--c-line);margin:4px 0 2px"></div>'+unk.map(row).join(''):'');
-  return '<div style="display:flex;flex-direction:column;gap:6px">'+head+body+'</div>';
-}
 function _cssWkPairs(wk){
   var p={};wk.orders.forEach(function(o){if(o.n>0&&_CSS_RATE_EXCL.indexOf(o.plat)<0)p[o.brand+'|'+o.plat]=1;});return p;
 }
@@ -3658,8 +3654,68 @@ if(!window._wkdB){window._wkdB=1;
     if(on)svg.removeAttribute('data-sel');else svg.setAttribute('data-sel',b);
   });
 }
-function _cssWeekHTML(wk,label,pv){
-  var rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
+function _wkAgeCol(a){
+  if(a==='확인 불가')return '#d3d6da';
+  var n=parseInt(a,10)||0;
+  return n<20?'#cfe3fb':n<30?'#a8cdf6':n<40?'#6fa8ea':n<50?'#2b7de0':n<60?'#1d5fb8':'#143f80';
+}
+function _wkAgeSort(a,b){
+  if(a==='확인 불가')return 1;if(b==='확인 불가')return -1;
+  return (parseInt(a,10)||0)-(parseInt(b,10)||0);
+}
+function _wkStack(age,gen,scale){
+  var a=Object.keys(age).sort(_wkAgeSort).map(function(k){return '<i title="'+_rsEsc(k)+' '+age[k]+'건" style="width:'+(age[k]/scale*100)+'%;background:'+_wkAgeCol(k)+'"></i>';}).join('');
+  var g=[['m','#2b7de0','남'],['f','#f4808f','여'],['u','#d3d6da','불명']].map(function(x){return gen[x[0]]?'<i title="'+x[2]+' '+gen[x[0]]+'건" style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
+  return '<div><div class="wk3-ab">'+a+'</div><div class="wk3-gb">'+g+'</div></div>';
+}
+function _wkBrandRates(wk){
+  var pairs=_cssWkPairs(wk),m={};
+  wk.orders.forEach(function(o){if(_CSS_RATE_EXCL.indexOf(o.plat)>=0)return;(m[o.brand]=m[o.brand]||{o:0,c:0}).o+=o.n;});
+  wk.rows.forEach(function(r){if(pairs[r.brand+'|'+r.plat]&&m[r.brand])m[r.brand].c++;});
+  return m;
+}
+function _wkChips(map){
+  return Object.keys(map).sort(function(a,b){return map[b]-map[a];}).map(function(k){return _rsEsc(k)+' <b>'+map[k]+'</b>';}).join(' · ');
+}
+function _wkRow(cls,name,bar,cnt,side,chips){
+  return '<div class="wk3-row '+cls+'"><span class="nm">'+name+'</span>'+bar+'<b>'+cnt+'</b><span class="sd">'+(side||'')+'</span>'+(chips?'<div class="wk3-rs">'+chips+'</div>':'')+'</div>';
+}
+function _wkCancelTree(wk,pv){
+  var tree={};
+  function add(o,r){o.c++;o.a+=r.amt;o.age[r.age]=(o.age[r.age]||0)+1;var k=r.gender==='남성'?'m':r.gender==='여성'?'f':'u';o.g[k]=(o.g[k]||0)+1;}
+  wk.rows.forEach(function(r){
+    var b=tree[r.brand]||(tree[r.brand]={n:r.brand,c:0,a:0,age:{},g:{},p:{}});add(b,r);
+    var p=b.p[r.prod]||(b.p[r.prod]={n:r.prod,c:0,a:0,age:{},g:{},r:{}});add(p,r);
+    p.r[r.reason]=(p.r[r.reason]||0)+1;
+  });
+  var bs=Object.keys(tree).map(function(k){return tree[k];}).sort(function(a,b){return b.c-a.c;});
+  var mx=bs.length?bs[0].c:1,rates=_wkBrandRates(wk);
+  return bs.map(function(b){
+    var rt=rates[b.n],r=rt&&rt.o?rt.c/rt.o:null,pb=pv?pv.byBrand.filter(function(x){return x.n===b.n;})[0]:null;
+    var side=r===null?'':'<span class="wk3-rt">'+(r*100).toFixed(1)+'%</span>'+(pv?_cssDl(r,pb&&pb.o?pb.t/pb.o:null):'');
+    var h='<div class="wk3-b">'+_wkRow('wk3-brand',_rsEsc(b.n),_wkStack(b.age,b.g,mx),b.c+'건',side,'');
+    h+=Object.keys(b.p).map(function(k){return b.p[k];}).sort(function(x,y){return y.c-x.c;}).map(function(p){
+      return _wkRow('wk3-prod',_rsEsc(p.n),_wkStack(p.age,p.g,mx),p.c+'건','<span class="wk3-amt">'+_cssN(p.a)+'원</span>',_wkChips(p.r));
+    }).join('');
+    return h+'</div>';
+  }).join('');
+}
+function _wkLegend(rows){
+  var ages={};rows.forEach(function(r){ages[r.age]=1;});
+  var a=Object.keys(ages).sort(_wkAgeSort).map(function(k){return '<span><s style="background:'+_wkAgeCol(k)+'"></s>'+_rsEsc(k)+'</span>';}).join('');
+  return '<div class="wk3-lg">'+a+'<span class="wk3-lgs">아래 얇은 막대 = 성비 <s style="background:#2b7de0"></s>남 <s style="background:#f4808f"></s>여 <s style="background:#d3d6da"></s>불명</span></div>';
+}
+function _wkComp(rows){
+  var n=rows.length||1,tm=0,tf=0,tu=0,ages={};
+  rows.forEach(function(r){if(r.gender==='남성')tm++;else if(r.gender==='여성')tf++;else tu++;ages[r.age]=(ages[r.age]||0)+1;});
+  function bar(parts){return '<div class="wk3-cb">'+parts.map(function(p){return p[1]?'<i title="'+_rsEsc(p[0])+' '+p[1]+'건" style="width:'+(p[1]/n*100)+'%;background:'+p[2]+'"></i>':'';}).join('')+'</div>';}
+  function lg(parts){return '<div class="wk3-cl">'+parts.map(function(p){return p[1]?'<span><s style="background:'+p[2]+'"></s>'+_rsEsc(p[0])+' <b>'+p[1]+'</b> '+Math.round(p[1]/n*100)+'%</span>':'';}).join('')+'</div>';}
+  var g=[['남성',tm,'#2b7de0'],['여성',tf,'#f4808f'],['성별 확인 불가',tu,'#d3d6da']];
+  var a=Object.keys(ages).sort(_wkAgeSort).map(function(k){return [k==='확인 불가'?'나이 확인 불가':k,ages[k],_wkAgeCol(k)];});
+  return '<div class="wk3-cn">성별</div>'+bar(g)+lg(g)+'<div class="wk3-cn" style="margin-top:12px">나이대</div>'+bar(a)+lg(a);
+}
+function _cssWeekHTML(wk,label,pd){
+  var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
   var pvShare={};
   if(pv&&pv.paid)pv.reasons.forEach(function(x){if(x[0].indexOf('입금 전')===0)return;pvShare[x[0].split(' (')[0]]=x[1]/pv.paid;});
   var wkShare={};rows.forEach(function(r){var k=r.reason.split(' (')[0];wkShare[k]=(wkShare[k]||0)+1;});
@@ -3667,45 +3723,33 @@ function _cssWeekHTML(wk,label,pv){
   var unkG=rows.filter(function(r){return r.gender==='확인 불가'}).length,unkA=rows.filter(function(r){return r.age==='확인 불가'}).length;
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
   var incl=rows.length-skipped,ordTot=wk.orders.filter(function(o){return !_CSS_RATE_EXCL.length||_CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
-  var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
-  var rel=prev?(cur-prev)/prev*100:null;
+  var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null,rel=prev?(cur-prev)/prev*100:null;
+  var prevRet=pd&&pd.ret&&pv&&pv.orders?pd.ret.ret/pv.orders:'';
   var headline='이번 주 취소율은 <b>'+(cur*100).toFixed(1)+'%</b>'+(rel===null?'입니다.':'로 전월('+(prev*100).toFixed(1)+'%)보다 <b style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');
-  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 22px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:11px">'+l+'</div><div style="font-size:clamp(18px,1.6vw,24px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;min-height:16px">'+sub+'</div></div>';}
+  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 20px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:11px">'+l+'</div><div style="font-size:clamp(18px,1.6vw,24px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;min-height:16px">'+sub+'</div></div>';}
   var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
-  var kpis='<div style="display:flex;flex-wrap:wrap;gap:14px 0;padding:12px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
-    +kpi('전체 취소율',(cur*100).toFixed(1)+'%',prev==null?'':'전월 '+(prev*100).toFixed(1)+'% · '+_cssDl(cur,prev),1)
-    +kpi('총 취소',_cssN(tot)+unit('건'),'주문 '+_cssN(ordTot)+'건 기준')
-    +kpi('총 취소금액',_cssN(sum)+unit('원'),'건당 평균 '+_cssN(tot?Math.round(sum/tot):0)+'원')
-    +kpi('전체 반품율','<span id="wk-ret-v" data-ord="'+ordTot+'">-</span>','<span id="wk-ret-s">반품 · 주문 '+_cssN(ordTot)+'건 기준</span>')
-    +kpi('총 반품 금액','-'+unit('원'),'반품 금액 합계')
+  var kpis='<div style="display:flex;flex-wrap:wrap;gap:12px 0;padding:12px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
+    +kpi('취소율',(cur*100).toFixed(1)+'%',prev==null?'':_cssDl(cur,prev)+' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>',1)
+    +kpi('취소',_cssN(tot)+unit('건'),'취소금액 '+_cssN(sum)+'원 · 건당 '+_cssN(tot?Math.round(sum/tot):0)+'원')
+    +kpi('반품율','<span id="wk-ret-v" data-ord="'+ordTot+'" data-prev="'+prevRet+'">-</span>','<span id="wk-ret-d"></span>')
+    +kpi('반품','<span id="wk-ret-n">-</span>'+unit('건'),'<span id="wk-ret-s">주문 '+_cssN(ordTot)+'건 기준</span>')
     +'</div>';
-  function ga(w){var c=w.charCodeAt(w.length-1);return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28)?'이':'가';}
-  var notes=[];
-  if(pv){
-    var ds=Object.keys(wkShare).filter(function(k){return pvShare[k]!=null}).map(function(k){return {k:k,w:wkShare[k]/tot,p:pvShare[k],d:wkShare[k]/tot-pvShare[k]}}).sort(function(a,b){return b.d-a.d});
-    var up=ds[0],dn=ds[ds.length-1];
-    if(up&&up.d>0)notes.push(['var(--c-red)','‘'+up.k+'’'+ga(up.k)+' 늘었어요','전체 취소의 '+Math.round(up.w*100)+'% · 전월 '+(up.p*100).toFixed(1)+'%보다 ▲ '+(up.d*100).toFixed(1)+'%p']);
-    if(dn&&dn!==up&&dn.d<0)notes.push(['var(--c-blue)','‘'+dn.k+'’'+ga(dn.k)+' 줄었어요','전체 취소의 '+Math.round(dn.w*100)+'% · 전월 '+(dn.p*100).toFixed(1)+'%보다 ▼ '+Math.abs(dn.d*100).toFixed(1)+'%p']);
-  }
-  var pg=_cssWkGroup(rows,'prod').sort(function(a,b){return b.c-a.c})[0];
-  if(pg){
-    var pr=rows.filter(function(r){return r.prod===pg.n});
-    function mode(key){var m={};pr.forEach(function(r){if(r[key]==='확인 불가')return;m[r[key]]=(m[r[key]]||0)+1;});var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a]});return ks.length&&m[ks[0]]>=2?ks[0]:'';}
-    var ma=mode('age'),mg=mode('gender'),who=(ma||mg)?' · 확인된 건 중 주로 '+(ma?ma+' ':'')+(mg?mg.replace('성','')+'성':''):'';
-    notes.push(['var(--c-fg)','‘'+pg.n+'’'+ga(pg.n)+' 가장 많아요',pg.c+'건 · 전체 취소의 '+Math.round(pg.c/tot*100)+'%'+who]);
-  }
-  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 26px;margin-top:12px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:13px;font-weight:700">'+n[1]+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
-  function sec(t,body,span){return '<div class="wk2-s"'+(span?' style="grid-column:span '+span+'"':'')+'><div class="wk2-h">'+t+'</div>'+body+'</div>';}
-  var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비(%), 괄호는 %p 차이 · 사유 비중은 전월 결제 후 취소 기준 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
-  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
+  function sec(t,body){return '<div class="wk2-s"><div class="wk2-h">'+t+'</div>'+body+'</div>';}
+  var note='기간 '+(wk.range||label)+' · 증감은 전월 월간 집계 대비(%), 괄호는 %p 차이 · 사유 비중은 전월 결제 후 취소 기준 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
+  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
-    +kpis+nh
-    +'<div class="wk2-g">'
-    +sec('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
-    +sec('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1}))
-    +sec('브랜드 · 플랫폼별 취소율','<div class="wk2-sub">브랜드</div>'+_cssWkRate(wk,'brand',pv)+'<div class="wk2-sub">플랫폼</div>'+_cssWkRate(wk,'plat',pv))
-    +sec('나이대별 · 성별',_cssWkAgeGender(rows),2)
-    +sec('일자별 취소 추이',_cssWkDaily(rows))
+    +kpis
+    +'<div class="wk3">'
+    +'<div class="wk3-l">'
+    +sec('취소 · 브랜드 > 제품 > 사유',_wkLegend(rows)+_wkCancelTree(wk,pv))
+    +sec('반품 · 브랜드 > 제품 > 사유','<div id="wk-ret-tree"><div class="csd-empty" style="margin:6px 0 0;text-align:left">불러오는 중…</div></div>')
+    +'</div>'
+    +'<div class="wk3-r">'
+    +sec('성별 · 나이 구성',_wkComp(rows))
+    +sec('사유별 (전월 대비)',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
+    +sec('플랫폼별 취소율',_cssWkRate(wk,'plat',pv))
+    +'<details class="wk3-dd"><summary>일자별 취소 추이</summary>'+_cssWkDaily(rows)+'</details>'
+    +'</div>'
     +'</div><p class="csd-note">'+note+'</p></div>';
   return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
 }
@@ -3724,6 +3768,27 @@ function _cssWkFit(){
   if(h2>avail+1){var z2=parseFloat(sl.style.zoom)||1;sl.style.zoom=Math.max(MINZ,z2*avail/h2*.99);}
 }
 if(!window._wkFitB){window._wkFitB=1;window.addEventListener('resize',function(){_cssWkFit();});}
+function _wkBrandName(id){
+  var el=id?document.querySelector('.brand-nav[data-brand="'+id+'"] .brand-logo-name'):null;
+  return el?el.textContent.trim():'기타';
+}
+function _wkRetTree(list){
+  if(!list.length)return '<div class="csd-empty" style="margin:6px 0 0;text-align:left">해당 기간 반품이 없습니다.</div>';
+  var t={};
+  list.forEach(function(r){
+    var b=t[r.brand]||(t[r.brand]={n:r.brand,c:0,p:{}});b.c++;
+    var p=b.p[r.product]||(b.p[r.product]={n:r.product,c:0,r:{}});p.c++;p.r[r.reason]=(p.r[r.reason]||0)+1;
+  });
+  var bs=Object.keys(t).map(function(k){return t[k];}).sort(function(a,b){return b.c-a.c;}),mx=bs[0].c;
+  function bar(c){return '<div><div class="wk3-ab"><i style="width:'+(c/mx*100)+'%;background:#6b7280"></i></div></div>';}
+  return bs.map(function(b){
+    var h='<div class="wk3-b">'+_wkRow('wk3-brand',_rsEsc(b.n),bar(b.c),b.c+'건','','');
+    h+=Object.keys(b.p).map(function(k){return b.p[k];}).sort(function(x,y){return y.c-x.c;}).map(function(p){
+      return _wkRow('wk3-prod',_rsEsc(p.n),bar(p.c),p.c+'건','',_wkChips(p.r));
+    }).join('');
+    return h+'</div>';
+  }).join('');
+}
 function _cssWkRetLoad(y,m,w,tok){
   var iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];if(!iso)return;
   var a=new Date(iso[0]+'T00:00:00'),b=new Date(iso[1]+'T23:59:59');
@@ -3733,7 +3798,7 @@ function _cssWkRetLoad(y,m,w,tok){
   Promise.all(yms.map(function(k){return fetch(_RETURN_SHEET_BASE+_RETURN_MONTH_GIDS[k]).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){return {ym:k,rows:_parseCSV(t)};});}))
   .then(function(res){
     if(tok!==_cssWkTok)return;
-    var n=0,seen={};
+    var list=[],seen={};
     res.forEach(function(rs){
       var isNew=rs.ym>=_RETURN_NEW_FMT_FROM,ld=null;
       for(var i=1;i<rs.rows.length;i++){
@@ -3741,13 +3806,17 @@ function _cssWkRetLoad(y,m,w,tok){
         if(row.date)ld=row.date;else if(ld)row.date=ld;
         if(!row.date||row.date<a||row.date>b||row.type!=='반품')continue;
         if(row.orderNo){if(seen[row.orderNo])continue;seen[row.orderNo]=1;}
-        n++;
+        list.push({brand:_wkBrandName(_detectBrand(row.product)),product:row.product,reason:row.reason||'변심'});
       }
     });
-    var v=document.getElementById('wk-ret-v'),sl=document.getElementById('wk-ret-s');if(!v)return;
-    var ord=+v.getAttribute('data-ord')||0;
-    v.textContent=ord?(n/ord*100).toFixed(1)+'%':'-';
-    if(sl)sl.textContent='반품 '+_cssN(n)+'건 · 주문 '+_cssN(ord)+'건 기준';
+    var v=document.getElementById('wk-ret-v');if(!v)return;
+    var ord=+v.getAttribute('data-ord')||0,prev=parseFloat(v.getAttribute('data-prev')),cur=ord?list.length/ord:0;
+    v.textContent=ord?(cur*100).toFixed(1)+'%':'-';
+    var d=document.getElementById('wk-ret-d');if(d)d.innerHTML=ord?_cssDl(cur,isNaN(prev)?null:prev)+(isNaN(prev)?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>'):'';
+    var n=document.getElementById('wk-ret-n');if(n)n.textContent=_cssN(list.length);
+    var sl=document.getElementById('wk-ret-s');if(sl)sl.textContent='주문 '+_cssN(ord)+'건 기준';
+    var tr=document.getElementById('wk-ret-tree');if(tr)tr.innerHTML=_wkRetTree(list);
+    if(window._cssWkFit)_cssWkFit();
   }).catch(function(){});
 }
 function _cssWeekLoad(box,y,m,w){
@@ -3762,7 +3831,7 @@ function _cssWeekLoad(box,y,m,w){
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];
-    box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd?pd.cancel:null);
+    box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
     var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkRetLoad(y,m,w,tok);_cssWkFit();
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
 }
