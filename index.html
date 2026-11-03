@@ -587,6 +587,10 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
           <span class="ic"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><path d="M9 1.5H4a1.5 1.5 0 0 0-1.5 1.5v10a1.5 1.5 0 0 0 1.5 1.5h8a1.5 1.5 0 0 0 1.5-1.5V6z"/><polyline points="9 1.5 9 6 13.5 6"/><line x1="5.5" y1="8.5" x2="10.5" y2="8.5"/><line x1="5.5" y1="10.5" x2="10.5" y2="10.5"/><line x1="5.5" y1="12" x2="8" y2="12"/></svg></span>
           <span><b>CS SUMMARY</b><small>요약 리포트</small></span>
         </a>
+        <a href="#" id="nav-reseller" aria-current="false">
+          <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></span>
+          <span><b>리셀러</b><small>리셀러 리스트</small></span>
+        </a>
         <a href="https://jjjjjin0-ai-agent.github.io/design_guide/" target="_blank" rel="noopener">
           <span class="ic"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11.5"/><circle cx="8" cy="4.5" r="0.8" fill="currentColor" stroke="none"/></svg></span>
           <span><b>디자인 가이드</b></span>
@@ -783,6 +787,11 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <button class="cal-add-btn cal-sync-btn" id="cal-sync" title="저장소에 일정 올리기 (토큰 없으면 저장소에서 불러오기)"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" style="display:block"><path d="M20 12a8 8 0 1 1-2.6-5.9"/><path d="M20 3v5h-5"/></svg></button>
       </div>
       <div class="cal-grid" id="cal-grid"></div>
+    </section>
+
+    <!-- 리셀러 뷰 -->
+    <section id="reseller-view" style="display:none;padding:24px 0">
+      <div class="csd-empty">리셀러 리스트는 준비 중입니다.</div>
     </section>
 
     <!-- CS SUMMARY 뷰 -->
@@ -1522,7 +1531,10 @@ function _ghWrite(path, data, sha, msg, cb) {
   const stockWrap=document.getElementById('stock-section-wrap');
   const returnWrap=document.getElementById('return-section-wrap');
   const vocWrap=document.getElementById('voc-section-wrap');
+  function hideReseller(){var v=document.getElementById('reseller-view');if(v)v.style.display='none';var n=document.getElementById('nav-reseller');if(n){n.classList.remove('on');n.setAttribute('aria-current','false');}}
+  window._hideReseller=hideReseller;
   function showCalendar(){
+    hideReseller();
     if(brandSection) brandSection.style.display='none';
     if(calView) calView.style.display='';
     if(stockWrap) stockWrap.style.display='none';
@@ -1535,6 +1547,7 @@ function _ghWrite(path, data, sha, msg, cb) {
     renderCal();
   }
   function showDashboard(){
+    hideReseller();
     // 브랜드가 선택된 경우만 관련 서비스 섹션 표시
     if(brandSection) brandSection.style.display = (activeBrand ? '' : 'none');
     if(calView) calView.style.display='none';
@@ -1551,6 +1564,7 @@ function _ghWrite(path, data, sha, msg, cb) {
   const navCsSummary = document.getElementById('nav-cs-summary');
   const csSummaryView = document.getElementById('cs-summary-view');
   function showCsSummary(){
+    hideReseller();
     if(brandSection) brandSection.style.display='none';
     if(calView) calView.style.display='none';
     if(csSummaryView) csSummaryView.style.display='';
@@ -1565,6 +1579,28 @@ function _ghWrite(path, data, sha, msg, cb) {
     e.preventDefault();
     if(csSummaryView&&csSummaryView.style.display!=='none'){ showDashboard(); navCsSummary.classList.remove('on'); navCsSummary.setAttribute('aria-current','false'); }
     else { showCsSummary(); }
+  });
+
+  // 리셀러 네비게이션
+  const navReseller=document.getElementById('nav-reseller');
+  const resellerView=document.getElementById('reseller-view');
+  function showReseller(){
+    if(brandSection) brandSection.style.display='none';
+    if(calView) calView.style.display='none';
+    if(csSummaryView) csSummaryView.style.display='none';
+    if(resellerView) resellerView.style.display='';
+    if(stockWrap) stockWrap.style.display='none';
+    if(returnWrap) returnWrap.style.display='none';
+    if(vocWrap) vocWrap.style.display='none';
+    if(pageTitleEl) pageTitleEl.textContent='리셀러';
+    navCal.classList.remove('on'); navCal.setAttribute('aria-current','false');
+    if(navCsSummary){ navCsSummary.classList.remove('on'); navCsSummary.setAttribute('aria-current','false'); }
+    if(navReseller){ navReseller.classList.add('on'); navReseller.setAttribute('aria-current','page'); }
+  }
+  if(navReseller) navReseller.addEventListener('click',e=>{
+    e.preventDefault();
+    if(resellerView&&resellerView.style.display!=='none'){ showDashboard(); var _ab=document.querySelector('.brand-nav.active .brand-logo-name'); if(pageTitleEl) pageTitleEl.textContent=_ab?_ab.textContent:'CX 대시보드'; }
+    else { showReseller(); }
   });
 
   navCal.addEventListener('click',e=>{
@@ -1607,6 +1643,7 @@ $$(".brand-nav").forEach((a,i)=>{
       const _cv=document.getElementById('cal-view'), _bp=document.getElementById('sc-pamicogen');
       const _sw=document.getElementById('stock-section-wrap');
       if(_cv) _cv.style.display='none'; if(_bp) _bp.style.display=''; if(_sw) _sw.style.display='';
+      if(window._hideReseller) window._hideReseller();
       const _csv=document.getElementById('cs-summary-view'); if(_csv) _csv.style.display='none';
       const _csn=document.getElementById('nav-cs-summary'); if(_csn){ _csn.classList.remove('on'); _csn.setAttribute('aria-current','false'); }
       const _rw=document.getElementById('return-section-wrap'), _vw=document.getElementById('voc-section-wrap'); if(_rw) _rw.style.display=''; if(_vw) _vw.style.display='';
