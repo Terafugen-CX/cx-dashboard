@@ -214,9 +214,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk2-g{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px 36px;border-top:1px solid var(--c-line);margin-top:14px;padding-top:14px}
 .wk2-sub{font-size:11px;color:var(--c-mut);margin:2px 0 0}
 .wk2-s svg.wkd{max-height:230px}
-.csd-wk .wk2-s .csd-br{padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
+.csd-wk .wk2-s .csd-br{font-size:12px;padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
-.wk2-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
+.wk2-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
 .wk2-s .csd-br .t{height:6px}
 .csd-wk .wk2-s .csd-br{grid-template-columns:minmax(150px,42%) minmax(0,1fr) 38px 36px}
 @media(max-width:1100px){.wk2-g{grid-template-columns:repeat(2,minmax(0,1fr))}.wk2-s{grid-column:auto!important}}@media(max-width:700px){.wk2-g{grid-template-columns:1fr}}
@@ -3561,11 +3561,11 @@ function _cssWkAgeGender(rows){
   var mx=Math.max.apply(null,list.map(function(x){return x.t}))||1;
   var tm=rows.filter(function(r){return r.gender==='남성'}).length,tf=rows.filter(function(r){return r.gender==='여성'}).length,tu=rows.length-tm-tf;
   function pill(l,v,c){return '<span style="display:inline-flex;align-items:center;gap:6px"><s style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+'"></s>'+l+' <b style="font-variant-numeric:tabular-nums">'+v+'</b><small style="color:var(--c-mut)">'+Math.round(v/n*100)+'%</small></span>';}
-  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM)+pill('여성',tf,CF)+(tu?pill('성별 확인 불가',tu,CU):'')+'</div>';
+  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:12px;padding-bottom:8px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM)+pill('여성',tf,CF)+(tu?pill('성별 확인 불가',tu,CU):'')+'</div>';
   function seg(v,c){return v?'<div style="width:'+(v/mx*100)+'%;background:'+c+';height:100%"></div>':'';}
   function row(x){
     var dim=x.n==='확인 불가';
-    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:13px;padding:1px 0">'
+    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:12px;padding:1px 0">'
       +'<span'+(dim?' style="color:var(--c-mut)"':'')+'>'+(dim?'나이 확인 불가':x.n)+'</span>'
       +'<div style="display:flex;height:13px;background:var(--c-line);border-radius:3px;overflow:hidden">'+seg(x.m,CM)+seg(x.f,CF)+seg(x.u,CU)+'</div>'
       +'<b style="text-align:right;font-variant-numeric:tabular-nums">'+x.t+'</b>'
@@ -3659,7 +3659,7 @@ function _cssWeekHTML(wk,label,pv){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
   var rel=prev?(cur-prev)/prev*100:null;
   var headline='이번 주 취소율은 <b>'+(cur*100).toFixed(1)+'%</b>'+(rel===null?'입니다.':'로 전월('+(prev*100).toFixed(1)+'%)보다 <b style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');
-  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 22px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:12px">'+l+'</div><div style="font-size:clamp(20px,1.9vw,28px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;min-height:18px">'+sub+'</div></div>';}
+  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 22px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:11px">'+l+'</div><div style="font-size:clamp(18px,1.6vw,24px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;min-height:16px">'+sub+'</div></div>';}
   var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
   var kpis='<div style="display:flex;flex-wrap:wrap;gap:14px 0;padding:12px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
     +kpi('전체 취소율',(cur*100).toFixed(1)+'%',prev==null?'':'전월 '+(prev*100).toFixed(1)+'% · '+_cssDl(cur,prev),1)
@@ -3683,11 +3683,11 @@ function _cssWeekHTML(wk,label,pv){
     var ma=mode('age'),mg=mode('gender'),who=(ma||mg)?' · 확인된 건 중 주로 '+(ma?ma+' ':'')+(mg?mg.replace('성','')+'성':''):'';
     notes.push(['var(--c-fg)','‘'+pg.n+'’'+ga(pg.n)+' 가장 많아요',pg.c+'건 · 전체 취소의 '+Math.round(pg.c/tot*100)+'%'+who]);
   }
-  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 26px;margin-top:12px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:14px;font-weight:700">'+n[1]+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
+  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px 26px;margin-top:12px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:13px;font-weight:700">'+n[1]+'</div><div style="font-size:11px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
   function sec(t,body,span){return '<div class="wk2-s"'+(span?' style="grid-column:span '+span+'"':'')+'><div class="wk2-h">'+t+'</div>'+body+'</div>';}
   var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비(%), 괄호는 %p 차이 · 사유 비중은 전월 결제 후 취소 기준 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
-    +'<p style="font-size:clamp(17px,1.7vw,22px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
+    +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
     +kpis+nh
     +'<div class="wk2-g">'
     +sec('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
@@ -3701,7 +3701,7 @@ function _cssWeekHTML(wk,label,pv){
 function _cssWkFit(){
   var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
   sl.style.zoom=1;
-  var avail=window.innerHeight-Math.max(sl.getBoundingClientRect().top,0)-12,MAXZ=1.5,MINZ=.6;
+  var avail=(window.innerHeight-Math.max(sl.getBoundingClientRect().top,0)-12)*.94,MAXZ=1.5,MINZ=.6;
   for(var i=0;i<6;i++){
     var h=sl.getBoundingClientRect().height,z=parseFloat(sl.style.zoom)||1,ratio=avail/h;
     if(h<=avail&&ratio<1.03)break;
