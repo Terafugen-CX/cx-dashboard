@@ -139,10 +139,10 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-go{font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:none;border-radius:9px;padding:7px 18px;cursor:pointer}
 .rs-go:hover{opacity:.85}
 .rs-count{font-size:13px;color:var(--muted);margin:0 2px 8px}
-.rs-tbl{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
-.rs-tbl table{width:100%;border-collapse:collapse;font-size:13px}
-.rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
-.rs-tbl td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.rs-tbl{display:block;width:fit-content;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
+.rs-tbl table{width:auto;border-collapse:collapse;font-size:13px}
+.rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rs-tbl td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
 .rs-tbl tr:last-child td{border-bottom:none}
 .csd{--c-bg:#080808;--c-fg:#f2f2f0;--c-mut:rgba(242,242,240,.5);--c-dim:rgba(242,242,240,.22);--c-line:rgba(255,255,255,.09);--c-sf:rgba(255,255,255,.055);--c-red:#e04040;--c-blue:#5eaeff;--c-gold:#f5b942;display:flex;flex-direction:column;gap:16px}
 .csd-slide{background:var(--c-bg);color:var(--c-fg);border-radius:16px;padding:36px 40px;display:flex;flex-direction:column}
