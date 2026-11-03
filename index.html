@@ -3489,21 +3489,27 @@ function _cssDl(cur,prev){
   return '<em class="csd-dl" style="color:'+(up?'var(--c-red)':'var(--c-blue)')+'">'+(up?'▲':'▼')+' '+Math.abs(rel).toFixed(1)+'%<span style="font-weight:500;opacity:.75"> ('+(up?'+':'-')+Math.abs(pp).toFixed(1)+'%p)</span></em>';
 }
 function _cssWkAgeGender(rows){
-  var CM=['#1f5fb8','#2b7de0','#5b9ae8','#8fbaf0','#bcd7f7','#d7e8fb'],CF=['#d94b63','#f4808f','#f79aa6','#f9b4bc','#fbcdd2','#fde3e6'],CU='#c9ccd1',n=rows.length||1;
+  var CM='#2b7de0',CF='#f4808f',CU='#c9ccd1',n=rows.length||1;
   var ages={};
   rows.forEach(function(r){var a=ages[r.age]||(ages[r.age]={n:r.age,m:0,f:0,u:0,t:0});a.t++;if(r.gender==='남성')a.m++;else if(r.gender==='여성')a.f++;else a.u++;});
   var list=Object.keys(ages).map(function(k){return ages[k]});
   var known=list.filter(function(x){return x.n!=='확인 불가'}).sort(function(p,q){return (parseInt(p.n,10)||0)-(parseInt(q.n,10)||0)}),unk=list.filter(function(x){return x.n==='확인 불가'});
-  var items=[];
-  known.forEach(function(x,i){if(x.m)items.push(['남성 · '+x.n,x.m,CM[i%CM.length]]);});
-  known.forEach(function(x,i){if(x.f)items.push(['여성 · '+x.n,x.f,CF[i%CF.length]]);});
-  list.forEach(function(x){if(x.u)items.push(['확인 불가 · '+(x.n==='확인 불가'?'나이 불명':x.n),x.u,CU]);});
+  var mx=Math.max.apply(null,list.map(function(x){return x.t}))||1;
   var tm=rows.filter(function(r){return r.gender==='남성'}).length,tf=rows.filter(function(r){return r.gender==='여성'}).length,tu=rows.length-tm-tf;
   function pill(l,v,c){return '<span style="display:inline-flex;align-items:center;gap:6px"><s style="display:inline-block;width:10px;height:10px;border-radius:50%;background:'+c+'"></s>'+l+' <b style="font-variant-numeric:tabular-nums">'+v+'</b><small style="color:var(--c-mut)">'+Math.round(v/n*100)+'%</small></span>';}
-  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM[1])+pill('여성',tf,CF[1])+(tu?pill('확인 불가',tu,CU):'')+'</div>';
-  var hd='<div class="csd-row" style="padding:4px 0 6px;font-size:11px;color:var(--c-mut)"><span>나이대</span><span style="flex:none;width:100px">남 · 여</span><b style="font-weight:700;color:var(--c-mut)">건</b><small style="opacity:0">%</small></div>';
-  var rowsH=known.concat(unk).map(function(x,i){var dim=x.n==='확인 불가';return '<div class="csd-row" style="padding:4px 0;font-size:13px"><span'+(dim?' style="color:var(--c-mut)"':'')+'>'+x.n+'</span><span style="flex:none;width:100px;color:var(--c-mut);font-size:12px">'+x.m+' · '+x.f+(x.u?' · 불명 '+x.u:'')+'</span><b>'+x.t+'</b><small>'+Math.round(x.t/n*100)+'%</small></div>';}).join('');
-  return '<div style="display:flex;gap:16px 28px;flex-wrap:wrap;align-items:center"><div class="csd-wkd" style="flex:0 0 clamp(150px,12vw,190px)">'+_cssDonut(items,rows.length,'건','svg','나이 · 성별')+'</div><div style="flex:1 1 320px;min-width:0;display:flex;flex-direction:column;gap:6px">'+head+hd+rowsH+'</div></div>';
+  var head='<div style="display:flex;gap:4px 16px;flex-wrap:wrap;font-size:13px;padding-bottom:10px;border-bottom:1px solid var(--c-line)">'+pill('남성',tm,CM)+pill('여성',tf,CF)+(tu?pill('성별 확인 불가',tu,CU):'')+'</div>';
+  function seg(v,c){return v?'<div style="width:'+(v/mx*100)+'%;background:'+c+';height:100%"></div>':'';}
+  function row(x){
+    var dim=x.n==='확인 불가';
+    return '<div style="display:grid;grid-template-columns:minmax(70px,96px) minmax(0,1fr) 34px 40px minmax(110px,160px);gap:12px;align-items:center;font-size:13px;padding:3px 0">'
+      +'<span'+(dim?' style="color:var(--c-mut)"':'')+'>'+(dim?'나이 확인 불가':x.n)+'</span>'
+      +'<div style="display:flex;height:16px;background:var(--c-line);border-radius:4px;overflow:hidden">'+seg(x.m,CM)+seg(x.f,CF)+seg(x.u,CU)+'</div>'
+      +'<b style="text-align:right;font-variant-numeric:tabular-nums">'+x.t+'</b>'
+      +'<small style="color:var(--c-mut);text-align:right">'+Math.round(x.t/n*100)+'%</small>'
+      +'<small style="color:var(--c-mut);font-size:12px">남 '+x.m+' · 여 '+x.f+(x.u?' · 불명 '+x.u:'')+'</small></div>';
+  }
+  var body=known.map(row).join('')+(unk.length?'<div style="border-top:1px dashed var(--c-line);margin:4px 0 2px"></div>'+unk.map(row).join(''):'');
+  return '<div style="display:flex;flex-direction:column;gap:6px">'+head+body+'</div>';
 }
 function _cssWkKpi(incl,ordTot,pv,amt,tot){
   var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
