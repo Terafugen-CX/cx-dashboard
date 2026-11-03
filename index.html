@@ -228,7 +228,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-c:first-child{padding-right:20px}
 .wk5-k{display:flex;flex-wrap:wrap;gap:12px 0}
 .wk5-t{margin-top:12px}
-.wk5-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 4px}
 @media(max-width:900px){.wk5{grid-template-columns:minmax(0,1fr)}.wk5-c+.wk5-c{border-left:none;padding-left:0}.wk5-c:first-child{padding-right:0}}
 .wk2-h{font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
 .wk2-s .csd-br .t{height:6px}
@@ -3681,11 +3680,11 @@ function _cssWeekHTML(wk,label,pd){
     +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('취소율',(cur*100).toFixed(1)+'%',prev==null?'':_cssDl(cur,prev)+' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>',1)
     +kpi('취소',_cssN(tot)+unit('건'),'취소금액 '+_cssN(sum)+'원 · 건당 '+_cssN(tot?Math.round(sum/tot):0)+'원')
-    +'</div><div class="wk5-t"><div class="wk5-h">주간 취소 추이</div>'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0')+'</div></div>'
+    +'</div><div class="wk5-t">'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0')+'</div></div>'
     +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('반품율','<span id="wk-ret-v" data-ord="'+ordTot+'" data-prev="'+prevRet+'">-</span>','<span id="wk-ret-d"></span>',1)
     +kpi('반품','<span id="wk-ret-n">-</span>'+unit('건'),'<span id="wk-ret-s">주문 '+_cssN(ordTot)+'건 기준</span>')
-    +'</div><div class="wk5-t"><div class="wk5-h">주간 반품 추이</div><div id="wk-ret-chart" data-start="'+axisStart+'"><div class="csd-empty" style="margin:8px 0 0;text-align:left">불러오는 중…</div></div></div></div>'
+    +'</div><div class="wk5-t"><div id="wk-ret-chart" data-start="'+axisStart+'"><div class="csd-empty" style="margin:8px 0 0;text-align:left">불러오는 중…</div></div></div></div>'
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
