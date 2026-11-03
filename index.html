@@ -200,6 +200,13 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-wk .csd-dl{font-size:11px}
 .csd-wk .csd-row{font-size:13px;padding:5px 0}
 .csd-wk .csd-note{font-size:12px;margin-top:10px;padding:0}
+.csd-wk .csd-slide{padding:28px 34px}
+.wk2-g{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:26px 48px;border-top:1px solid var(--c-line);margin-top:22px;padding-top:22px}
+.wk2-s{min-width:0}
+.wk2-h{font-size:12px;font-weight:700;letter-spacing:.08em;color:var(--c-mut);margin:0 0 10px}
+.wk2-s .csd-br .t{height:6px}
+.csd-wk .wk2-s .csd-br{grid-template-columns:minmax(150px,42%) minmax(0,1fr) 38px 36px}
+@media(max-width:900px){.wk2-g{grid-template-columns:1fr}}
 .csd-vp{position:relative;height:calc(100vh - 140px);min-height:520px;overflow:hidden;border-radius:16px;background:#080808}
 .csd-vp .csd-slide{position:absolute;inset:0;border-radius:0;overflow-y:auto;transition:transform .65s cubic-bezier(.77,0,.18,1)}
 .csd-vp .csd-cover{min-height:0}
@@ -3511,14 +3518,6 @@ function _cssWkAgeGender(rows){
   var body=known.map(row).join('')+(unk.length?'<div style="border-top:1px dashed var(--c-line);margin:4px 0 2px"></div>'+unk.map(row).join(''):'');
   return '<div style="display:flex;flex-direction:column;gap:6px">'+head+body+'</div>';
 }
-function _cssWkKpi(incl,ordTot,pv,amt,tot){
-  var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
-  function cell(l,v,sub,first){return '<div style="flex:1 1 200px;min-width:0;padding:2px 24px;'+(first?'':'border-left:1px solid var(--c-line);')+'display:flex;flex-direction:column;gap:6px"><div class="csd-ch">'+l+'</div><div style="font-size:clamp(20px,2vw,28px);font-weight:900;letter-spacing:-.04em;line-height:1.1">'+v+'</div><div style="font-size:12px;color:var(--c-mut);min-height:20px;line-height:1.5">'+sub+'</div></div>';}
-  return cell('전체 취소율',(cur*100).toFixed(1)+'%',_cssDl(cur,prev)+(prev==null?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>')+'<br>총 취소 '+_cssN(tot)+'건 · 주문 '+_cssN(ordTot)+'건 기준',1)
-    +cell('전체 반품율','<span id="wk-ret-v" data-ord="'+ordTot+'">-</span>','<span id="wk-ret-s">반품 · 주문 '+_cssN(ordTot)+'건 기준</span>')
-    +cell('총 취소금액',_cssN(amt.sum)+'<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">원</span>','취소 주문 금액 합계')
-    +cell('총 반품 금액','-<span style="font-size:.5em;font-weight:600;color:var(--c-mut);margin-left:4px">원</span>','반품 금액 합계');
-}
 function _cssWkPairs(wk){
   var p={};wk.orders.forEach(function(o){if(o.n>0&&_CSS_RATE_EXCL.indexOf(o.plat)<0)p[o.brand+'|'+o.plat]=1;});return p;
 }
@@ -3532,7 +3531,7 @@ function _cssWkRate(wk,key,pv){
   return list.map(function(x){var r=x.o?x.c/x.o:0;
     var pb=key==='brand'&&pv?pv.byBrand.filter(function(b){return b.n===x.n})[0]:null;
     var bd=key==='brand'&&pv?(x.o?_cssDl(r,pb&&pb.o?pb.t/pb.o:null):''):'';
-    return '<div class="csd-br"><span class="l">'+x.n+bd+'<small style="margin-left:6px;display:block">주문 '+_cssN(x.o)+'건 · 취소금액 '+_cssN(x.a)+'원</small></span><div class="t"><u style="width:'+(r/mx*100)+'%;background:var(--c-red)"></u></div><b>'+(x.o?(r*100).toFixed(1)+'%':'-')+'</b><small>'+x.c+'건</small></div>';}).join('')||'<div class="csd-empty" style="margin-top:20px">주문 수량 데이터가 없습니다.</div>';
+    return '<div class="csd-br"><span class="l">'+x.n+bd+'<small style="margin-left:6px;display:block">주문 '+_cssN(x.o)+'건 · 취소금액 '+_cssN(x.a)+'원</small></span><div class="t"><u style="width:'+(r/mx*100)+'%;background:var(--c-fg)"></u></div><b>'+(x.o?(r*100).toFixed(1)+'%':'-')+'</b><small>'+x.c+'건</small></div>';}).join('')||'<div class="csd-empty" style="margin-top:20px">주문 수량 데이터가 없습니다.</div>';
 }
 function _cssWkGroup(rows,key){
   var m={};rows.forEach(function(r){var k=r[key];if(!m[k])m[k]={n:k,c:0,a:0};m[k].c++;m[k].a+=r.amt;});
@@ -3597,21 +3596,50 @@ function _cssWeekHTML(wk,label,pv){
   if(pv&&pv.paid)pv.reasons.forEach(function(x){if(x[0].indexOf('입금 전')===0)return;pvShare[x[0].split(' (')[0]]=x[1]/pv.paid;});
   var wkShare={};rows.forEach(function(r){var k=r.reason.split(' (')[0];wkShare[k]=(wkShare[k]||0)+1;});
   var reasonBadge=pv?function(x){if(x.n.indexOf(' (')>=0)return '';return _cssDl((wkShare[x.n]||0)/tot,pvShare[x.n]);}:null;
-  function card(t,body,span){return '<div class="csd-card" style="justify-content:flex-start;gap:8px;padding:18px 20px'+(span?';grid-column:span '+span:'')+'"><div class="csd-ch">'+t+'</div>'+body+'</div>';}
-  var ageSort=function(p,q){return (parseInt(p.n,10)||0)-(parseInt(q.n,10)||0)};
   var unkG=rows.filter(function(r){return r.gender==='확인 불가'}).length,unkA=rows.filter(function(r){return r.age==='확인 불가'}).length;
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
   var incl=rows.length-skipped,ordTot=wk.orders.filter(function(o){return !_CSS_RATE_EXCL.length||_CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
-  var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비 상대 변화(%), 괄호는 %p 차이 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
+  var cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null;
+  var rel=prev?(cur-prev)/prev*100:null;
+  var headline='이번 주 취소율은 <b>'+(cur*100).toFixed(1)+'%</b>'+(rel===null?'입니다.':'로 전월('+(prev*100).toFixed(1)+'%)보다 <b style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');
+  function kpi(l,v,sub,first){return '<div style="flex:1 1 150px;min-width:0;padding:0 22px;'+(first?'padding-left:0;':'border-left:1px solid var(--c-line);')+'"><div class="csd-ch" style="font-size:12px">'+l+'</div><div style="font-size:clamp(20px,1.9vw,28px);font-weight:800;letter-spacing:-.03em;line-height:1.2;margin-top:4px;white-space:nowrap">'+v+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;min-height:18px">'+sub+'</div></div>';}
+  var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
+  var kpis='<div style="display:flex;flex-wrap:wrap;gap:14px 0;padding:16px 0;border-top:1px solid var(--c-line);border-bottom:1px solid var(--c-line)">'
+    +kpi('전체 취소율',(cur*100).toFixed(1)+'%',prev==null?'':'전월 '+(prev*100).toFixed(1)+'% · '+_cssDl(cur,prev),1)
+    +kpi('총 취소',_cssN(tot)+unit('건'),'주문 '+_cssN(ordTot)+'건 기준')
+    +kpi('총 취소금액',_cssN(sum)+unit('원'),'건당 평균 '+_cssN(tot?Math.round(sum/tot):0)+'원')
+    +kpi('전체 반품율','<span id="wk-ret-v" data-ord="'+ordTot+'">-</span>','<span id="wk-ret-s">반품 · 주문 '+_cssN(ordTot)+'건 기준</span>')
+    +kpi('총 반품 금액','-'+unit('원'),'반품 금액 합계')
+    +'</div>';
+  function ga(w){var c=w.charCodeAt(w.length-1);return (c>=0xAC00&&c<=0xD7A3&&(c-0xAC00)%28)?'이':'가';}
+  var notes=[];
+  if(pv){
+    var ds=Object.keys(wkShare).filter(function(k){return pvShare[k]!=null}).map(function(k){return {k:k,w:wkShare[k]/tot,p:pvShare[k],d:wkShare[k]/tot-pvShare[k]}}).sort(function(a,b){return b.d-a.d});
+    var up=ds[0],dn=ds[ds.length-1];
+    if(up&&up.d>0)notes.push(['var(--c-red)','‘'+up.k+'’'+ga(up.k)+' 늘었어요','전체 취소의 '+Math.round(up.w*100)+'% · 전월 '+(up.p*100).toFixed(1)+'%보다 ▲ '+(up.d*100).toFixed(1)+'%p']);
+    if(dn&&dn!==up&&dn.d<0)notes.push(['var(--c-blue)','‘'+dn.k+'’'+ga(dn.k)+' 줄었어요','전체 취소의 '+Math.round(dn.w*100)+'% · 전월 '+(dn.p*100).toFixed(1)+'%보다 ▼ '+Math.abs(dn.d*100).toFixed(1)+'%p']);
+  }
+  var pg=_cssWkGroup(rows,'prod').sort(function(a,b){return b.c-a.c})[0];
+  if(pg){
+    var pr=rows.filter(function(r){return r.prod===pg.n});
+    function mode(key){var m={};pr.forEach(function(r){if(r[key]==='확인 불가')return;m[r[key]]=(m[r[key]]||0)+1;});var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a]});return ks.length&&m[ks[0]]>=2?ks[0]:'';}
+    var ma=mode('age'),mg=mode('gender'),who=(ma||mg)?' · 확인된 건 중 주로 '+(ma?ma+' ':'')+(mg?mg.replace('성','')+'성':''):'';
+    notes.push(['var(--c-fg)','‘'+pg.n+'’'+ga(pg.n)+' 가장 많아요',pg.c+'건 · 전체 취소의 '+Math.round(pg.c/tot*100)+'%'+who]);
+  }
+  var nh=notes.length?'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px 26px;margin-top:18px">'+notes.map(function(n){return '<div style="border-left:2px solid '+n[0]+';padding-left:12px;border-radius:0"><div style="font-size:14px;font-weight:700">'+n[1]+'</div><div style="font-size:12px;color:var(--c-mut);margin-top:3px;line-height:1.6">'+n[2]+'</div></div>';}).join('')+'</div>':'';
+  function sec(t,body,full){return '<div class="wk2-s"'+(full?' style="grid-column:1/-1"':'')+'><div class="wk2-h">'+t+'</div>'+body+'</div>';}
+  var note='기간 '+(wk.range||label)+' · 취소금액은 취소 주문 금액 합계 · 증감은 전월 월간 집계 대비(%), 괄호는 %p 차이 · 사유 비중은 전월 결제 후 취소 기준 · 확인 불가는 별도 집계 (성별 '+unkG+'건 · 나이 '+unkA+'건)'+(skipped?' · 주문 수 미입력 취소 '+skipped+'건은 취소율에서 제외':'');
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
-    +'<div class="csd-grid" style="grid-template-columns:repeat(6,minmax(0,1fr));grid-template-rows:auto">'
-    +'<div class="csd-card" style="grid-column:1/-1;flex-direction:row;flex-wrap:wrap;gap:12px 0;padding:12px 0">'+_cssWkKpi(incl,ordTot,pv,{sum:sum,cnt:tot},tot)+'</div>'
-    +card('브랜드 · 플랫폼별 취소율','<div class="csd-ch" style="font-size:11px;opacity:.8">브랜드</div>'+_cssWkRate(wk,'brand',pv)+'<div style="border-top:1px solid var(--c-line);margin:4px 0"></div><div class="csd-ch" style="font-size:11px;opacity:.8">플랫폼</div>'+_cssWkRate(wk,'plat',pv),2)
-    +card('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}),2)
-    +card('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1,col:'var(--c-blue)'}),2)
-    +card('일자별 취소 추이',_cssWkDaily(rows),3)
-    +card('나이대별 · 성별',_cssWkAgeGender(rows),3)
-    +'</div></div>';
+    +'<p style="font-size:clamp(17px,1.7vw,22px);font-weight:600;line-height:1.55;margin:0 0 16px;letter-spacing:-.01em">'+headline+'</p>'
+    +kpis+nh
+    +'<div class="wk2-g">'
+    +sec('사유별',_cssWkBars(_cssWkGroup(rows,'reason'),tot,{badge:reasonBadge}))
+    +sec('제품별',_cssWkBars(_cssWkGroup(rows,'prod'),tot,{amt:1}))
+    +sec('브랜드별 취소율',_cssWkRate(wk,'brand',pv))
+    +sec('플랫폼별 취소율',_cssWkRate(wk,'plat',pv))
+    +sec('나이대별 · 성별',_cssWkAgeGender(rows),1)
+    +sec('일자별 취소 추이',_cssWkDaily(rows),1)
+    +'</div><p class="csd-note">'+note+'</p></div>';
   return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
 }
 function _cssWkRetLoad(y,m,w,tok){
