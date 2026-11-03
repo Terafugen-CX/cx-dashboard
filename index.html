@@ -134,6 +134,16 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .seg-btn:disabled:hover{background:none;color:var(--muted)}
 .css-sel{border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:5px 30px 5px 12px;font-size:13px;font-weight:600;color:var(--fg);font-family:inherit;cursor:pointer;outline:none;-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%23999' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;box-shadow:0 1px 3px rgba(0,0,0,.06);transition:border-color .15s}
 .css-sel:focus{border-color:var(--accent)}
+.rs-in{flex:1 1 280px;max-width:460px;min-width:180px;border:1px solid var(--line);background:var(--surface);border-radius:9px;padding:6px 12px;font-size:13px;color:var(--fg);font-family:inherit;outline:none}
+.rs-in:focus{border-color:var(--accent)}
+.rs-go{font:inherit;font-size:13px;font-weight:600;color:var(--accent);background:var(--accent-soft);border:none;border-radius:9px;padding:7px 18px;cursor:pointer}
+.rs-go:hover{opacity:.85}
+.rs-count{font-size:13px;color:var(--muted);margin:0 2px 8px}
+.rs-tbl{background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
+.rs-tbl table{width:100%;border-collapse:collapse;font-size:13px}
+.rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:10px 14px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rs-tbl td{padding:9px 14px;border-bottom:1px solid var(--line);vertical-align:top}
+.rs-tbl tr:last-child td{border-bottom:none}
 .csd{--c-bg:#080808;--c-fg:#f2f2f0;--c-mut:rgba(242,242,240,.5);--c-dim:rgba(242,242,240,.22);--c-line:rgba(255,255,255,.09);--c-sf:rgba(255,255,255,.055);--c-red:#e04040;--c-blue:#5eaeff;--c-gold:#f5b942;display:flex;flex-direction:column;gap:16px}
 .csd-slide{background:var(--c-bg);color:var(--c-fg);border-radius:16px;padding:36px 40px;display:flex;flex-direction:column}
 .csd-cover{min-height:min(560px,70vh);justify-content:space-between}
@@ -794,7 +804,14 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 
     <!-- 리셀러 뷰 -->
     <section id="reseller-view" style="display:none;padding:24px 0">
-      <div class="csd-empty">리셀러 리스트는 준비 중입니다.</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <select class="css-sel" id="rs-brand"><option value="">브랜드 선택</option><option>테라퓨젠</option><option>프로즌랩</option><option>덴티플라</option><option>메디그로우</option><option>셀로핏</option><option>파미코젠</option></select>
+        <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option></select>
+        <input type="text" id="rs-q" class="rs-in" placeholder="검색어 입력" autocomplete="off" onkeydown="if(event.key==='Enter')rsSearch()">
+        <button type="button" class="rs-go" onclick="rsSearch()">조회</button>
+      </div>
+      <div id="rs-note" style="font-size:12px;color:var(--muted);margin:8px 2px 0;min-height:16px"></div>
+      <div id="rs-result" style="margin-top:14px"><div class="csd-empty">검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.</div></div>
     </section>
 
     <!-- CS SUMMARY 뷰 -->
@@ -3767,6 +3784,50 @@ function cssUpdate(){
 }
 
 cssUpdate();
+
+/* ===== 리셀러 관리 ===== */
+var _RS_SHEET='https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/export?format=csv&gid=';
+var _RS_DEFAULT_GID='282932725';
+var _RS_GIDS={};
+var _RS_MASK=true;
+var _rsCache={},_rsTok=0;
+function _rsEsc(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function _rsMaskName(v){v=String(v||'').trim();if(v.length<=1)return v;if(v.length===2)return v.charAt(0)+'*';return v.charAt(0)+new Array(v.length-1).join('*')+v.charAt(v.length-1);}
+function _rsMaskPhone(v){var d=String(v||'').replace(/\D/g,'');if(d.length<8)return v;return d.slice(0,3)+'-****-'+d.slice(-4);}
+function _rsMaskId(v){v=String(v||'');var i=v.indexOf('@'),h=i<0?v:v.slice(0,i),t=i<0?'':v.slice(i);return h.slice(0,3)+'***'+t;}
+function _rsMaskAddr(v){var p=String(v||'').trim().split(/\s+/);return p.slice(0,2).join(' ')+(p.length>2?' ***':'');}
+function _rsMaskIp(v){var p=String(v||'').split('.');return p.length===4?p[0]+'.'+p[1]+'.*.*':v;}
+function _rsView(r){return _RS_MASK?{name:_rsMaskName(r.name),id:_rsMaskId(r.id),ord:r.ord,phone:_rsMaskPhone(r.phone),addr:_rsMaskAddr(r.addr),ip:_rsMaskIp(r.ip)}:r;}
+function _rsLoad(gid){
+  if(_rsCache[gid])return Promise.resolve(_rsCache[gid]);
+  return fetch(_RS_SHEET+gid+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){
+    var rows=_parseCSV(t),out=[];
+    for(var i=1;i<rows.length;i++){var c=rows[i];if(!(c[0]||c[3]||c[4]||c[5]))continue;out.push({name:(c[0]||'').trim(),id:(c[1]||'').trim(),ord:(c[2]||'').trim(),phone:(c[3]||'').trim(),addr:(c[4]||'').trim(),ip:(c[5]||'').trim()});}
+    _rsCache[gid]=out;return out;
+  });
+}
+function rsSearch(){
+  var box=document.getElementById('rs-result'),note=document.getElementById('rs-note');if(!box)return;
+  var brand=document.getElementById('rs-brand').value,type=document.getElementById('rs-type').value,q=(document.getElementById('rs-q').value||'').trim();
+  if(!type){box.innerHTML='<div class="csd-empty">검색 항목(이름 / 연락처 / IP / 주소)을 선택해 주세요.</div>';return;}
+  if(!q){box.innerHTML='<div class="csd-empty">검색어를 입력해 주세요.</div>';return;}
+  var gid=(brand&&_RS_GIDS[brand])||_RS_DEFAULT_GID,tok=++_rsTok;
+  note.textContent=brand&&!_RS_GIDS[brand]?'현재 시트에는 브랜드 구분이 없어 전체 데이터에서 검색합니다.':'';
+  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  _rsLoad(gid).then(function(all){
+    if(tok!==_rsTok)return;
+    var ql=q.toLowerCase(),qd=q.replace(/\D/g,'');
+    var hit=all.filter(function(r){
+      if(type==='phone')return qd.length>0&&r.phone.replace(/\D/g,'').indexOf(qd)>=0;
+      return String(r[type]||'').toLowerCase().indexOf(ql)>=0;
+    });
+    if(!hit.length){box.innerHTML='<div class="csd-empty">일치하는 결과가 없습니다.</div>';return;}
+    var shown=hit.slice(0,200);
+    var th='<tr><th>이름</th><th>아이디</th><th>주문번호</th><th>연락처</th><th>주소</th><th>IP</th></tr>';
+    var tb=shown.map(function(r){var v=_rsView(r);return '<tr><td>'+_rsEsc(v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td>'+_rsEsc(v.ord)+'</td><td>'+_rsEsc(v.phone)+'</td><td>'+_rsEsc(v.addr)+'</td><td>'+_rsEsc(v.ip)+'</td></tr>';}).join('');
+    box.innerHTML='<div class="rs-count">검색 결과 <b>'+hit.length+'</b>건'+(hit.length>shown.length?' (상위 '+shown.length+'건 표시)':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':'')+'</div><div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
+  }).catch(function(e){if(tok===_rsTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+_rsEsc(e.message)+'). 시트 공유 설정을 확인하세요.</div>';});
+}
 
 /* ===== 날짜 세그먼트 & 자동 초기화 ===== */
 function _fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
