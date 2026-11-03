@@ -3701,8 +3701,16 @@ function _cssWeekHTML(wk,label,pv){
 function _cssWkFit(){
   var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
   sl.style.zoom=1;
-  var top=sl.getBoundingClientRect().top,avail=window.innerHeight-Math.max(top,0)-12;
-  for(var i=0;i<3;i++){var h=sl.getBoundingClientRect().height,z=parseFloat(sl.style.zoom)||1;if(h<=avail+1&&i>0)break;var nz=Math.max(.6,Math.min(1,z*avail/h));if(Math.abs(nz-z)<.005)break;sl.style.zoom=nz;}
+  var avail=window.innerHeight-Math.max(sl.getBoundingClientRect().top,0)-12,MAXZ=1.5,MINZ=.6;
+  for(var i=0;i<6;i++){
+    var h=sl.getBoundingClientRect().height,z=parseFloat(sl.style.zoom)||1,ratio=avail/h;
+    if(h<=avail&&ratio<1.03)break;
+    var nz=Math.max(MINZ,Math.min(MAXZ,z*ratio));
+    if(Math.abs(nz-z)<.005)break;
+    sl.style.zoom=nz;
+  }
+  var h2=sl.getBoundingClientRect().height;
+  if(h2>avail+1){var z2=parseFloat(sl.style.zoom)||1;sl.style.zoom=Math.max(MINZ,z2*avail/h2*.99);}
 }
 if(!window._wkFitB){window._wkFitB=1;window.addEventListener('resize',function(){_cssWkFit();});}
 function _cssWkRetLoad(y,m,w,tok){
