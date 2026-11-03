@@ -3561,7 +3561,8 @@ function _cssWkRows(csv){
     if(i<=hi)return;
     var b=_cssWkDate(g(r,'날짜'));if(b)blk=b;
     if(!g(r,'주문번호')||!g(r,'브랜드'))return;
-    (g(r,'취소 / 반품').indexOf('반품')>=0?rets:out).push({cd:_cssWkDate(g(r,'취소 접수일'))||blk,ord:g(r,'주문번호'),brand:g(r,'브랜드'),plat:g(r,'플랫폼')||'미기재',gender:g(r,'성별')||'확인 불가',age:g(r,'나이')||'확인 불가',prod:g(r,'제품')||'미기재',reason:g(r,'사유')||'미기재',amt:_cssAmt(g(r,'금액'))});
+    var isRet=g(r,'취소 / 반품').indexOf('반품')>=0;
+    (isRet?rets:out).push({cd:isRet?blk:(_cssWkDate(g(r,'취소 접수일'))||blk),ord:g(r,'주문번호'),brand:g(r,'브랜드'),plat:g(r,'플랫폼')||'미기재',gender:g(r,'성별')||'확인 불가',age:g(r,'나이')||'확인 불가',prod:g(r,'제품')||'미기재',reason:g(r,'사유')||'미기재',amt:_cssAmt(g(r,'금액'))});
   });
   return {rows:out,retRows:rets,range:'',orders:_cssWkOrders(csv)};
 }
@@ -3694,20 +3695,20 @@ function _cssWeekHTML(wk,label,pd){
   var unit=function(u){return '<span style="font-size:.55em;font-weight:600;color:var(--c-mut);margin-left:3px">'+u+'</span>';};
   var cdays=rows.map(function(r){return r.cd||'';});
   var cday={};rows.forEach(function(r){if(!r.cd)return;var o=cday[r.cd]||(cday[r.cd]={c:0,a:0});o.c++;o.a+=r.amt;});
-  var rr=wk.retRows||[],fromSheet=rr.length>0,rday={},raday={},retAmt=0;
+  var rr=wk.retRows||[],rday={},raday={},retAmt=0;
   rr.forEach(function(r){retAmt+=r.amt;if(r.cd){rday[r.cd]=(rday[r.cd]||0)+1;raday[r.cd]=(raday[r.cd]||0)+r.amt;}});
-  var retCur=ordTot?rr.length/ordTot:0,retSubTxt=fromSheet?'반품금액 '+_cssN(retAmt)+'원':(noOrd?'주문 수량 입력 전':'주문 '+_cssN(ordTot)+'건 기준');
-  window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,rs:fromSheet,retSub:fromSheet?retSubTxt:''};window._wkSel={};
-  var cmin=cdays.filter(Boolean).sort()[0]||'',axisStart=cmin||(wk.iso?wk.iso[0]:'');
+  var retCur=ordTot?rr.length/ordTot:0,retSubTxt='반품금액 '+_cssN(retAmt)+'원';
+  window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,retSub:retSubTxt};window._wkSel={};
+  var cmin=cdays.concat(rr.map(function(r){return r.cd||'';})).filter(Boolean).sort()[0]||'',axisStart=cmin||(wk.iso?wk.iso[0]:'');
   var kpis='<div class="wk5">'
     +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('취소율',noOrd?'-':(cur*100).toFixed(1)+'%',noOrd?'주문 수량 입력 전':prev==null?'':_cssDl(cur,prev)+' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>',1)
     +kpi('<span id="wk-c-l">취소</span>','<span id="wk-c-n">'+_cssN(tot)+'</span>'+unit('건'),'<span id="wk-c-s">취소금액 '+_cssN(sum)+'원 · 건당 '+_cssN(tot?Math.round(sum/tot):0)+'원</span>')
     +'</div><div class="wk5-t">'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0','c')+'</div></div>'
     +'<div class="wk5-c"><div class="wk5-k">'
-    +kpi('반품율','<span id="wk-ret-v" data-ord="'+ordTot+'" data-prev="'+prevRet+'">'+(fromSheet?(ordTot?(retCur*100).toFixed(1)+'%':'-'):'-')+'</span>','<span id="wk-ret-d">'+(fromSheet&&ordTot?_cssDl(retCur,prevRet===''?null:prevRet)+(prevRet===''?'':' <span style="margin-left:4px">전월 '+(prevRet*100).toFixed(1)+'%</span>'):'')+'</span>',1)
-    +kpi('<span id="wk-r-l">반품</span>','<span id="wk-ret-n">'+(fromSheet?_cssN(rr.length):'-')+'</span>'+unit('건'),'<span id="wk-ret-s">'+retSubTxt+'</span>')
-    +'</div><div class="wk5-t"><div id="wk-ret-chart" data-start="'+axisStart+'">'+(fromSheet?_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r'):'<div class="csd-empty" style="margin:8px 0 0;text-align:left">불러오는 중…</div>')+'</div></div></div>'
+    +kpi('반품율',ordTot?(retCur*100).toFixed(1)+'%':'-',ordTot?_cssDl(retCur,prevRet===''?null:prevRet)+(prevRet===''?'':' <span style="margin-left:4px">전월 '+(prevRet*100).toFixed(1)+'%</span>'):'주문 수량 입력 전',1)
+    +kpi('<span id="wk-r-l">반품</span>','<span id="wk-ret-n">'+_cssN(rr.length)+'</span>'+unit('건'),'<span id="wk-ret-s">'+retSubTxt+'</span>')
+    +'</div><div class="wk5-t"><div id="wk-ret-chart">'+_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r')+'</div></div></div>'
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
@@ -3731,7 +3732,7 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
   }else{
     var n=sel?(D.r[sel]||0):D.rt;
     if($('wk-ret-n'))$('wk-ret-n').textContent=_cssN(n);
-    if($('wk-ret-s'))$('wk-ret-s').textContent=sel?(D.rs?'반품금액 '+_cssN(D.ra[sel]||0)+'원':'반품 금액 -원')+' · '+lab+' 기준':D.retSub;
+    if($('wk-ret-s'))$('wk-ret-s').textContent=sel?'반품금액 '+_cssN(D.ra[sel]||0)+'원 · '+lab+' 기준':D.retSub;
     if($('wk-r-l'))$('wk-r-l').textContent=sel?'반품 · '+lab:'반품';
   }
 });}
@@ -3750,37 +3751,6 @@ function _cssWkFit(){
   if(h2>avail+1){var z2=parseFloat(sl.style.zoom)||1;sl.style.zoom=Math.max(MINZ,z2*avail/h2*.99);}
 }
 if(!window._wkFitB){window._wkFitB=1;window.addEventListener('resize',function(){_cssWkFit();});}
-function _cssWkRetLoad(y,m,w,tok){
-  var iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];if(!iso)return;
-  var a=new Date(iso[0]+'T00:00:00'),b=new Date(iso[1]+'T23:59:59');
-  var yms=[],c=new Date(a.getFullYear(),a.getMonth(),1);
-  for(;c<=b;c.setMonth(c.getMonth()+1))yms.push(c.getFullYear()*100+c.getMonth()+1);
-  yms=yms.filter(function(k){return _RETURN_MONTH_GIDS[k]});if(!yms.length)return;
-  Promise.all(yms.map(function(k){return fetch(_RETURN_SHEET_BASE+_RETURN_MONTH_GIDS[k]).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){return {ym:k,rows:_parseCSV(t)};});}))
-  .then(function(res){
-    if(tok!==_cssWkTok)return;
-    var days=[],seen={};
-    res.forEach(function(rs){
-      var isNew=rs.ym>=_RETURN_NEW_FMT_FROM,ld=null;
-      for(var i=1;i<rs.rows.length;i++){
-        var row=isNew?_parseRetRow_new(rs.rows[i]):_parseRetRow_old(rs.rows[i]);if(!row)continue;
-        if(row.date)ld=row.date;else if(ld)row.date=ld;
-        if(!row.date||row.date<a||row.date>b||row.type!=='반품')continue;
-        if(row.orderNo){if(seen[row.orderNo])continue;seen[row.orderNo]=1;}
-        days.push(_fmtD(row.date));
-      }
-    });
-    var n=days.length,v=document.getElementById('wk-ret-v');if(!v)return;
-    var ord=+v.getAttribute('data-ord')||0,prev=parseFloat(v.getAttribute('data-prev')),cur=ord?n/ord:0;
-    v.textContent=ord?(cur*100).toFixed(1)+'%':'-';
-    var d=document.getElementById('wk-ret-d');if(d)d.innerHTML=ord?_cssDl(cur,isNaN(prev)?null:prev)+(isNaN(prev)?'':' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>'):'';
-    var nn=document.getElementById('wk-ret-n');if(nn)nn.textContent=_cssN(n);
-    var sl=document.getElementById('wk-ret-s');if(sl)sl.textContent=ord?'주문 '+_cssN(ord)+'건 기준':'주문 수량 입력 전';
-    var rday={};days.forEach(function(k){rday[k]=(rday[k]||0)+1;});if(window._wkD){window._wkD.r=rday;window._wkD.rt=n;window._wkD.retSub=sl?sl.textContent:'';}
-    var ch=document.getElementById('wk-ret-chart');if(ch)ch.innerHTML=_wkTrend(_wkDays(days,[ch.getAttribute('data-start')||iso[0],iso[1]]),'#6b7280','r');
-    if(window._cssWkFit)_cssWkFit();
-  }).catch(function(){});
-}
 function _cssWeekLoad(box,y,m,w){
   var gid=_CSS_WEEK_GIDS[y+'-'+m+'-'+w];
   if(!gid){box.innerHTML='<div class="csd-empty">'+m+'월 '+w+'주차 데이터는 아직 시트가 연결되지 않았습니다.</div>';return;}
@@ -3794,7 +3764,7 @@ function _cssWeekLoad(box,y,m,w){
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
-    var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;if(!(wk.retRows&&wk.retRows.length))_cssWkRetLoad(y,m,w,tok);_cssWkFit();
+    var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkFit();
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
 }
 function cssUpdate(){
