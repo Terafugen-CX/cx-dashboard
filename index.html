@@ -3749,13 +3749,11 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
     var o=sel?(D.c[sel]||{c:0,a:0}):D.ct;
     if($('wk-c-n'))$('wk-c-n').textContent=_cssN(o.c);
     if($('wk-c-s'))$('wk-c-s').textContent='취소금액 '+_cssN(o.a)+'원 · 건당 '+_cssN(o.c?Math.round(o.a/o.c):0)+'원';
-    if($('wk-c-l'))$('wk-c-l').textContent=sel?'취소 · '+lab:'취소';
     if($('wk-c-list'))$('wk-c-list').innerHTML=_wkList(D.cRows,sel,'취소 내역');
   }else{
     var n=sel?(D.r[sel]||0):D.rt;
     if($('wk-ret-n'))$('wk-ret-n').textContent=_cssN(n);
-    if($('wk-ret-s'))$('wk-ret-s').textContent=sel?'반품금액 '+_cssN(D.ra[sel]||0)+'원 · '+lab+' 기준':D.retSub;
-    if($('wk-r-l'))$('wk-r-l').textContent=sel?'반품 · '+lab:'반품';
+    if($('wk-ret-s'))$('wk-ret-s').textContent=sel?'반품금액 '+_cssN(D.ra[sel]||0)+'원':D.retSub;
     if($('wk-r-list'))$('wk-r-list').innerHTML=_wkList(D.rRows,sel,'반품 내역');
   }
 });}
