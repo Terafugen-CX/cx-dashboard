@@ -233,21 +233,21 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
-.wk6-r{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) minmax(0,1fr);gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;cursor:pointer;border-radius:6px}
+.wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),minmax(44px,1fr));gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
+.wk6-r{cursor:pointer}
 .wk6-r:hover{background:rgba(0,0,0,.025)}
 .wk6-r.sel{background:rgba(43,125,224,.08)}
+.wk6-hd{font-size:10.5px;color:var(--c-mut);font-weight:600;padding-top:0;padding-bottom:4px;border-bottom:1px solid var(--c-line);border-radius:0;margin-bottom:2px}
+.wk6-hd .am,.wk6-hd .ct{text-align:right}
+.wk6-hd .rh{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wk6-r .nm{font-weight:600}
 .wk6-r .am{text-align:right;font-variant-numeric:tabular-nums}
 .wk6-r>b{text-align:right;font-variant-numeric:tabular-nums}
+.wk6-r .rc{text-align:center;font-variant-numeric:tabular-nums}
+.wk6-r .rc b{font-weight:700}
 .wk6-bar{display:flex;height:10px;background:var(--c-line);border-radius:3px;overflow:hidden;min-width:0}
 .wk6-bar i{display:block;height:100%}
-.wk6-r .rs{color:var(--c-mut);font-size:11px;line-height:1.5}
-.wk6-r .rs b{color:var(--c-fg);font-weight:700}
-.wk6-lg{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:10.5px;color:var(--c-mut);margin:0 0 6px}
-.wk6-lg s{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
-.wk6-lgs{margin-left:auto}
 .wk6-age{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--c-line);color:var(--c-mut)}
-.wk6-age .k{font-weight:700;color:var(--c-fg)}
 .wk6-age b{color:var(--c-fg);font-weight:700}
 .wk6-e{font-size:12px;color:var(--c-mut);padding:3px 0}
 .wk5-ring{opacity:0;transition:opacity .15s}
@@ -3711,32 +3711,36 @@ function _wkAgeSort(a,b){
   return (parseInt(a,10)||0)-(parseInt(b,10)||0);
 }
 function _wkGenBar(gen,scale){
-  var g=[['m','#2b7de0','남성'],['f','#f4808f','여성'],['u','#d3d6da','불명']].map(function(x){return gen[x[0]]?'<i title="'+x[2]+' '+gen[x[0]]+'건" style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
-  return '<div class="wk6-bar">'+g+'</div>';
+  var seg=[['m','#2b7de0'],['f','#f4808f'],['u','#d3d6da']].map(function(x){return gen[x[0]]?'<i style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
+  return '<div class="wk6-bar" title="남성 '+(gen.m||0)+'명 · 여성 '+(gen.f||0)+'명 · 불명 '+(gen.u||0)+'명">'+seg+'</div>';
 }
 function _wkAgeText(f,psel){
   var f2=psel?f.filter(function(r){return r.prod===psel;}):f,a={};
   f2.forEach(function(r){a[r.age]=(a[r.age]||0)+1;});
-  var t=Object.keys(a).sort(_wkAgeSort).map(function(k){return '<span>'+_rsEsc(k)+' <b>'+a[k]+'명</b></span>';}).join('');
-  return '<div class="wk6-age"><span class="k">'+(psel?_rsEsc(psel)+' · ':'')+'나이대</span>'+t+'</div>';
+  return '<div class="wk6-age">'+Object.keys(a).sort(_wkAgeSort).map(function(k){return '<span>'+_rsEsc(k)+' <b>'+a[k]+'명</b></span>';}).join('')+'</div>';
 }
+function _wkRK(x){return String(x||'').split(' (')[0].trim()||'미기재';}
 function _wkList(rows,sel,title,psel){
   var f=sel?rows.filter(function(r){return r.cd===sel;}):rows;
   var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'';
   var head='<div class="wk6-h">'+title+(lab?' · '+lab:'')+'</div>';
   if(!f.length)return head+'<div class="wk6-e">내역이 없습니다.</div>';
+  var tot={};f.forEach(function(r){var k=_wkRK(r.reason);tot[k]=(tot[k]||0)+1;});
+  var keys=Object.keys(tot).sort(function(a,b){return tot[b]-tot[a];}),cols=keys.slice(0,5);
+  if(keys.length>5)cols.push('기타');
+  function colOf(k){return cols.indexOf(k)>=0?k:'기타';}
   var g={};
   f.forEach(function(r){
-    var o=g[r.prod]||(g[r.prod]={p:r.prod,c:0,a:0,r:{},gen:{}});
-    o.c++;o.a+=r.amt;o.r[r.reason]=(o.r[r.reason]||0)+1;
+    var o=g[r.prod]||(g[r.prod]={p:r.prod,c:0,a:0,rc:{},gen:{}});
+    o.c++;o.a+=r.amt;var ck=colOf(_wkRK(r.reason));o.rc[ck]=(o.rc[ck]||0)+1;
     var gk=r.gender==='남성'?'m':r.gender==='여성'?'f':'u';o.gen[gk]=(o.gen[gk]||0)+1;
   });
   var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.c-a.c;});
-  var mx=list[0].c;
-  var lg='<div class="wk6-lg"><span><s style="background:#2b7de0"></s>남성</span><span><s style="background:#f4808f"></s>여성</span><span><s style="background:#d3d6da"></s>불명</span><span class="wk6-lgs">막대를 누르면 제품별 나이대가 아래에 표시됩니다</span></div>';
-  return head+lg+list.map(function(o){
-    var rs=Object.keys(o.r).sort(function(a,b){return o.r[b]-o.r[a];}).map(function(k){return _rsEsc(k)+' <b>'+o.r[k]+'</b>';}).join(' · ');
-    return '<div class="wk6-r'+(psel===o.p?' sel':'')+'" data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+'<span class="rs">'+rs+'</span></div>';
+  var mx=list[0].c,st=' style="--n:'+cols.length+'"';
+  var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" title="'+_rsEsc(k)+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
+  return head+hd+list.map(function(o){
+    var cells=cols.map(function(k){return '<span class="rc">'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'')+'</span>';}).join('');
+    return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+_wkAgeText(f,psel);
 }
 function _cssWeekHTML(wk,label,pd){
