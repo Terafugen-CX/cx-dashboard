@@ -234,11 +234,30 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
-.wk7{margin-top:16px;padding-top:12px;border-top:1px solid var(--c-line)}
-.wk7-h{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
-.wk7 ul{margin:0;padding-left:16px}
-.wk7 li{font-size:13px;line-height:1.75;color:var(--c-fg);margin:0 0 2px}
-.wk7 li b{font-weight:700}
+.op{margin-top:22px;background:#fff;color:#1a1c1f;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:30px 36px}
+.op-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid #1a1c1f}
+.op-eb{font-size:12px;color:#6b7076}
+.op h2{font-size:34px;font-weight:800;letter-spacing:-.025em;margin:6px 0 0;color:#1a1c1f}
+.op-meta{text-align:right;font-size:12px;color:#6b7076;line-height:1.75}
+.op-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.op-k{border:1px solid rgba(0,0,0,.1);border-radius:12px;padding:16px 18px;min-width:0}
+.op-k.hot{border-color:#d6203a}.op-k.hot .v{color:#d6203a}
+.op-k .l{font-size:12px;font-weight:700}
+.op-k .v{font-size:32px;font-weight:800;letter-spacing:-.03em;margin:6px 0 4px;line-height:1.15}
+.op-k .v small{font-size:15px;font-weight:600;margin:0 3px 0 2px}
+.op-k .s{font-size:12px;color:#6b7076;line-height:1.7}
+.op-c{background:#f3f4f6;border-radius:12px;padding:18px 24px;margin-bottom:24px}
+.op-ch{font-size:12px;font-weight:700;margin-bottom:8px}
+.op-c ol{margin:0;padding-left:20px}
+.op-c li{font-size:14px;line-height:1.85;margin-bottom:3px}
+.op-th{font-size:14px;font-weight:800;margin:0 0 8px}
+.op-tb{width:100%;border-collapse:collapse;font-size:13px}
+.op-tb th{font-size:12px;font-weight:600;color:#6b7076;text-align:right;padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.12)}
+.op-tb td{text-align:right;padding:12px;border-bottom:1px solid rgba(0,0,0,.07);font-variant-numeric:tabular-nums}
+.op-tb .nm{text-align:left;font-weight:700}
+.op-tb .rs{text-align:left;color:#4b5057}
+.op-f{font-size:12px;color:#6b7076;margin-top:14px}
+@media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
 .wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),minmax(44px,1fr));gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
 .wk6-r{cursor:pointer}
@@ -3762,26 +3781,43 @@ function _wkList(rows,sel,title,psel){
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
-function _wkSummary(label,rows,rr,noOrd,cur,prev){
-  function top(list,fn){var m={};list.forEach(function(r){var k=fn(r);m[k]=(m[k]||0)+1;});var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a];});return ks.length?{k:ks[0],c:m[ks[0]]}:null;}
+function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
+  var e=_rsEsc,N=_cssN;
+  var cA=rows.reduce(function(a,r){return a+r.amt;},0),rA=rr.reduce(function(a,r){return a+r.amt;},0),tot=rows.length+rr.length,aAll=cA+rA;
+  function man(x){return Math.round(x/10000);}
   function md(d){return d?(+d.slice(5,7))+'/'+(+d.slice(8)):'';}
-  function line(name,list){
-    if(!list.length)return '<li><b>'+name+' 0건</b></li>';
-    var amt=list.reduce(function(a,r){return a+r.amt;},0),p=top(list,function(r){return r.prod;}),rs=top(list,function(r){return _wkRK(r.reason);}),dd=top(list.filter(function(r){return r.cd;}),function(r){return r.cd;});
-    var t='<b>'+name+' '+list.length+'건 · '+_cssN(amt)+'원</b> — 제품은 '+_rsEsc(p.k)+' '+p.c+'건('+Math.round(p.c/list.length*100)+'%)이 가장 많고, 사유는 '+_rsEsc(rs.k)+' '+rs.c+'건이 가장 많습니다.';
-    if(dd&&Object.keys(list.reduce(function(m,r){m[r.cd]=1;return m;},{})).length>1)t+=' 접수가 가장 많았던 날은 '+md(dd.k)+'('+dd.c+'건)입니다.';
-    return '<li>'+t+'</li>';
-  }
-  var items=[];
-  if(!noOrd&&prev!=null){var rel=prev?(cur-prev)/prev*100:0;items.push('<li><b>취소율 '+(cur*100).toFixed(1)+'%</b> — 전월('+(prev*100).toFixed(1)+'%)보다 '+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'.</li>');}
-  items.push(line('취소',rows));
-  items.push(line('반품',rr));
+  function topOf(list,fn){var m={};list.forEach(function(r){var k=fn(r);m[k]=(m[k]||0)+1;});return Object.keys(m).map(function(k){return {k:k,c:m[k]};}).sort(function(a,b){return b.c-a.c;});}
+  var all=rows.concat(rr);
+  var days=_wkDays(all.map(function(r){return r.cd||'';}),wk.iso?[(all.map(function(r){return r.cd||'';}).filter(Boolean).sort()[0]||wk.iso[0]),wk.iso[1]]:null).length||1;
+  var byDay=topOf(all.filter(function(r){return r.cd;}),function(r){return r.cd;}),byProd=topOf(all,function(r){return r.prod;}),byReason=topOf(all,function(r){return _wkRK(r.reason);});
+  var hot=byProd[0],hotRs=hot?topOf(all.filter(function(r){return r.prod===hot.k;}),function(r){return _wkRK(r.reason);})[0]:null;
+  var iso=wk.iso||[],period=iso.length?iso[0].replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');
+  var now=new Date(),pad=function(x){return String(x).padStart(2,'0');},stamp=now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
+  var rateMain=noOrd?'—':(cur*100).toFixed(1)+'<small>%</small> / '+(retCur*100).toFixed(1)+'<small>%</small>';
+  var rateSub=noOrd?'주문 수량이 입력되면 취소율·반품율이 표시됩니다':'전월 '+(prev==null?'-':(prev*100).toFixed(1)+'%')+' / '+(prevRet===''?'-':(prevRet*100).toFixed(1)+'%');
+  var kpis='<div class="op-kpis">'
+    +'<div class="op-k"><div class="l">취소·반품 주문</div><div class="v">'+tot+'<small>건</small></div><div class="s">취소 '+rows.length+'건 · 반품 '+rr.length+'건<br>하루 평균 '+(tot/days).toFixed(1)+'건 ('+days+'일 기준)</div></div>'
+    +'<div class="op-k"><div class="l">상품 금액</div><div class="v">'+N(man(aAll))+'<small>만 원</small></div><div class="s">취소 '+N(man(cA))+'만 원 · 반품 '+N(man(rA))+'만 원<br>주문당 '+(tot?(aAll/tot/10000).toFixed(1):'0')+'만 원</div></div>'
+    +'<div class="op-k"><div class="l">취소율 / 반품율</div><div class="v">'+rateMain+'</div><div class="s">'+rateSub+'</div></div>'
+    +'<div class="op-k hot"><div class="l">가장 많은 상품</div><div class="v">'+(hot?hot.c:0)+'<small>건</small></div><div class="s">'+(hot?e(hot.k)+' · 전체의 '+Math.round(hot.c/tot*100)+'%':'')+(hotRs?'<br>주요 사유 '+e(hotRs.k)+' '+hotRs.c+'건':'')+'</div></div>'
+    +'</div>';
   var gm=0,gf=0;rows.forEach(function(r){if(r.gender==='남성')gm++;else if(r.gender==='여성')gf++;});
-  var ages=rows.filter(function(r){return r.age&&r.age!=='확인 불가';}),ta=ages.length?top(ages,function(r){return r.age;}):null,parts=[];
-  if(gm+gf)parts.push('성별은 남성 '+Math.round(gm/(gm+gf)*100)+'%·여성 '+Math.round(gf/(gm+gf)*100)+'%(성별이 확인된 '+(gm+gf)+'건 기준)');
-  if(ta)parts.push('나이는 '+_rsEsc(ta.k)+'가 가장 많습니다('+ta.c+'명, 나이가 확인된 '+ages.length+'건 중)');
-  if(parts.length)items.push('<li><b>취소 고객층</b> — '+parts.join(', ')+'.</li>');
-  return '<div class="wk7"><div class="wk7-h">'+label+' 요약</div><ul>'+items.join('')+'</ul></div>';
+  var ages=topOf(rows.filter(function(r){return r.age&&r.age!=='확인 불가';}),function(r){return r.age;});
+  var concl=[];
+  concl.push('이번 주 취소·반품은 총 <b>'+tot+'건</b>(취소 '+rows.length+'건, 반품 '+rr.length+'건), 금액은 <b>'+N(man(aAll))+'만 원</b>입니다.'+(byDay[0]&&byDay.length>1?' 접수가 가장 많았던 날은 <b>'+md(byDay[0].k)+'</b>('+byDay[0].c+'건)입니다.':''));
+  if(byProd[0])concl.push('상품은 <b>'+e(byProd[0].k)+' '+byProd[0].c+'건</b>이 가장 많고'+(byProd[1]?', 다음은 '+e(byProd[1].k)+' '+byProd[1].c+'건':'')+'입니다. 상위 '+Math.min(2,byProd.length)+'개 상품이 전체의 '+Math.round((byProd[0].c+(byProd[1]?byProd[1].c:0))/tot*100)+'%를 차지합니다.');
+  if(byReason[0]){var cu=[];if(gm+gf)cu.push('성별은 남성 '+Math.round(gm/(gm+gf)*100)+'%·여성 '+Math.round(gf/(gm+gf)*100)+'%');if(ages[0])cu.push('나이는 '+e(ages[0].k)+'가 가장 많음');concl.push('사유는 <b>'+e(byReason[0].k)+' '+byReason[0].c+'건('+Math.round(byReason[0].c/tot*100)+'%)</b>이 가장 많습니다.'+(cu.length?' 취소 고객층: '+cu.join(', ')+'(확인된 건 기준).':''));}
+  if(noOrd)concl.push('주문 수량 표가 아직 입력되지 않아 취소율·반품율은 계산하지 않았습니다.');
+  else if(prev!=null){var rel=prev?(cur-prev)/prev*100:0;concl.push('취소율은 <b>'+(cur*100).toFixed(1)+'%</b>로 전월('+(prev*100).toFixed(1)+'%)보다 <b>'+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'</b>.');}
+  var P={};
+  rows.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.c++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
+  rr.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.t++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
+  var list=Object.keys(P).map(function(k){return P[k];}).sort(function(a,b){return (b.c+b.t)-(a.c+a.t);}),shown=list.slice(0,6);
+  var trs=shown.map(function(o){var rs=Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3).map(function(k){return e(k)+' '+o.rs[k];}).join(' · ');return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'—')+'</td><td>'+(o.t||'—')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
+  return '<div class="op"><div class="op-top"><div><div class="op-eb">CX팀 · 주간 취소·반품 보고서</div><h2>'+label+' 한 장 요약</h2></div><div class="op-meta">'+period+'<br>집계 기준: 취소 = 취소 접수일, 반품 = 취합일<br>작성 '+stamp+'</div></div>'
+    +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
+    +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th></tr></thead><tbody>'+trs+'</tbody></table>'
+    +'<div class="op-f">단위: 건 · 원 · 상품은 취소·반품이 많은 순 상위 '+shown.length+'개'+(list.length>shown.length?' (전체 '+list.length+'개 중)':'')+' · 취소율 = 취소 ÷ 주문 수량, 반품율 = 반품 ÷ 주문 수량</div></div>';
 }
 function _cssWeekHTML(wk,label,pd){
   var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
@@ -3811,8 +3847,8 @@ function _cssWeekHTML(wk,label,pd){
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
-    +kpis+_wkSummary(label,rows,rr,noOrd,cur,prev)+'</div>';
-  return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
+    +kpis+'</div>';
+  return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>'+_wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet);
 }
 if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(e){
   var pr=e.target&&e.target.closest?e.target.closest('.wk6-r'):null;
