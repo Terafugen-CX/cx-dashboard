@@ -154,8 +154,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-wrap .rs-in{max-width:none;flex:1 1 200px}
 .rs-tbl{display:block;width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
 .rs-tbl table{width:100%;border-collapse:collapse;font-size:13px}
-.rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
-.rs-tbl td{padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
+.rs-tbl th{text-align:center;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+.rs-tbl td{text-align:center;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
 .rs-tbl tr:last-child td{border-bottom:none}
 .rs-tag{display:inline-block;font-size:11px;font-weight:600;color:var(--fg);background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:1px 8px;margin-right:4px}
 .csd{--c-bg:#080808;--c-fg:#f2f2f0;--c-mut:rgba(242,242,240,.5);--c-dim:rgba(242,242,240,.22);--c-line:rgba(255,255,255,.09);--c-sf:rgba(255,255,255,.055);--c-red:#e04040;--c-blue:#5eaeff;--c-gold:#f5b942;display:flex;flex-direction:column;gap:16px}
@@ -900,13 +900,11 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
           <select class="css-sel" id="rs-rc-brand"><option value="">브랜드 선택</option><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select>
           <button type="button" class="rs-go" onclick="rsRecover()">회수 하기</button>
-        </div>
-        <div id="rs-rc-note" class="rs-hint">브랜드를 선택하고 회수 하기를 누르면 카페24 로그인 창이 열리고 쇼핑몰 아이디·부운영자 아이디·비밀번호가 입력됩니다. 캡차 체크와 로그인은 직접 해 주세요. (sync-server 폴더의 start-server.bat 을 먼저 실행해 두세요)</div>
-        <div style="margin-top:14px;padding-top:12px;border-top:1px dashed var(--c-bd,#d8dbe0)">
-          <div class="rs-hint" style="margin:0 0 8px">로그인한 뒤 아래 버튼을 누르면 회원등급 welcome 회원 중 사용가능 적립금이 있는 계정을 찾아 적립금 차감으로 회수합니다.</div>
           <button type="button" class="rs-go" onclick="rsScan()">회수 대상 조회</button>
-          <div id="rs-rc-act" style="margin-top:10px"></div>
         </div>
+        <div id="rs-hist" style="margin-top:12px"></div>
+        <div id="rs-rc-note" class="rs-hint"></div>
+        <div id="rs-rc-act" style="margin-top:10px"></div>
       </div>
       </div>
     </section>
@@ -4073,6 +4071,7 @@ function rsSearch(){
 }
 
 _rsShow('검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.');
+setTimeout(function(){rsHistLoad();},0);
 function rsRecover(){
   var sel=document.getElementById('rs-rc-brand'),note=document.getElementById('rs-rc-note');
   var b=sel.value;
@@ -4087,6 +4086,21 @@ function rsRecover(){
   .catch(function(e){loginCafe24(b);note.style.color='#d6203a';note.textContent='동기화 서버가 꺼져 있어 일반 창으로 열었습니다(쇼핑몰 아이디는 비어 있고 부운영자 아이디만 채워져요). 쇼핑몰 아이디: '+info.mallId+'  ·  전체 자동 입력: sync-server 폴더의 start-server.bat 을 실행한 뒤 다시 눌러 주세요.';});
 }
 var _rsPoll=null;
+function _rsHistShow(rows,msg){
+  var box=document.getElementById('rs-hist');if(!box)return;
+  var th='<tr><th>브랜드</th><th>이름</th><th>아이디</th><th>회수 금액</th><th>회수 날짜</th><th>회수 횟수</th></tr>';
+  var tb=(rows&&rows.length)?rows.map(function(r){
+    var b='';for(var k in BRAND_CAFE24){if(BRAND_CAFE24[k].mallId===r.mallId)b=k;}
+    var bn={terafugen:'테라퓨젠',frozenlab:'프로즌랩',dentipla:'덴티플라',mediglow:'메디그로우',cellofit:'셀로핏',pamicogen:'파미코젠'}[b]||r.mallId||'';
+    var d=new Date(r.last),ds=isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td>'+_rsEsc(_rsMaskId(r.id))+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
+  }).join(''):'<tr><td colspan="6" class="rs-empty">'+_rsEsc(msg||'회수 내역이 없습니다.')+'</td></tr>';
+  box.innerHTML='<div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
+}
+function rsHistLoad(){
+  fetch('http://localhost:3355/cafe24-recover/history').then(function(r){return r.json();}).then(function(d){_rsHistShow(d.rows);}).catch(function(){_rsHistShow([],'동기화 서버에 연결할 수 없어 회수 내역을 불러오지 못했습니다.');});
+}
+
 function _rsFmt(n){return Number(n||0).toLocaleString('ko-KR');}
 function _rsBrandInfo(){
   var sel=document.getElementById('rs-rc-brand'),b=sel.value;
@@ -4130,7 +4144,7 @@ function rsRun(limit,count,sum){
         el.innerHTML=(j.running?'진행 중 ':'완료 ')+j.done+' / '+j.total+'명 · 성공 '+j.ok+' · 건너뜀 '+j.skipped+' · 실패 '+j.failed+' · 회수 합계 '+_rsFmt(j.sum)+'원'+
           (last&&last.status==='error'?'<br><span style="color:#d6203a">'+_rsEsc(last.id||'')+' '+_rsEsc(last.error||'')+'</span>':'')+
           (j.running?' <a href="#" onclick="rsCancel();return false">중지</a>':'');
-        if(!j.running)clearInterval(_rsPoll);
+        if(!j.running){clearInterval(_rsPoll);rsHistLoad();}
       }).catch(function(){});
     },1500);
   })
