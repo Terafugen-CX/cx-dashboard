@@ -226,13 +226,14 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-wk .wk2-s .csd-br{font-size:12px;padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
 .wk5{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);border-bottom:1px solid var(--c-line);border-top:1px solid var(--c-line)}
-.wk5-c{padding:12px 0 14px;min-width:0}
+.wk5-c{padding:12px 0 14px;min-width:0;display:flex;flex-direction:column}
 .wk5-c+.wk5-c{border-left:1px solid var(--c-line);padding-left:20px}
 .wk5-c:first-child{padding-right:20px}
 .wk5-k{display:flex;flex-wrap:wrap;gap:12px 0}
 .wk5-t{margin-top:28px}
 .wk5-hit{cursor:pointer}
-.wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px}
+.wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
+.wk6-sp{flex:1;min-height:10px}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
 .wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),minmax(44px,1fr));gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
 .wk6-r{cursor:pointer}
@@ -249,7 +250,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 #wk-tip{position:fixed;display:none;z-index:9999;pointer-events:none;background:#eceef1;color:#1a1c1f;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:12px;font-weight:600;line-height:1.5;padding:6px 11px;border-radius:8px;white-space:nowrap}
 .wk6-bar{display:flex;height:10px;background:var(--c-line);border-radius:3px;overflow:hidden;min-width:0}
 .wk6-bar i{display:block;height:100%}
-.wk6-age{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--c-line);color:var(--c-mut)}
+.wk6-age{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;margin-top:0;padding-top:8px;border-top:1px dashed var(--c-line);color:var(--c-mut)}
 .wk6-age b{color:var(--c-fg);font-weight:700}
 .wk6-e{font-size:12px;color:var(--c-mut);padding:3px 0}
 .wk5-ring{opacity:0;transition:opacity .15s}
@@ -861,7 +862,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
           <select class="css-sel" id="rs-rc-brand"><option value="">브랜드 선택</option><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select>
           <button type="button" class="rs-go" onclick="rsRecover()">회수 하기</button>
         </div>
-        <div id="rs-rc-note" class="rs-hint">브랜드를 선택하고 회수 하기를 누르면 카페24 로그인 창이 열리고 저장된 계정으로 로그인이 진행됩니다. 캡차가 나오면 직접 입력해 주세요.</div>
+        <div id="rs-rc-note" class="rs-hint">브랜드를 선택하고 회수 하기를 누르면 카페24 로그인 창이 열리고 쇼핑몰 아이디·부운영자 아이디·비밀번호가 입력됩니다. 캡차 체크와 로그인은 직접 해 주세요. (sync-server 실행 필요)</div>
       </div>
       </div>
     </section>
@@ -3719,9 +3720,10 @@ function _wkAgeSort(a,b){
   if(a==='확인 불가')return 1;if(b==='확인 불가')return -1;
   return (parseInt(a,10)||0)-(parseInt(b,10)||0);
 }
+function _wkGT(x){var p=[];if(x.m)p.push('남성 '+x.m+'명');if(x.f)p.push('여성 '+x.f+'명');if(x.u)p.push('불명 '+x.u+'명');return p.join('\n');}
 function _wkGenBar(gen,scale){
   var seg=[['m','#2b7de0'],['f','#f4808f'],['u','#d3d6da']].map(function(x){return gen[x[0]]?'<i style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
-  return '<div class="wk6-bar" data-tip="남성 '+(gen.m||0)+'명\n여성 '+(gen.f||0)+'명\n불명 '+(gen.u||0)+'명">'+seg+'</div>';
+  return '<div class="wk6-bar" data-tip="'+_wkGT(gen)+'">'+seg+'</div>';
 }
 function _wkAgeText(f,psel){
   var f2=psel?f.filter(function(r){return r.prod===psel;}):f,a={};
@@ -3746,14 +3748,14 @@ function _wkList(rows,sel,title,psel){
     var rg=o.rg[ck]||(o.rg[ck]={m:0,f:0,u:0});rg[gk]++;
     var cc=ct[ck]||(ct[ck]={m:0,f:0,u:0});cc[gk]++;
   });
-  function gtip(name,x){return _rsEsc(name)+'\n남성 '+x.m+'명\n여성 '+x.f+'명\n불명 '+x.u+'명';}
+  function gtip(name,x){return _wkGT(x);}
   var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.c-a.c;});
   var mx=list[0].c,st=' style="--n:'+cols.length+'"';
   var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" data-tip="'+gtip(k,ct[k]||{m:0,f:0,u:0})+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
   return head+hd+list.map(function(o){
     var cells=cols.map(function(k){return '<span class="rc"'+(o.rc[k]?' data-tip="'+gtip(k,o.rg[k])+'"':'')+'>'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'')+'</span>';}).join('');
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
-  }).join('')+_wkAgeText(f,psel);
+  }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
 function _cssWeekHTML(wk,label,pd){
   var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
@@ -3971,8 +3973,12 @@ function rsRecover(){
   if(!b){note.textContent='브랜드를 먼저 선택해 주세요.';return;}
   var info=BRAND_CAFE24[b];
   if(!info||!info.mallId||info.mallId==='___'){note.textContent='이 브랜드는 저장된 카페24 계정이 없습니다.';return;}
-  loginCafe24(b);
-  note.textContent=sel.options[sel.selectedIndex].text+' 카페24 로그인 창을 열었습니다. 캡차가 나오면 직접 입력하고 로그인을 마무리해 주세요.';
+  var nm=sel.options[sel.selectedIndex].text;
+  note.textContent=nm+' 카페24 로그인 창을 여는 중…';
+  fetch('http://localhost:3355/cafe24-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info})})
+  .then(function(r){return r.json();})
+  .then(function(d){if(!d.ok)throw new Error(d.error||'실패');note.textContent=nm+' 카페24 로그인 창이 열렸습니다. 쇼핑몰 아이디·부운영자 아이디·비밀번호가 입력되어 있어요. 캡차를 체크하고 로그인을 눌러주세요.';})
+  .catch(function(e){loginCafe24(b);note.textContent='로컬 서버에 연결하지 못해 일반 창으로 열었습니다(부운영자 아이디만 채워집니다). 쇼핑몰 아이디는 '+info.mallId+' 입니다. 전체 자동 입력은 sync-server에서 node server.js 를 실행해 주세요.';});
 }
 /* ===== 날짜 세그먼트 & 자동 초기화 ===== */
 function _fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
