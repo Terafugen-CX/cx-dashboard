@@ -156,6 +156,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-wrap .rs-in{max-width:none;min-width:110px;flex:1 1 110px;box-sizing:border-box;height:27.9px;padding-top:0;padding-bottom:0}
 .rs-tbl{display:block;width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
 .rs-tbl{cursor:grab}
+.rs-tbl td.rs-idlink{cursor:pointer;color:var(--accent)}
+.rs-tbl td.rs-idlink:hover{text-decoration:underline}
 .rs-tbl.rs-drag{cursor:grabbing;user-select:none}
 .rs-tbl thead th{position:sticky;top:0;z-index:1;background:var(--surface)}
 .rs-tbl table{width:100%;border-collapse:collapse;font-size:13px}
@@ -893,7 +895,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       <div class="rs-wrap">
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <select class="css-sel" id="rs-brand"><option value="">브랜드 선택</option><option>테라퓨젠</option><option>프로즌랩</option><option>덴티플라</option><option>메디그로우</option><option>셀로핏</option><option>파미코젠</option></select>
-        <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option></select>
+        <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option><option value="id">아이디</option></select>
         <input type="text" id="rs-q" class="rs-in" placeholder="검색어 입력" autocomplete="off" onkeydown="if(event.key==='Enter')rsSearch()">
         <button type="button" class="rs-go" onclick="rsSearch()">조회</button>
         <span id="rs-cnt" class="rs-cnt">리셀러 추정 <b>-</b>계정 · 주문 <b>-</b>건</span>
@@ -4043,7 +4045,7 @@ function _rsLoad(gid){
     _rsCache[gid]=out;return out;
   });
 }
-var _RS_LABEL={name:'이름',phone:'연락처',ip:'IP',addr:'주소'};
+var _RS_LABEL={name:'이름',phone:'연락처',ip:'IP',addr:'주소',id:'아이디'};
 function _rsDigits(v){return String(v||'').replace(/\D/g,'');}
 function _rsAddrKey(v){return String(v||'').toLowerCase().replace(/[\s,()·.\-]/g,'');}
 function _rsAddrBase(v){var t=String(v||'').replace(/\s+/g,''),m=/^(.*?(?:로|길)\d*(?:번길)?\d+(?:-\d+)?)/.exec(t);return m?m[1].replace(/-/g,''):'';}
@@ -4068,6 +4070,7 @@ function rsSearch(){
         if(qa.length>0&&_rsAddrKey(r.addr).indexOf(qa)>=0)lab='주소 일치';
         else if(qb&&_rsAddrBase(r.addr)===qb)lab='주소 유사';
       }
+      else if(type==='id'){if(String(r.id||'').toLowerCase()===ql)lab='아이디 일치';}
       else if(String(r[type]||'').toLowerCase().indexOf(ql)>=0)lab=_RS_LABEL[type]+' 일치';
       if(lab)items.push({r:r,m:lab});
     });
@@ -4129,7 +4132,7 @@ function _rsHistShow(rows,msg){
     var b='';for(var k in BRAND_CAFE24){if(BRAND_CAFE24[k].mallId===r.mallId)b=k;}
     var bn={terafugen:'테라퓨젠',frozenlab:'프로즌랩',dentipla:'덴티플라',mediglow:'메디그로우',cellofit:'셀로핏',pamicogen:'파미코젠'}[b]||r.mallId||'';
     var d=new Date(r.last),ds=isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td>'+_rsEsc(r.id)+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
+    return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td class="rs-idlink" data-brand="'+_rsEsc(bn)+'" data-id="'+_rsEsc(r.id)+'" title="클릭하면 리셀러 조회에서 이 아이디를 검색합니다">'+_rsEsc(r.id)+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
   }).join(''):'<tr><td colspan="6" class="rs-empty">'+_rsEsc(msg||'회수 내역이 없습니다.')+'</td></tr>';
   box.innerHTML='<div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
   _rsFit();
@@ -4155,6 +4158,14 @@ function rsWatch(nm){
   },2000);
 }
 var _rsWatchT=0;
+document.addEventListener('click',function(e){
+  var t=e.target.closest?e.target.closest('td.rs-idlink'):null;if(!t)return;
+  var b=document.getElementById('rs-brand'),ty=document.getElementById('rs-type'),q=document.getElementById('rs-q');if(!b||!ty||!q)return;
+  b.value=t.getAttribute('data-brand')||'';if(b.value!==(t.getAttribute('data-brand')||''))b.value='';
+  ty.value='id';q.value=t.getAttribute('data-id')||'';
+  rsSearch();
+  var lv=document.querySelector('.rs-left');if(lv&&lv.scrollIntoView)lv.scrollIntoView({block:'nearest'});
+});
 function rsCancel(){fetch('http://localhost:3355/cafe24-recover/cancel',{method:'POST'});}
 /* ===== 날짜 세그먼트 & 자동 초기화 ===== */
 function _fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
