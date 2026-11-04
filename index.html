@@ -4013,6 +4013,8 @@ function _rsMaskIp(v){var p=String(v||'').split('.');return p.length===4?p[0]+'.
 function _rsView(r){return _RS_MASK?{name:_rsMaskName(r.name),id:_rsMaskId(r.id),ord:r.ord,phone:_rsMaskPhone(r.phone),addr:_rsMaskAddr(r.addr),ip:_rsMaskIp(r.ip)}:r;}
 var _RS_TH='<tr><th>브랜드</th><th>이름</th><th>아이디</th><th>주문</th><th>연락처</th><th>주소</th><th>IP</th><th>일치 정보</th></tr>';
 function _rsFit(){
+  var lw=document.querySelector('.rs-left .rs-wrap'),hb=document.getElementById('rs-hist');
+  if(lw&&hb&&lw.offsetWidth)hb.style.width=lw.offsetWidth+'px'; // 회수 칸 폭 = 리셀러 조회 칸 폭
   var els=document.querySelectorAll('.rs-tbl');
   for(var i=0;i<els.length;i++){var el=els[i];if(el.offsetParent===null)continue;
     el.style.maxHeight='';var top=el.getBoundingClientRect().top,h=Math.max(160,window.innerHeight-top-24);
