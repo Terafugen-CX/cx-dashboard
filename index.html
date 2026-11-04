@@ -234,6 +234,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
+.wk7{margin-top:16px;padding-top:12px;border-top:1px solid var(--c-line)}
+.wk7-h{font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
+.wk7 ul{margin:0;padding-left:16px}
+.wk7 li{font-size:13px;line-height:1.75;color:var(--c-fg);margin:0 0 2px}
+.wk7 li b{font-weight:700}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
 .wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),minmax(44px,1fr));gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
 .wk6-r{cursor:pointer}
@@ -3757,6 +3762,27 @@ function _wkList(rows,sel,title,psel){
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
+function _wkSummary(label,rows,rr,noOrd,cur,prev){
+  function top(list,fn){var m={};list.forEach(function(r){var k=fn(r);m[k]=(m[k]||0)+1;});var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a];});return ks.length?{k:ks[0],c:m[ks[0]]}:null;}
+  function md(d){return d?(+d.slice(5,7))+'/'+(+d.slice(8)):'';}
+  function line(name,list){
+    if(!list.length)return '<li><b>'+name+' 0건</b></li>';
+    var amt=list.reduce(function(a,r){return a+r.amt;},0),p=top(list,function(r){return r.prod;}),rs=top(list,function(r){return _wkRK(r.reason);}),dd=top(list.filter(function(r){return r.cd;}),function(r){return r.cd;});
+    var t='<b>'+name+' '+list.length+'건 · '+_cssN(amt)+'원</b> — 제품은 '+_rsEsc(p.k)+' '+p.c+'건('+Math.round(p.c/list.length*100)+'%)이 가장 많고, 사유는 '+_rsEsc(rs.k)+' '+rs.c+'건이 가장 많습니다.';
+    if(dd&&Object.keys(list.reduce(function(m,r){m[r.cd]=1;return m;},{})).length>1)t+=' 접수가 가장 많았던 날은 '+md(dd.k)+'('+dd.c+'건)입니다.';
+    return '<li>'+t+'</li>';
+  }
+  var items=[];
+  if(!noOrd&&prev!=null){var rel=prev?(cur-prev)/prev*100:0;items.push('<li><b>취소율 '+(cur*100).toFixed(1)+'%</b> — 전월('+(prev*100).toFixed(1)+'%)보다 '+Math.abs(rel).toFixed(1)+'% '+(rel>0?'높아졌습니다':'낮아졌습니다')+'.</li>');}
+  items.push(line('취소',rows));
+  items.push(line('반품',rr));
+  var gm=0,gf=0;rows.forEach(function(r){if(r.gender==='남성')gm++;else if(r.gender==='여성')gf++;});
+  var ages=rows.filter(function(r){return r.age&&r.age!=='확인 불가';}),ta=ages.length?top(ages,function(r){return r.age;}):null,parts=[];
+  if(gm+gf)parts.push('성별은 남성 '+Math.round(gm/(gm+gf)*100)+'%·여성 '+Math.round(gf/(gm+gf)*100)+'%(성별이 확인된 '+(gm+gf)+'건 기준)');
+  if(ta)parts.push('나이는 '+_rsEsc(ta.k)+'가 가장 많습니다('+ta.c+'명, 나이가 확인된 '+ages.length+'건 중)');
+  if(parts.length)items.push('<li><b>취소 고객층</b> — '+parts.join(', ')+'.</li>');
+  return '<div class="wk7"><div class="wk7-h">'+label+' 요약</div><ul>'+items.join('')+'</ul></div>';
+}
 function _cssWeekHTML(wk,label,pd){
   var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
   var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
@@ -3785,7 +3811,7 @@ function _cssWeekHTML(wk,label,pd){
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
-    +kpis+'</div>';
+    +kpis+_wkSummary(label,rows,rr,noOrd,cur,prev)+'</div>';
   return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>';
 }
 if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(e){
