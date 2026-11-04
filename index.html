@@ -4091,7 +4091,7 @@ function _rsHistShow(rows,msg){
     var b='';for(var k in BRAND_CAFE24){if(BRAND_CAFE24[k].mallId===r.mallId)b=k;}
     var bn={terafugen:'테라퓨젠',frozenlab:'프로즌랩',dentipla:'덴티플라',mediglow:'메디그로우',cellofit:'셀로핏',pamicogen:'파미코젠'}[b]||r.mallId||'';
     var d=new Date(r.last),ds=isNaN(d)?'':d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
-    return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td>'+_rsEsc(_rsMaskId(r.id))+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
+    return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td>'+_rsEsc(r.id)+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
   }).join(''):'<tr><td colspan="6" class="rs-empty">'+_rsEsc(msg||'회수 내역이 없습니다.')+'</td></tr>';
   box.innerHTML='<div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
 }
