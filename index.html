@@ -149,9 +149,11 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 @media(max-width:1100px){.rs-layout{grid-template-columns:minmax(0,1fr)}.rs-left{padding-right:0}.rs-right{display:none}}
 .rs-more{font-size:11px;color:var(--muted);margin-left:2px}
 .rs-count{font-size:13px;color:var(--muted);margin:0 2px 8px}
+.rs-cnt{font-size:13px;color:var(--muted);white-space:nowrap;margin-left:4px}
+.rs-cnt b{color:var(--fg)}
 .rs-empty{text-align:center;color:var(--c-mut,#8b9097);padding:28px 8px !important;font-size:13px}
 .rs-wrap{width:100%}
-.rs-wrap .rs-in{max-width:none;flex:1 1 200px}
+.rs-wrap .rs-in{max-width:none;min-width:110px;flex:1 1 110px}
 .rs-tbl{display:block;width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
 .rs-tbl{cursor:grab}
 .rs-tbl.rs-drag{cursor:grabbing;user-select:none}
@@ -894,6 +896,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option></select>
         <input type="text" id="rs-q" class="rs-in" placeholder="검색어 입력" autocomplete="off" onkeydown="if(event.key==='Enter')rsSearch()">
         <button type="button" class="rs-go" onclick="rsSearch()">조회</button>
+        <span id="rs-cnt" class="rs-cnt"></span>
       </div>
       <div id="rs-result" style="margin-top:12px"></div>
       </div>
@@ -4025,7 +4028,8 @@ if(!window._rsFitB){window._rsFitB=1;window.addEventListener('resize',_rsFit);
 }
 function _rsShow(msg,count,tb){
   var box=document.getElementById('rs-result');if(!box)return;
-  box.innerHTML=(count?'<div class="rs-count">'+count+'</div>':'')+'<div class="rs-tbl"><table><thead>'+_RS_TH+'</thead><tbody>'+(tb||'<tr><td colspan="8" class="rs-empty">'+_rsEsc(msg||'')+'</td></tr>')+'</tbody></table></div>';
+  var cn=document.getElementById('rs-cnt');if(cn)cn.innerHTML=count||'';
+  box.innerHTML='<div class="rs-tbl"><table><thead>'+_RS_TH+'</thead><tbody>'+(tb||'<tr><td colspan="8" class="rs-empty">'+_rsEsc(msg||'')+'</td></tr>')+'</tbody></table></div>';
   _rsFit();
 }
 function _rsLoad(gid){
@@ -4083,7 +4087,7 @@ function rsSearch(){
       var tags=Object.keys(g.tags).map(function(t){return '<span class="rs-tag '+(t.indexOf('유사')>=0?'rs-tag-sim':'rs-tag-ok')+'">'+_rsEsc(t)+'</span>';}).join('');
       return '<tr><td>'+_rsEsc(g.rows[0].brand)+'</td><td>'+more(g.rows,'name',v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td><b>'+g.rows.length+'</b>건</td><td>'+more(g.rows,'phone',v.phone)+'</td><td>'+more(g.rows,'addr',v.addr)+'</td><td>'+more(g.rows,'ip',v.ip)+'</td><td>'+tags+'</td></tr>';
     }).join('');
-    _rsShow('','추정 리셀러 <b>'+list.length+'</b>계정 · 주문 '+items.length+'건'+(list.length>shown.length?' (상위 '+shown.length+'계정 표시)':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':''),tb);
+    _rsShow('','리셀러 추정 <b>'+list.length+'</b>계정 · 주문 <b>'+items.length+'</b>건',tb);
   }).catch(function(e){if(tok===_rsTok)_rsShow('시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.');});
 }
 
