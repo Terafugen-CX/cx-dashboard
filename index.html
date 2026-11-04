@@ -141,6 +141,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-layout{display:grid;grid-template-columns:minmax(660px,35%) minmax(0,1fr);gap:0;align-items:stretch;min-height:calc(100vh - 200px)}
 .rs-left{min-width:0;padding-right:28px}
 .rs-right{min-width:0;padding-left:28px;border-left:1px solid var(--line)}
+.rs-hint{font-size:12px;color:var(--muted);line-height:1.6;margin:10px 2px 0}
 .rs-title{font-size:16px;font-weight:700;color:var(--fg);margin:0 0 12px}
 #rs-result .csd-empty{text-align:left;margin:10px 2px 0;font-size:13px}
 .rs-tag.rs-tag-ok{color:var(--accent);background:var(--accent-soft);border-color:transparent}
@@ -854,7 +855,14 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       </div>
       <div id="rs-result" style="margin-top:12px"><div class="csd-empty">검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.</div></div>
       </div>
-      <div class="rs-right"><div class="rs-title">리셀러 적립금 회수</div></div>
+      <div class="rs-right">
+        <div class="rs-title">리셀러 적립금 회수</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+          <select class="css-sel" id="rs-rc-brand"><option value="">브랜드 선택</option><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select>
+          <button type="button" class="rs-go" onclick="rsRecover()">회수 하기</button>
+        </div>
+        <div id="rs-rc-note" class="rs-hint">브랜드를 선택하고 회수 하기를 누르면 카페24 로그인 창이 열리고 저장된 계정으로 로그인이 진행됩니다. 캡차가 나오면 직접 입력해 주세요.</div>
+      </div>
       </div>
     </section>
 
@@ -3810,7 +3818,7 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
 });}
 if(!window._wkTipB){window._wkTipB=1;
   var tp=document.createElement('div');tp.id='wk-tip';document.body.appendChild(tp);
-  function place(e){var w=tp.offsetWidth,h=tp.offsetHeight,x=e.clientX+14,y=e.clientY+16;if(x+w>window.innerWidth-8)x=e.clientX-w-14;if(y+h>window.innerHeight-8)y=e.clientY-h-12;tp.style.left=Math.max(4,x)+'px';tp.style.top=Math.max(4,y)+'px';}
+  function place(e){var z=parseFloat(getComputedStyle(document.body).zoom)||1,w=tp.offsetWidth*z,h=tp.offsetHeight*z,x=e.clientX-w/2,y=e.clientY-h-14;if(y<4)y=e.clientY+20;x=Math.min(Math.max(4,x),window.innerWidth-w-4);tp.style.left=(x/z)+'px';tp.style.top=(y/z)+'px';}
   document.addEventListener('mouseover',function(e){var t=e.target&&e.target.closest?e.target.closest('[data-tip]'):null;if(!t){tp.style.display='none';return;}tp.textContent=t.getAttribute('data-tip').split('\n').join(' · ');tp.style.display='block';place(e);});
   document.addEventListener('mousemove',function(e){if(tp.style.display==='block')place(e);});
   document.addEventListener('mouseleave',function(){tp.style.display='none';});
@@ -3957,6 +3965,15 @@ function rsSearch(){
   }).catch(function(e){if(tok===_rsTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+_rsEsc(e.message)+'). 시트 공유 설정을 확인하세요.</div>';});
 }
 
+function rsRecover(){
+  var sel=document.getElementById('rs-rc-brand'),note=document.getElementById('rs-rc-note');
+  var b=sel.value;
+  if(!b){note.textContent='브랜드를 먼저 선택해 주세요.';return;}
+  var info=BRAND_CAFE24[b];
+  if(!info||!info.mallId||info.mallId==='___'){note.textContent='이 브랜드는 저장된 카페24 계정이 없습니다.';return;}
+  loginCafe24(b);
+  note.textContent=sel.options[sel.selectedIndex].text+' 카페24 로그인 창을 열었습니다. 캡차가 나오면 직접 입력하고 로그인을 마무리해 주세요.';
+}
 /* ===== 날짜 세그먼트 & 자동 초기화 ===== */
 function _fmtD(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
 function _weekRange(){
