@@ -140,7 +140,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-go:hover{opacity:.85}
 .rs-layout{display:grid;grid-template-columns:minmax(660px,35%) minmax(0,1fr);gap:0;align-items:stretch;min-height:calc(100vh - 200px)}
 .rs-left{min-width:0;padding-right:28px}
-.rs-right{min-width:0;padding-left:28px;border-left:1px solid var(--line)}
+.rs-right{min-width:0;padding-left:28px}
 .rs-hint{font-size:12px;color:var(--muted);line-height:1.6;margin:10px 2px 0}
 .rs-title{font-size:16px;font-weight:700;color:var(--fg);margin:0 0 12px}
 #rs-result .csd-empty{text-align:left;margin:10px 2px 0;font-size:13px}
@@ -896,7 +896,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option></select>
         <input type="text" id="rs-q" class="rs-in" placeholder="검색어 입력" autocomplete="off" onkeydown="if(event.key==='Enter')rsSearch()">
         <button type="button" class="rs-go" onclick="rsSearch()">조회</button>
-        <span id="rs-cnt" class="rs-cnt"></span>
+        <span id="rs-cnt" class="rs-cnt">리셀러 추정 <b>-</b>계정 · 주문 <b>-</b>건</span>
       </div>
       <div id="rs-result" style="margin-top:12px"></div>
       </div>
@@ -4028,7 +4028,7 @@ if(!window._rsFitB){window._rsFitB=1;window.addEventListener('resize',_rsFit);
 }
 function _rsShow(msg,count,tb){
   var box=document.getElementById('rs-result');if(!box)return;
-  var cn=document.getElementById('rs-cnt');if(cn)cn.innerHTML=count||'';
+  var cn=document.getElementById('rs-cnt');if(cn)cn.innerHTML=count||'리셀러 추정 <b>-</b>계정 · 주문 <b>-</b>건';
   box.innerHTML='<div class="rs-tbl"><table><thead>'+_RS_TH+'</thead><tbody>'+(tb||'<tr><td colspan="8" class="rs-empty">'+_rsEsc(msg||'')+'</td></tr>')+'</tbody></table></div>';
   _rsFit();
 }
