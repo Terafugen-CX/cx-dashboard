@@ -149,6 +149,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 @media(max-width:1100px){.rs-layout{grid-template-columns:minmax(0,1fr)}.rs-left{padding-right:0}.rs-right{display:none}}
 .rs-more{font-size:11px;color:var(--muted);margin-left:2px}
 .rs-count{font-size:13px;color:var(--muted);margin:0 2px 8px}
+.rs-empty{text-align:center;color:var(--c-mut,#8b9097);padding:28px 8px !important;font-size:13px}
 .rs-tbl{display:block;width:fit-content;max-width:100%;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
 .rs-tbl table{width:auto;border-collapse:collapse;font-size:13px}
 .rs-tbl th{text-align:left;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
@@ -888,7 +889,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <input type="text" id="rs-q" class="rs-in" placeholder="검색어 입력" autocomplete="off" onkeydown="if(event.key==='Enter')rsSearch()">
         <button type="button" class="rs-go" onclick="rsSearch()">조회</button>
       </div>
-      <div id="rs-result" style="margin-top:12px"><div class="csd-empty">검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.</div></div>
+      <div id="rs-result" style="margin-top:12px"></div>
       </div>
       <div class="rs-right">
         <div class="rs-title">리셀러 적립금 회수</div>
@@ -3992,7 +3993,7 @@ cssUpdate();
 
 /* ===== 리셀러 관리 ===== */
 var _RS_SHEET='https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/export?format=csv&gid=';
-var _RS_GIDS={'테라퓨젠':'282932725','프로즌랩':'558699786'};
+var _RS_GIDS={'테라퓨젠':'282932725','프로즌랩':'558699786','덴티플라':'546258892','메디그로우':'1056119376'};
 function _rsBrandOf(gid){for(var k in _RS_GIDS)if(_RS_GIDS[k]===gid)return k;return '';}
 var _RS_MASK=true;
 var _rsCache={},_rsTok=0;
@@ -4003,6 +4004,11 @@ function _rsMaskId(v){v=String(v||'');var i=v.indexOf('@'),h=i<0?v:v.slice(0,i),
 function _rsMaskAddr(v){var p=String(v||'').trim().split(/\s+/);return p.slice(0,2).join(' ')+(p.length>2?' ***':'');}
 function _rsMaskIp(v){var p=String(v||'').split('.');return p.length===4?p[0]+'.'+p[1]+'.*.*':v;}
 function _rsView(r){return _RS_MASK?{name:_rsMaskName(r.name),id:_rsMaskId(r.id),ord:r.ord,phone:_rsMaskPhone(r.phone),addr:_rsMaskAddr(r.addr),ip:_rsMaskIp(r.ip)}:r;}
+var _RS_TH='<tr><th>브랜드</th><th>이름</th><th>아이디</th><th>주문</th><th>연락처</th><th>주소</th><th>IP</th><th>일치 정보</th></tr>';
+function _rsShow(msg,count,tb){
+  var box=document.getElementById('rs-result');if(!box)return;
+  box.innerHTML=(count?'<div class="rs-count">'+count+'</div>':'')+'<div class="rs-tbl"><table><thead>'+_RS_TH+'</thead><tbody>'+(tb||'<tr><td colspan="8" class="rs-empty">'+_rsEsc(msg||'')+'</td></tr>')+'</tbody></table></div>';
+}
 function _rsLoad(gid){
   if(_rsCache[gid])return Promise.resolve(_rsCache[gid]);
   return fetch(_RS_SHEET+gid+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){
@@ -4018,12 +4024,12 @@ function _rsAddrBase(v){var t=String(v||'').replace(/\s+/g,''),m=/^(.*?(?:로|�
 function rsSearch(){
   var box=document.getElementById('rs-result');if(!box)return;
   var type=document.getElementById('rs-type').value,q=(document.getElementById('rs-q').value||'').trim();
-  if(!type){box.innerHTML='<div class="csd-empty">검색 항목(이름 / 연락처 / IP / 주소)을 선택해 주세요.</div>';return;}
-  if(!q){box.innerHTML='<div class="csd-empty">검색어를 입력해 주세요.</div>';return;}
+  if(!type){_rsShow('검색 항목(이름 / 연락처 / IP / 주소)을 선택해 주세요.');return;}
+  if(!q){_rsShow('검색어를 입력해 주세요.');return;}
   var brand=document.getElementById('rs-brand').value;
-  if(brand&&!_RS_GIDS[brand]){box.innerHTML='<div class="csd-empty">'+_rsEsc(brand)+' 리셀러 시트는 아직 연결되지 않았습니다.</div>';return;}
+  if(brand&&!_RS_GIDS[brand]){_rsShow(brand+' 리셀러 시트는 아직 연결되지 않았습니다.');return;}
   var gids=brand?[_RS_GIDS[brand]]:Object.keys(_RS_GIDS).map(function(k){return _RS_GIDS[k];}),tok=++_rsTok;
-  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  _rsShow('불러오는 중…');
   Promise.all(gids.map(function(g){return _rsLoad(g);})).then(function(parts){
     var all=[].concat.apply([],parts);
     if(tok!==_rsTok)return;
@@ -4039,7 +4045,7 @@ function rsSearch(){
       else if(String(r[type]||'').toLowerCase().indexOf(ql)>=0)lab=_RS_LABEL[type]+' 일치';
       if(lab)items.push({r:r,m:lab});
     });
-    if(!items.length){box.innerHTML='<div class="csd-empty">일치하는 결과가 없습니다.</div>';return;}
+    if(!items.length){_rsShow('일치하는 결과가 없습니다.');return;}
     var groups={},order=[];
     items.forEach(function(it){
       var k=(it.r.brand||'')+'|'+(it.r.id||('_'+order.length)),g=groups[k];
@@ -4053,16 +4059,16 @@ function rsSearch(){
     });
     function more(rows,key,shown){var n={};rows.forEach(function(r){n[r[key]]=1;});var c=Object.keys(n).length;return _rsEsc(shown)+(c>1?' <span class="rs-more">외 '+(c-1)+'</span>':'');}
     var shown=list.slice(0,200);
-    var th='<tr>'+(brand?'':'<th>브랜드</th>')+'<th>이름</th><th>아이디</th><th>주문</th><th>연락처</th><th>주소</th><th>IP</th><th>일치 정보</th></tr>';
     var tb=shown.map(function(g){
       var v=_rsView(g.rows[0]);
       var tags=Object.keys(g.tags).map(function(t){return '<span class="rs-tag '+(t.indexOf('유사')>=0?'rs-tag-sim':'rs-tag-ok')+'">'+_rsEsc(t)+'</span>';}).join('');
-      return '<tr>'+(brand?'':'<td>'+_rsEsc(g.rows[0].brand)+'</td>')+'<td>'+more(g.rows,'name',v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td><b>'+g.rows.length+'</b>건</td><td>'+more(g.rows,'phone',v.phone)+'</td><td>'+more(g.rows,'addr',v.addr)+'</td><td>'+more(g.rows,'ip',v.ip)+'</td><td>'+tags+'</td></tr>';
+      return '<tr><td>'+_rsEsc(g.rows[0].brand)+'</td><td>'+more(g.rows,'name',v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td><b>'+g.rows.length+'</b>건</td><td>'+more(g.rows,'phone',v.phone)+'</td><td>'+more(g.rows,'addr',v.addr)+'</td><td>'+more(g.rows,'ip',v.ip)+'</td><td>'+tags+'</td></tr>';
     }).join('');
-    box.innerHTML='<div class="rs-count">추정 리셀러 <b>'+list.length+'</b>계정 · 주문 '+items.length+'건'+(list.length>shown.length?' (상위 '+shown.length+'계정 표시)':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':'')+'</div><div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
-  }).catch(function(e){if(tok===_rsTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+_rsEsc(e.message)+'). 시트 공유 설정을 확인하세요.</div>';});
+    _rsShow('','추정 리셀러 <b>'+list.length+'</b>계정 · 주문 '+items.length+'건'+(list.length>shown.length?' (상위 '+shown.length+'계정 표시)':'')+(_RS_MASK?' · 개인정보는 일부만 표시됩니다':''),tb);
+  }).catch(function(e){if(tok===_rsTok)_rsShow('시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.');});
 }
 
+_rsShow('검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.');
 function rsRecover(){
   var sel=document.getElementById('rs-rc-brand'),note=document.getElementById('rs-rc-note');
   var b=sel.value;
