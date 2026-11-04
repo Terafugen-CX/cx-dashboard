@@ -245,6 +245,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk6-r>b{text-align:right;font-variant-numeric:tabular-nums}
 .wk6-r .rc{text-align:center;font-variant-numeric:tabular-nums}
 .wk6-r .rc b{font-weight:700}
+#wk-tip{position:fixed;display:none;z-index:9999;pointer-events:none;background:rgba(18,18,28,.94);color:#fff;font-size:12px;line-height:1.65;padding:7px 11px;border-radius:8px;white-space:pre-line}
 .wk6-bar{display:flex;height:10px;background:var(--c-line);border-radius:3px;overflow:hidden;min-width:0}
 .wk6-bar i{display:block;height:100%}
 .wk6-age{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--c-line);color:var(--c-mut)}
@@ -3702,8 +3703,8 @@ function _wkTrend(list,color,kind){
   var pts=list.map(function(x,i){return X(i)+','+Y(x.v);}).join(' ');
   var line=n>1?'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>':'';
   var cw=n>1?pw/(n-1):pw;
-  var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"><title>'+x.l+' · '+x.v+'건</title></circle><text x="'+X(i)+'" y="'+(Y(x.v)-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+color+'">'+x.v+'</text><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text></g>';}).join('')
-    +list.map(function(x,i){return '<rect class="wk5-hit" data-kind="'+kind+'" data-k="'+x.k+'" x="'+(X(i)-cw/2)+'" y="0" width="'+cw+'" height="'+H+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';}).join('');
+  var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"></circle><text x="'+X(i)+'" y="'+(Y(x.v)-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+color+'">'+x.v+'</text><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text></g>';}).join('')
+    +list.map(function(x,i){return '<rect class="wk5-hit" data-kind="'+kind+'" data-k="'+x.k+'" data-tip="'+x.l+' · '+x.v+'건" x="'+(X(i)-cw/2)+'" y="0" width="'+cw+'" height="'+H+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';}).join('');
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;max-height:170px;display:block" role="img"><title>일자별 건수</title>'+g+line+dots+'</svg>';
 }
 function _wkAgeSort(a,b){
@@ -3712,7 +3713,7 @@ function _wkAgeSort(a,b){
 }
 function _wkGenBar(gen,scale){
   var seg=[['m','#2b7de0'],['f','#f4808f'],['u','#d3d6da']].map(function(x){return gen[x[0]]?'<i style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
-  return '<div class="wk6-bar" title="남성 '+(gen.m||0)+'명 · 여성 '+(gen.f||0)+'명 · 불명 '+(gen.u||0)+'명">'+seg+'</div>';
+  return '<div class="wk6-bar" data-tip="남성 '+(gen.m||0)+'명\n여성 '+(gen.f||0)+'명\n불명 '+(gen.u||0)+'명">'+seg+'</div>';
 }
 function _wkAgeText(f,psel){
   var f2=psel?f.filter(function(r){return r.prod===psel;}):f,a={};
@@ -3729,17 +3730,20 @@ function _wkList(rows,sel,title,psel){
   var keys=Object.keys(tot).sort(function(a,b){return tot[b]-tot[a];}),cols=keys.slice(0,5);
   if(keys.length>5)cols.push('기타');
   function colOf(k){return cols.indexOf(k)>=0?k:'기타';}
-  var g={};
+  var g={},ct={};
   f.forEach(function(r){
-    var o=g[r.prod]||(g[r.prod]={p:r.prod,c:0,a:0,rc:{},gen:{}});
-    o.c++;o.a+=r.amt;var ck=colOf(_wkRK(r.reason));o.rc[ck]=(o.rc[ck]||0)+1;
-    var gk=r.gender==='남성'?'m':r.gender==='여성'?'f':'u';o.gen[gk]=(o.gen[gk]||0)+1;
+    var o=g[r.prod]||(g[r.prod]={p:r.prod,c:0,a:0,rc:{},rg:{},gen:{}});
+    var ck=colOf(_wkRK(r.reason)),gk=r.gender==='남성'?'m':r.gender==='여성'?'f':'u';
+    o.c++;o.a+=r.amt;o.rc[ck]=(o.rc[ck]||0)+1;o.gen[gk]=(o.gen[gk]||0)+1;
+    var rg=o.rg[ck]||(o.rg[ck]={m:0,f:0,u:0});rg[gk]++;
+    var cc=ct[ck]||(ct[ck]={m:0,f:0,u:0});cc[gk]++;
   });
+  function gtip(name,x){return _rsEsc(name)+'\n남성 '+x.m+'명\n여성 '+x.f+'명\n불명 '+x.u+'명';}
   var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.c-a.c;});
   var mx=list[0].c,st=' style="--n:'+cols.length+'"';
-  var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" title="'+_rsEsc(k)+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
+  var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" data-tip="'+gtip(k,ct[k]||{m:0,f:0,u:0})+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
   return head+hd+list.map(function(o){
-    var cells=cols.map(function(k){return '<span class="rc">'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'')+'</span>';}).join('');
+    var cells=cols.map(function(k){return '<span class="rc"'+(o.rc[k]?' data-tip="'+gtip(k,o.rg[k])+'"':'')+'>'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'')+'</span>';}).join('');
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+_wkAgeText(f,psel);
 }
@@ -3804,6 +3808,13 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
     if($('wk-r-list'))$('wk-r-list').innerHTML=_wkList(D.rRows,sel,'반품 내역');
   }
 });}
+if(!window._wkTipB){window._wkTipB=1;
+  var tp=document.createElement('div');tp.id='wk-tip';document.body.appendChild(tp);
+  function place(e){var w=tp.offsetWidth,h=tp.offsetHeight,x=e.clientX+14,y=e.clientY+16;if(x+w>window.innerWidth-8)x=e.clientX-w-14;if(y+h>window.innerHeight-8)y=e.clientY-h-12;tp.style.left=Math.max(4,x)+'px';tp.style.top=Math.max(4,y)+'px';}
+  document.addEventListener('mouseover',function(e){var t=e.target&&e.target.closest?e.target.closest('[data-tip]'):null;if(!t){tp.style.display='none';return;}tp.textContent=t.getAttribute('data-tip');tp.style.display='block';place(e);});
+  document.addEventListener('mousemove',function(e){if(tp.style.display==='block')place(e);});
+  document.addEventListener('mouseleave',function(){tp.style.display='none';});
+}
 function _cssWkFit(){
   var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
   sl.style.zoom=1;
