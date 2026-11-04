@@ -153,6 +153,9 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-wrap{width:100%}
 .rs-wrap .rs-in{max-width:none;flex:1 1 200px}
 .rs-tbl{display:block;width:100%;box-sizing:border-box;background:var(--surface);border:1px solid var(--line);border-radius:12px;overflow:auto}
+.rs-tbl{cursor:grab}
+.rs-tbl.rs-drag{cursor:grabbing;user-select:none}
+.rs-tbl thead th{position:sticky;top:0;z-index:1;background:var(--surface)}
 .rs-tbl table{width:100%;border-collapse:collapse;font-size:13px}
 .rs-tbl th{text-align:center;font-weight:600;color:var(--muted);padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
 .rs-tbl td{text-align:center;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top;white-space:nowrap}
@@ -1701,7 +1704,7 @@ function _ghWrite(path, data, sha, msg, cb) {
     if(brandSection) brandSection.style.display='none';
     if(calView) calView.style.display='none';
     if(csSummaryView) csSummaryView.style.display='none';
-    if(resellerView) resellerView.style.display='';
+    if(resellerView){ resellerView.style.display=''; if(window._rsFit) setTimeout(_rsFit,0); }
     if(stockWrap) stockWrap.style.display='none';
     if(returnWrap) returnWrap.style.display='none';
     if(vocWrap) vocWrap.style.display='none';
@@ -4005,9 +4008,25 @@ function _rsMaskAddr(v){var p=String(v||'').trim().split(/\s+/);return p.slice(0
 function _rsMaskIp(v){var p=String(v||'').split('.');return p.length===4?p[0]+'.'+p[1]+'.*.*':v;}
 function _rsView(r){return _RS_MASK?{name:_rsMaskName(r.name),id:_rsMaskId(r.id),ord:r.ord,phone:_rsMaskPhone(r.phone),addr:_rsMaskAddr(r.addr),ip:_rsMaskIp(r.ip)}:r;}
 var _RS_TH='<tr><th>브랜드</th><th>이름</th><th>아이디</th><th>주문</th><th>연락처</th><th>주소</th><th>IP</th><th>일치 정보</th></tr>';
+function _rsFit(){
+  var els=document.querySelectorAll('.rs-tbl');
+  for(var i=0;i<els.length;i++){var el=els[i];if(el.offsetParent===null)continue;
+    el.style.maxHeight='';var top=el.getBoundingClientRect().top,h=Math.max(160,window.innerHeight-top-24);
+    el.style.maxHeight=h+'px';
+    var over=el.getBoundingClientRect().bottom-(window.innerHeight-24);
+    if(over>2){el.style.maxHeight=Math.max(160,h-over)+'px';}
+  }
+}
+if(!window._rsFitB){window._rsFitB=1;window.addEventListener('resize',_rsFit);
+  var _dg=null;
+  document.addEventListener('mousedown',function(e){var t=e.target.closest?e.target.closest('.rs-tbl'):null;if(!t||e.button!==0)return;_dg={el:t,x:e.clientX,y:e.clientY,sl:t.scrollLeft,st:t.scrollTop,moved:false};});
+  document.addEventListener('mousemove',function(e){if(!_dg)return;var dx=e.clientX-_dg.x,dy=e.clientY-_dg.y;if(!_dg.moved&&Math.abs(dx)+Math.abs(dy)<4)return;_dg.moved=true;_dg.el.classList.add('rs-drag');_dg.el.scrollLeft=_dg.sl-dx;_dg.el.scrollTop=_dg.st-dy;});
+  document.addEventListener('mouseup',function(){if(_dg){_dg.el.classList.remove('rs-drag');_dg=null;}});
+}
 function _rsShow(msg,count,tb){
   var box=document.getElementById('rs-result');if(!box)return;
   box.innerHTML=(count?'<div class="rs-count">'+count+'</div>':'')+'<div class="rs-tbl"><table><thead>'+_RS_TH+'</thead><tbody>'+(tb||'<tr><td colspan="8" class="rs-empty">'+_rsEsc(msg||'')+'</td></tr>')+'</tbody></table></div>';
+  _rsFit();
 }
 function _rsLoad(gid){
   if(_rsCache[gid])return Promise.resolve(_rsCache[gid]);
@@ -4094,6 +4113,7 @@ function _rsHistShow(rows,msg){
     return '<tr><td>'+_rsEsc(bn)+'</td><td>'+_rsEsc(_rsMaskName(r.name))+'</td><td>'+_rsEsc(r.id)+'</td><td>'+_rsFmt(r.sum)+'원</td><td>'+ds+'</td><td><b>'+r.count+'</b>회</td></tr>';
   }).join(''):'<tr><td colspan="6" class="rs-empty">'+_rsEsc(msg||'회수 내역이 없습니다.')+'</td></tr>';
   box.innerHTML='<div class="rs-tbl"><table><thead>'+th+'</thead><tbody>'+tb+'</tbody></table></div>';
+  _rsFit();
 }
 function rsHistLoad(){
   fetch('http://localhost:3355/cafe24-recover/history').then(function(r){return r.json();}).then(function(d){_rsHistShow(d.rows);}).catch(function(){_rsHistShow([],'동기화 서버에 연결할 수 없어 회수 내역을 불러오지 못했습니다.');});
