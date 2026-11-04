@@ -234,6 +234,15 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
+.wk-ttl{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.wk-sw{position:relative;display:inline-grid;grid-template-columns:1fr 1fr;background:#e9ebee;border-radius:999px;padding:3px;margin-top:6px}
+.wk-sw .th{position:absolute;top:3px;bottom:3px;left:3px;width:calc((100% - 6px)/2);background:#fff;border-radius:999px;box-shadow:0 1px 3px rgba(0,0,0,.18);transition:transform .22s cubic-bezier(.4,0,.2,1)}
+.wk-sw[data-v=detail] .th{transform:translateX(100%)}
+.wk-sw button{position:relative;z-index:1;background:none;border:none;padding:5px 15px;font:inherit;font-size:12px;font-weight:600;color:#6b7076;cursor:pointer;white-space:nowrap;border-radius:999px;transition:color .2s}
+.wk-sw button.on{color:#1a1c1f}
+.wk-root[data-mode=one] .csd{display:none}
+.wk-root[data-mode=detail] .op{display:none}
+.wk-root[data-mode=one] .op{margin-top:0}
 .op{margin-top:22px;background:#fff;color:#1a1c1f;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:30px 36px}
 .op-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid #1a1c1f}
 .op-eb{font-size:12px;color:#6b7076}
@@ -3781,6 +3790,8 @@ function _wkList(rows,sel,title,psel){
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
+function _wkView(){var v=window._wkViewMode;if(!v){try{v=localStorage.getItem('cx-wk-view');}catch(e){}}return v==='one'?'one':'detail';}
+function _wkSw(){var v=_wkView();return '<div class="wk-sw" data-v="'+v+'"><i class="th"></i><button type="button" data-v="one" class="'+(v==='one'?'on':'')+'">한 장 보기</button><button type="button" data-v="detail" class="'+(v==='detail'?'on':'')+'">상세 보기</button></div>';}
 function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var e=_rsEsc,N=_cssN;
   var cA=rows.reduce(function(a,r){return a+r.amt;},0),rA=rr.reduce(function(a,r){return a+r.amt;},0),tot=rows.length+rr.length,aAll=cA+rA;
@@ -3792,7 +3803,6 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var byDay=topOf(all.filter(function(r){return r.cd;}),function(r){return r.cd;}),byProd=topOf(all,function(r){return r.prod;}),byReason=topOf(all,function(r){return _wkRK(r.reason);});
   var hot=byProd[0],hotRs=hot?topOf(all.filter(function(r){return r.prod===hot.k;}),function(r){return _wkRK(r.reason);})[0]:null;
   var iso=wk.iso||[],period=iso.length?iso[0].replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');
-  var now=new Date(),pad=function(x){return String(x).padStart(2,'0');},stamp=now.getFullYear()+'.'+pad(now.getMonth()+1)+'.'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes());
   var rateMain=noOrd?'—':(cur*100).toFixed(1)+'<small>%</small> / '+(retCur*100).toFixed(1)+'<small>%</small>';
   var rateSub=noOrd?'주문 수량이 입력되면 취소율·반품율이 표시됩니다':'전월 '+(prev==null?'-':(prev*100).toFixed(1)+'%')+' / '+(prevRet===''?'-':(prevRet*100).toFixed(1)+'%');
   var kpis='<div class="op-kpis">'
@@ -3814,7 +3824,7 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   rr.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.t++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
   var list=Object.keys(P).map(function(k){return P[k];}).sort(function(a,b){return (b.c+b.t)-(a.c+a.t);}),shown=list.slice(0,6);
   var trs=shown.map(function(o){var rs=Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3).map(function(k){return e(k)+' '+o.rs[k];}).join(' · ');return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'—')+'</td><td>'+(o.t||'—')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
-  return '<div class="op"><div class="op-top"><div><div class="op-eb">CX팀 · 주간 취소·반품 보고서</div><h2>'+label+' 한 장 요약</h2></div><div class="op-meta">'+period+'<br>집계 기준: 취소 = 취소 접수일, 반품 = 취합일<br>작성 '+stamp+'</div></div>'
+  return '<div class="op"><div class="op-top"><div><div class="op-eb">CX팀 · 주간 취소·반품 보고서</div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'<br>집계 기준: 취소 = 취소 접수일, 반품 = 취합일</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
     +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th></tr></thead><tbody>'+trs+'</tbody></table>'
     +'<div class="op-f">단위: 건 · 원 · 상품은 취소·반품이 많은 순 상위 '+shown.length+'개'+(list.length>shown.length?' (전체 '+list.length+'개 중)':'')+' · 취소율 = 취소 ÷ 주문 수량, 반품율 = 반품 ÷ 주문 수량</div></div>';
@@ -3845,10 +3855,10 @@ function _cssWeekHTML(wk,label,pd){
     +kpi('<span id="wk-r-l">반품</span>','<span id="wk-ret-n">'+_cssN(rr.length)+'</span>'+unit('건'),'<span id="wk-ret-s">'+retSubTxt+'</span>')
     +'</div><div class="wk5-t"><div id="wk-ret-chart">'+_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r')+'</div></div><div class="wk6" id="wk-r-list">'+_wkList(rr,'','반품 내역')+'</div></div>'
     +'</div>';
-  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><h2>주간 취소 · 반품 현황</h2></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
+  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><div class="wk-ttl"><h2>주간 취소 · 반품 현황</h2>'+_wkSw()+'</div></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
     +kpis+'</div>';
-  return '<div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>'+_wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet);
+  return '<div class="wk-root" data-mode="'+_wkView()+'"><div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>'+_wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet)+'</div>';
 }
 if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(e){
   var pr=e.target&&e.target.closest?e.target.closest('.wk6-r'):null;
@@ -3887,6 +3897,15 @@ if(!window._wkTipB){window._wkTipB=1;
   document.addEventListener('mousemove',function(e){if(tp.style.display==='block')place(e);});
   document.addEventListener('mouseleave',function(){tp.style.display='none';});
 }
+if(!window._wkSwB){window._wkSwB=1;document.addEventListener('click',function(e){
+  var b=e.target&&e.target.closest?e.target.closest('.wk-sw button'):null;if(!b)return;
+  var root=b.closest('.wk-root');if(!root)return;
+  var v=b.getAttribute('data-v');window._wkViewMode=v;try{localStorage.setItem('cx-wk-view',v);}catch(x){}
+  root.setAttribute('data-mode',v);
+  root.querySelectorAll('.wk-sw').forEach(function(sw){sw.setAttribute('data-v',v);sw.querySelectorAll('button').forEach(function(bb){bb.classList.toggle('on',bb.getAttribute('data-v')===v);});});
+  if(v==='detail'&&window._cssWkFit)_cssWkFit();
+  window.scrollTo(0,0);
+});}
 function _cssWkFit(){
   var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
   sl.style.zoom=1;
