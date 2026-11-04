@@ -245,7 +245,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk6-r>b{text-align:right;font-variant-numeric:tabular-nums}
 .wk6-r .rc{text-align:center;font-variant-numeric:tabular-nums}
 .wk6-r .rc b{font-weight:700}
-#wk-tip{position:fixed;display:none;z-index:9999;pointer-events:none;background:rgba(18,18,28,.94);color:#fff;font-size:12px;line-height:1.65;padding:7px 11px;border-radius:8px;white-space:pre-line}
+#wk-tip{position:fixed;display:none;z-index:9999;pointer-events:none;background:#eceef1;color:#1a1c1f;border:1px solid rgba(0,0,0,.08);box-shadow:0 2px 8px rgba(0,0,0,.08);font-size:12px;font-weight:600;line-height:1.5;padding:6px 11px;border-radius:8px;white-space:nowrap}
 .wk6-bar{display:flex;height:10px;background:var(--c-line);border-radius:3px;overflow:hidden;min-width:0}
 .wk6-bar i{display:block;height:100%}
 .wk6-age{display:flex;flex-wrap:wrap;gap:3px 14px;font-size:12px;margin-top:10px;padding-top:8px;border-top:1px dashed var(--c-line);color:var(--c-mut)}
@@ -3811,7 +3811,7 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
 if(!window._wkTipB){window._wkTipB=1;
   var tp=document.createElement('div');tp.id='wk-tip';document.body.appendChild(tp);
   function place(e){var w=tp.offsetWidth,h=tp.offsetHeight,x=e.clientX+14,y=e.clientY+16;if(x+w>window.innerWidth-8)x=e.clientX-w-14;if(y+h>window.innerHeight-8)y=e.clientY-h-12;tp.style.left=Math.max(4,x)+'px';tp.style.top=Math.max(4,y)+'px';}
-  document.addEventListener('mouseover',function(e){var t=e.target&&e.target.closest?e.target.closest('[data-tip]'):null;if(!t){tp.style.display='none';return;}tp.textContent=t.getAttribute('data-tip');tp.style.display='block';place(e);});
+  document.addEventListener('mouseover',function(e){var t=e.target&&e.target.closest?e.target.closest('[data-tip]'):null;if(!t){tp.style.display='none';return;}tp.textContent=t.getAttribute('data-tip').split('\n').join(' · ');tp.style.display='block';place(e);});
   document.addEventListener('mousemove',function(e){if(tp.style.display==='block')place(e);});
   document.addEventListener('mouseleave',function(){tp.style.display='none';});
 }
