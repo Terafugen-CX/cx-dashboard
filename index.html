@@ -904,8 +904,9 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       <div class="rs-right">
         <div class="rs-title">리셀러 적립금 회수</div>
         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-          <select class="css-sel" id="rs-rc-brand"><option value="">브랜드 선택</option><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select>
+          <select class="css-sel" id="rs-rc-brand" onchange="rsRcSum()"><option value="">브랜드 선택</option><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select>
           <button type="button" class="rs-go" onclick="rsRecover()">회수 하기</button>
+          <span id="rs-rc-sum" class="rs-cnt"><b>-</b> 회수 적립금 <b>-</b>원</span>
         </div>
         <div id="rs-hist" style="margin-top:12px"></div>
         <div id="rs-rc-note" class="rs-hint"></div>
@@ -4107,8 +4108,16 @@ function rsRecover(){
   .catch(function(e){loginCafe24(b);note.style.color='#d6203a';note.textContent='동기화 서버가 꺼져 있어 일반 창으로 열었습니다(쇼핑몰 아이디는 비어 있고 부운영자 아이디만 채워져요). 쇼핑몰 아이디: '+info.mallId+'  ·  전체 자동 입력: sync-server 폴더의 start-server.bat 을 실행한 뒤 다시 눌러 주세요.';});
 }
 var _rsPoll=null;
+var _rsHistRows=null;
+function rsRcSum(){
+  var el=document.getElementById('rs-rc-sum'),sel=document.getElementById('rs-rc-brand');if(!el||!sel)return;
+  var b=sel.value,nm=b?sel.options[sel.selectedIndex].text:'-',amt='-';
+  if(b&&_rsHistRows&&BRAND_CAFE24[b]){var m=BRAND_CAFE24[b].mallId,t=0;_rsHistRows.forEach(function(r){if(r.mallId===m)t+=r.sum||0;});amt=_rsFmt(t);}
+  el.innerHTML='<b>'+_rsEsc(nm)+'</b> 회수 적립금 <b>'+amt+'</b>원';
+}
 function _rsHistShow(rows,msg){
   var box=document.getElementById('rs-hist');if(!box)return;
+  _rsHistRows=(rows&&rows.length!==undefined&&!msg)?rows:null;rsRcSum();
   var th='<tr><th>브랜드</th><th>이름</th><th>아이디</th><th>회수 금액</th><th>회수 날짜</th><th>회수 횟수</th></tr>';
   var tb=(rows&&rows.length)?rows.map(function(r){
     var b='';for(var k in BRAND_CAFE24){if(BRAND_CAFE24[k].mallId===r.mallId)b=k;}
