@@ -140,6 +140,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .rs-go:hover{opacity:.85}
 .rs-layout{display:grid;grid-template-columns:minmax(0,58%) minmax(0,1fr);gap:28px;align-items:start}
 .rs-left{min-width:0}
+.rs-title{font-size:16px;font-weight:700;color:var(--fg);margin:0 0 12px}
 #rs-result .csd-empty{text-align:left;margin:10px 2px 0;font-size:13px}
 .rs-tag.rs-tag-ok{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 .rs-tag.rs-tag-sim{color:#8a6100;background:rgba(250,204,21,.28);border-color:transparent}
@@ -231,7 +232,14 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
-.wk6-r{display:grid;grid-template-columns:minmax(110px,38%) 38px minmax(0,1fr);gap:2px 10px;font-size:12px;padding:3px 0;align-items:baseline}
+.wk6-r{display:grid;grid-template-columns:minmax(110px,30%) 38px minmax(80px,120px) minmax(0,1fr);gap:2px 12px;font-size:12px;padding:4px 0;align-items:center}
+.wk6-bar{min-width:0}
+.wk6-ab,.wk6-gb{display:flex;background:var(--c-line);border-radius:3px;overflow:hidden}
+.wk6-ab{height:10px}.wk6-gb{height:3px;margin-top:3px}
+.wk6-ab i,.wk6-gb i{display:block;height:100%}
+.wk6-lg{display:flex;flex-wrap:wrap;gap:3px 12px;font-size:10.5px;color:var(--c-mut);margin:0 0 6px}
+.wk6-lg s{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:4px}
+.wk6-lgs{margin-left:auto}
 .wk6-r .nm{font-weight:600}
 .wk6-r>b{text-align:right;font-variant-numeric:tabular-nums}
 .wk6-r .rs{color:var(--c-mut);font-size:11px;line-height:1.5}
@@ -831,6 +839,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     <section id="reseller-view" style="display:none;padding:24px 0">
       <div class="rs-layout">
       <div class="rs-left">
+      <div class="rs-title">리셀러 조회</div>
       <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
         <select class="css-sel" id="rs-brand"><option value="">브랜드 선택</option><option>테라퓨젠</option><option>프로즌랩</option><option>덴티플라</option><option>메디그로우</option><option>셀로핏</option><option>파미코젠</option></select>
         <select class="css-sel" id="rs-type"><option value="">검색 항목 선택</option><option value="name">이름</option><option value="phone">연락처</option><option value="ip">IP</option><option value="addr">주소</option></select>
@@ -839,7 +848,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       </div>
       <div id="rs-result" style="margin-top:12px"><div class="csd-empty">검색 항목을 선택하고 검색어를 입력한 뒤 조회를 눌러주세요.</div></div>
       </div>
-      <div class="rs-right"></div>
+      <div class="rs-right"><div class="rs-title">리셀러 적립금 회수</div></div>
       </div>
     </section>
 
@@ -3692,17 +3701,41 @@ function _wkTrend(list,color,kind){
     +list.map(function(x,i){return '<rect class="wk5-hit" data-kind="'+kind+'" data-k="'+x.k+'" x="'+(X(i)-cw/2)+'" y="0" width="'+cw+'" height="'+H+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';}).join('');
   return '<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;max-height:170px;display:block" role="img"><title>일자별 건수</title>'+g+line+dots+'</svg>';
 }
+function _wkAgeCol(a){
+  if(a==='확인 불가')return '#d3d6da';
+  var n=parseInt(a,10)||0;
+  return n<20?'#cfe3fb':n<30?'#a8cdf6':n<40?'#6fa8ea':n<50?'#2b7de0':n<60?'#1d5fb8':'#143f80';
+}
+function _wkAgeSort(a,b){
+  if(a==='확인 불가')return 1;if(b==='확인 불가')return -1;
+  return (parseInt(a,10)||0)-(parseInt(b,10)||0);
+}
+function _wkStack(age,gen,scale){
+  var a=Object.keys(age).sort(_wkAgeSort).map(function(k){return '<i title="'+_rsEsc(k)+' '+age[k]+'건" style="width:'+(age[k]/scale*100)+'%;background:'+_wkAgeCol(k)+'"></i>';}).join('');
+  var g=[['m','#2b7de0','남'],['f','#f4808f','여'],['u','#d3d6da','불명']].map(function(x){return gen[x[0]]?'<i title="'+x[2]+' '+gen[x[0]]+'건" style="width:'+(gen[x[0]]/scale*100)+'%;background:'+x[1]+'"></i>':'';}).join('');
+  return '<div class="wk6-bar"><div class="wk6-ab">'+a+'</div><div class="wk6-gb">'+g+'</div></div>';
+}
+function _wkLegend(f){
+  var ages={};f.forEach(function(r){ages[r.age]=1;});
+  var a=Object.keys(ages).sort(_wkAgeSort).map(function(k){return '<span><s style="background:'+_wkAgeCol(k)+'"></s>'+_rsEsc(k)+'</span>';}).join('');
+  return '<div class="wk6-lg">'+a+'<span class="wk6-lgs">얇은 막대 = 성비 <s style="background:#2b7de0"></s>남 <s style="background:#f4808f"></s>여 <s style="background:#d3d6da"></s>불명</span></div>';
+}
 function _wkList(rows,sel,title){
   var f=sel?rows.filter(function(r){return r.cd===sel;}):rows;
-  var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'주간 전체';
-  var head='<div class="wk6-h">'+title+' · '+lab+'</div>';
+  var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'';
+  var head='<div class="wk6-h">'+title+(lab?' · '+lab:'')+'</div>';
   if(!f.length)return head+'<div class="wk6-e">내역이 없습니다.</div>';
   var g={};
-  f.forEach(function(r){var k=r.brand+'\u0001'+r.prod,o=g[k]||(g[k]={b:r.brand,p:r.prod,c:0,r:{}});o.c++;o.r[r.reason]=(o.r[r.reason]||0)+1;});
+  f.forEach(function(r){
+    var k=r.brand+'\u0001'+r.prod,o=g[k]||(g[k]={b:r.brand,p:r.prod,c:0,r:{},age:{},gen:{}});
+    o.c++;o.r[r.reason]=(o.r[r.reason]||0)+1;o.age[r.age]=(o.age[r.age]||0)+1;
+    var gk=r.gender==='남성'?'m':r.gender==='여성'?'f':'u';o.gen[gk]=(o.gen[gk]||0)+1;
+  });
   var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.c-a.c;});
-  return head+list.map(function(o){
+  var mx=list[0].c;
+  return head+_wkLegend(f)+list.map(function(o){
     var rs=Object.keys(o.r).sort(function(a,b){return o.r[b]-o.r[a];}).map(function(k){return _rsEsc(k)+' <b>'+o.r[k]+'</b>';}).join(' · ');
-    return '<div class="wk6-r"><span class="nm">'+_rsEsc(o.b)+' · '+_rsEsc(o.p)+'</span><b>'+o.c+'건</b><span class="rs">'+rs+'</span></div>';
+    return '<div class="wk6-r"><span class="nm">'+_rsEsc(o.b)+' · '+_rsEsc(o.p)+'</span><b>'+o.c+'건</b>'+_wkStack(o.age,o.gen,mx)+'<span class="rs">'+rs+'</span></div>';
   }).join('');
 }
 function _cssWeekHTML(wk,label,pd){
