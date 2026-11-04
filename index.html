@@ -4107,7 +4107,7 @@ function rsWatch(nm){
     var note=document.getElementById('rs-rc-note');if(!note){clearInterval(_rsPoll);return;}
     fetch('http://localhost:3355/cafe24-recover/status').then(function(r){return r.json();}).then(function(s){
       var j=s.job;note.style.color='';
-      if(j.phase==='waiting_login'){note.textContent=nm+' 카페24 로그인을 기다리는 중입니다. 캡차를 체크하고 로그인해 주세요. 로그인하면 창이 최소화되고 회수가 자동으로 진행됩니다.';}
+      if(j.phase==='waiting_login'){note.textContent=nm+' 카페24 로그인을 기다리는 중입니다. 캡차를 체크하고 로그인해 주세요. 로그인하면 이 창은 자동으로 닫히고 회수가 백그라운드에서 진행됩니다.';}
       else if(j.phase==='running'){note.innerHTML='회수 진행 중 '+j.done+' / '+j.total+'명 · 성공 '+j.ok+' · 건너뜀 '+j.skipped+' · 실패 '+j.failed+' · 회수 합계 '+_rsFmt(j.sum)+'원 <a href="#" onclick="rsCancel();return false">중지</a>';if(!_rsWatchT||Date.now()-_rsWatchT>5000){_rsWatchT=Date.now();rsHistLoad();}}
       else if(j.phase==='done'||j.phase==='stopped'){clearInterval(_rsPoll);rsHistLoad();note.innerHTML=(j.phase==='stopped'?'중지됨 ':'회수 완료 ')+'· 성공 '+j.ok+' · 건너뜀 '+j.skipped+' · 실패 '+j.failed+' · 회수 합계 '+_rsFmt(j.sum)+'원'+(j.message?'<br><span style="color:#d6203a">'+_rsEsc(j.message)+'</span>':'');}
       else if(j.phase==='error'){clearInterval(_rsPoll);note.style.color='#d6203a';note.textContent=j.message||'회수 중 오류가 발생했습니다.';}
