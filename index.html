@@ -206,12 +206,12 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 #wkd-tip{position:fixed;z-index:9999;display:none;pointer-events:none;background:rgba(18,18,28,.92);color:#fff;font-size:12px;line-height:1.7;padding:8px 12px;border-radius:8px;white-space:nowrap}
 #wkd-tip b{display:block;margin-bottom:2px}
 #wkd-tip i{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px}
-.csd-wk .csd-slide{padding:22px 28px}
-.csd-wk .csd-head{padding-bottom:12px;margin-bottom:12px}
+.csd-wk .csd-slide{padding:30px 36px}
+.csd-wk .csd-head{padding-bottom:18px;margin-bottom:20px;border-bottom:2px solid #1a1c1f;gap:20px}
 .csd-wk .csd-eb{font-size:12px;margin-bottom:4px}
-.csd-wk h2{font-size:clamp(22px,2.3vw,30px)}
+.csd-wk h2{font-size:34px;font-weight:800;letter-spacing:-.025em;margin:6px 0 0}
 .csd-wk .csd-tot b{font-size:clamp(20px,2vw,26px)}
-.csd-wk .csd-tot span{font-size:13px}
+.csd-wk .csd-tot .wk-meta{font-size:12px;font-weight:400;color:#6b7076;line-height:1.75;margin:0}
 .csd-wk .csd-grid{gap:10px}
 .csd-wk .csd-card{padding:12px 16px;gap:6px;border-radius:10px}
 .csd-wk .csd-ch{font-size:12px}
@@ -221,7 +221,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-wk .csd-dl{font-size:11px}
 .csd-wk .csd-row{font-size:13px;padding:5px 0}
 .csd-wk .csd-note{font-size:12px;margin-top:10px;padding:0}
-.csd-wk .csd-slide{padding:20px 28px}
+.csd-wk .csd-slide{padding:30px 36px}
 .wk2-s svg.wkd{max-height:230px}
 .csd-wk .wk2-s .csd-br{font-size:12px;padding:2px 0;grid-template-columns:minmax(120px,40%) minmax(0,1fr) 40px 74px}
 .wk2-s{min-width:0}
@@ -245,7 +245,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk-root[data-mode=one] .op{margin-top:0}
 .op{margin-top:22px;background:#fff;color:#1a1c1f;border:1px solid rgba(0,0,0,.08);border-radius:16px;padding:30px 36px}
 .op-top{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;padding-bottom:18px;border-bottom:2px solid #1a1c1f}
-.op-eb{font-size:12px;color:#6b7076}
 .op h2{font-size:34px;font-weight:800;letter-spacing:-.025em;margin:6px 0 0;color:#1a1c1f}
 .op-meta{text-align:right;font-size:12px;color:#6b7076;line-height:1.75}
 .op-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
@@ -3790,8 +3789,9 @@ function _wkList(rows,sel,title,psel){
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
+function _wkPeriod(wk){var iso=wk.iso||[];return iso.length?iso[0].replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');}
 function _wkView(){var v=window._wkViewMode;if(!v){try{v=localStorage.getItem('cx-wk-view');}catch(e){}}return v==='one'?'one':'detail';}
-function _wkSw(){var v=_wkView();return '<div class="wk-sw" data-v="'+v+'"><i class="th"></i><button type="button" data-v="one" class="'+(v==='one'?'on':'')+'">한 장 보기</button><button type="button" data-v="detail" class="'+(v==='detail'?'on':'')+'">상세 보기</button></div>';}
+function _wkSw(){var v=_wkView();return '<div class="wk-sw" data-v="'+v+'"><i class="th"></i><button type="button" data-v="one" class="'+(v==='one'?'on':'')+'">요약 보기</button><button type="button" data-v="detail" class="'+(v==='detail'?'on':'')+'">상세 보기</button></div>';}
 function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var e=_rsEsc,N=_cssN;
   var cA=rows.reduce(function(a,r){return a+r.amt;},0),rA=rr.reduce(function(a,r){return a+r.amt;},0),tot=rows.length+rr.length,aAll=cA+rA;
@@ -3823,8 +3823,8 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   rows.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.c++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
   rr.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.t++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
   var list=Object.keys(P).map(function(k){return P[k];}).sort(function(a,b){return (b.c+b.t)-(a.c+a.t);}),shown=list.slice(0,6);
-  var trs=shown.map(function(o){var rs=Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3).map(function(k){return e(k)+' '+o.rs[k];}).join(' · ');return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'—')+'</td><td>'+(o.t||'—')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
-  return '<div class="op"><div class="op-top"><div><div class="op-eb">CX팀 · 주간 취소·반품 보고서</div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'<br>집계 기준: 취소 = 취소 접수일, 반품 = 취합일</div></div>'
+  var trs=shown.map(function(o){var rs=Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3).map(function(k){return e(k)+' '+o.rs[k];}).join(' · ');return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
+  return '<div class="op"><div class="op-top"><div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
     +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th></tr></thead><tbody>'+trs+'</tbody></table>'
     +'<div class="op-f">단위: 건 · 원 · 상품은 취소·반품이 많은 순 상위 '+shown.length+'개'+(list.length>shown.length?' (전체 '+list.length+'개 중)':'')+' · 취소율 = 취소 ÷ 주문 수량, 반품율 = 반품 ÷ 주문 수량</div></div>';
@@ -3855,7 +3855,7 @@ function _cssWeekHTML(wk,label,pd){
     +kpi('<span id="wk-r-l">반품</span>','<span id="wk-ret-n">'+_cssN(rr.length)+'</span>'+unit('건'),'<span id="wk-ret-s">'+retSubTxt+'</span>')
     +'</div><div class="wk5-t"><div id="wk-ret-chart">'+_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r')+'</div></div><div class="wk6" id="wk-r-list">'+_wkList(rr,'','반품 내역')+'</div></div>'
     +'</div>';
-  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="csd-eb">'+label+' · CS SUMMARY</div><div class="wk-ttl"><h2>주간 취소 · 반품 현황</h2>'+_wkSw()+'</div></div><div class="csd-tot"><span style="margin:0;font-size:15px;font-weight:600;color:var(--c-mut)">'+(wk.disp||wk.range||label)+'</span></div></div>'
+  var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="wk-ttl"><h2>주간 취소 · 반품 현황</h2>'+_wkSw()+'</div></div><div class="csd-tot"><span class="wk-meta">'+(_wkPeriod(wk)||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
     +kpis+'</div>';
   return '<div class="wk-root" data-mode="'+_wkView()+'"><div class="csd"><div class="csd-vp csd-wk" id="csd-vp">'+s+'</div></div>'+_wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet)+'</div>';
@@ -3907,7 +3907,10 @@ if(!window._wkSwB){window._wkSwB=1;document.addEventListener('click',function(e)
   window.scrollTo(0,0);
 });}
 function _cssWkFit(){
-  var sl=document.querySelector('.csd-wk .csd-slide');if(!sl||sl.offsetParent===null)return;
+  var root=document.querySelector('.wk-root'),host=document.getElementById('cs-summary-view'),sl=document.querySelector('.csd-wk .csd-slide');
+  if(!root||!sl||!host||host.offsetParent===null)return;
+  var op=root.querySelector('.op'),mode=root.getAttribute('data-mode');
+  if(mode==='one')root.setAttribute('data-mode','detail');
   sl.style.zoom=1;
   var avail=(window.innerHeight-Math.max(sl.getBoundingClientRect().top,0)-12)*.94,MAXZ=1,MINZ=.6;
   for(var i=0;i<6;i++){
@@ -3919,6 +3922,8 @@ function _cssWkFit(){
   }
   var h2=sl.getBoundingClientRect().height;
   if(h2>avail+1){var z2=parseFloat(sl.style.zoom)||1;sl.style.zoom=Math.max(MINZ,z2*avail/h2*.99);}
+  if(op)op.style.zoom=sl.style.zoom||1;
+  if(mode==='one')root.setAttribute('data-mode','one');
 }
 if(!window._wkFitB){window._wkFitB=1;window.addEventListener('resize',function(){_cssWkFit();});}
 function _cssWeekLoad(box,y,m,w){
