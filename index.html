@@ -3650,6 +3650,14 @@ function _cssWkRows(csv){
 var _CSS_RATE_EXCL=[];
 function _cssWkOrders(csv){
   var rows=_parseCSV(csv),c=-1,h=-1,out=[],cb='';
+  // 새 양식: M열 '총 주문 수량' / N열 브랜드 / O열 수량 (브랜드별 총 주문 수량, 플랫폼 구분 없음)
+  for(var a=0;a<rows.length&&h<0;a++)for(var b=0;b<rows[a].length;b++)if(/총\s*주문\s*수량/.test(rows[a][b]||'')){h=a;c=b;break;}
+  if(h>=0){
+    for(var k0=h;k0<rows.length&&k0<h+15;k0++){var r0=rows[k0],bn=(r0[c+1]||'').trim();if(!bn){if(k0>h)break;else continue;}
+      var q=_cssAmt(r0[c+2]);if(q>0)out.push({brand:bn,plat:'',n:q});}
+    return out;
+  }
+  c=-1;h=-1;
   for(var i=0;i<rows.length&&c<0;i++)for(var j=0;j<rows[i].length;j++)if((rows[i][j]||'').trim()==='주문건수'){h=i;c=j;break;}
   if(c<2)return out;
   for(var k=h+1;k<rows.length;k++){var r=rows[k];
@@ -3673,7 +3681,7 @@ function _cssWkRate(wk,key,pv){
   var m={};
   wk.orders.forEach(function(o){if(_CSS_RATE_EXCL.indexOf(o.plat)>=0)return;var k=o[key==='brand'?'brand':'plat'];(m[k]=m[k]||{n:k,o:0,c:0,a:0}).o+=o.n;});
   var pairs=_cssWkPairs(wk);
-  wk.rows.forEach(function(r){if(!pairs[r.brand+'|'+r.plat])return;var k=r[key];if(m[k]){m[k].c++;m[k].a+=r.amt;}});
+  wk.rows.forEach(function(r){if(!(pairs[r.brand+'|'+r.plat]||pairs[r.brand+'|']))return;var k=r[key];if(m[k]){m[k].c++;m[k].a+=r.amt;}});
   var list=Object.keys(m).map(function(k){return m[k]}).filter(function(x){return x.o>0||x.c>0}).sort(function(p,q){return q.o-p.o});
   var mx=Math.max.apply(null,list.map(function(x){return x.o?x.c/x.o:0}))||1;
   return list.map(function(x){var r=x.o?x.c/x.o:0;
@@ -3848,7 +3856,7 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
 }
 function _cssWeekHTML(wk,label,pd){
   var pv=pd&&pd.cancel?pd.cancel:null,rows=wk.rows,tot=rows.length,sum=rows.reduce(function(s,r){return s+r.amt},0);
-  var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !pairs[r.brand+'|'+r.plat]}).length;
+  var pairs=_cssWkPairs(wk),skipped=rows.filter(function(r){return !(pairs[r.brand+'|'+r.plat]||pairs[r.brand+'|'])}).length;
   var incl=rows.length-skipped,ordTot=wk.orders.filter(function(o){return !_CSS_RATE_EXCL.length||_CSS_RATE_EXCL.indexOf(o.plat)<0}).reduce(function(s,o){return s+o.n},0);
   var noOrd=!ordTot,cur=ordTot?incl/ordTot:0,prev=pv&&pv.orders?pv.total/pv.orders:null,rel=(prev&&!noOrd)?(cur-prev)/prev*100:null;
   var prevRet=pd&&pd.ret&&pv&&pv.orders?pd.ret.ret/pv.orders:'';
