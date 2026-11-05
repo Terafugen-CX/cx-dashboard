@@ -278,6 +278,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .op-tb .nm{text-align:left;font-weight:700}
 .op-tb .rs{text-align:center;color:#4b5057}
 .op-tb .rsg{display:inline-flex;gap:0;justify-content:flex-start}
+.dash{font-style:normal;color:rgba(0,0,0,.25)}
 .op-tb .rsc{display:inline-block;text-align:left;white-space:nowrap}
 .op-f{font-size:12px;color:#6b7076;margin-top:14px}
 @media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -3814,7 +3815,7 @@ function _wkList(rows,sel,title,psel){
   var mx=list[0].c,st=' style="--n:'+cols.length+'"';
   var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" data-tip="'+gtip(k,ct[k]||{m:0,f:0,u:0})+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
   return head+hd+list.map(function(o){
-    var cells=cols.map(function(k){return '<span class="rc"'+(o.rc[k]?' data-tip="'+gtip(k,o.rg[k])+'"':'')+'>'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'')+'</span>';}).join('');
+    var cells=cols.map(function(k){return '<span class="rc"'+(o.rc[k]?' data-tip="'+gtip(k,o.rg[k])+'"':'')+'>'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'<i class="dash">-</i>')+'</span>';}).join('');
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
@@ -3856,8 +3857,8 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var rTop=function(o){return Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3);},rTot={};
   shown.forEach(function(o){rTop(o).forEach(function(k){rTot[k]=(rTot[k]||0)+o.rs[k];});});
   var rW=Math.max.apply(null,Object.keys(rTot).map(function(k){return k.length;}).concat([4]))*.95+2.6;
-  var vocCell=function(){return '';}; // VOC 데이터는 별도 전달 예정 - 비워 둠
-  var trs=shown.map(function(o){var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);}).map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td><td class="rs">'+vocCell(o.n)+'</td></tr>';}).join('');
+  var vocCell=function(){return '<i class="dash">-</i>';}; // VOC 데이터는 별도 전달 예정 - 비워 둠
+  var trs=shown.map(function(o){var tp=rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);});var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+tp.map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+new Array(Math.max(0,3-tp.length)+1).join('<span class="rsc" style="width:'+rW+'em"><i class="dash">-</i></span>')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td><td class="rs">'+vocCell(o.n)+'</td></tr>';}).join('');
   return '<div class="op"><div class="op-top"><div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
     +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th><th class="rs">VOC</th></tr></thead><tbody>'+trs+'</tbody></table>'
