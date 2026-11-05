@@ -272,10 +272,12 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .op-c li{font-size:14px;line-height:1.85;margin-bottom:3px}
 .op-th{font-size:14px;font-weight:800;margin:0 0 8px}
 .op-tb{width:100%;border-collapse:collapse;font-size:13px}
-.op-tb th{font-size:12px;font-weight:600;color:#6b7076;text-align:right;padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.12)}
-.op-tb td{text-align:right;padding:12px;border-bottom:1px solid rgba(0,0,0,.07);font-variant-numeric:tabular-nums}
+.op-tb th{font-size:12px;font-weight:600;color:#6b7076;text-align:center;padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.12)}
+.op-tb td{text-align:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.07);font-variant-numeric:tabular-nums}
 .op-tb .nm{text-align:left;font-weight:700}
-.op-tb .rs{text-align:left;color:#4b5057}
+.op-tb .rs{text-align:center;color:#4b5057}
+.op-tb .rsg{display:inline-flex;gap:14px;justify-content:center}
+.op-tb .rsc{display:inline-block;text-align:left;white-space:nowrap}
 .op-f{font-size:12px;color:#6b7076;margin-top:14px}
 @media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
@@ -3848,7 +3850,11 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   rows.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.c++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
   rr.forEach(function(r){var o=P[r.prod]||(P[r.prod]={n:r.prod,c:0,t:0,a:0,rs:{}});o.t++;o.a+=r.amt;var k=_wkRK(r.reason);o.rs[k]=(o.rs[k]||0)+1;});
   var list=Object.keys(P).map(function(k){return P[k];}).sort(function(a,b){return (b.c+b.t)-(a.c+a.t);}),shown=list.slice(0,6);
-  var trs=shown.map(function(o){var rs=Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3).map(function(k){return e(k)+' '+o.rs[k];}).join(' · ');return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
+  // 주요 사유: 사유별 고정 열(같은 사유는 모든 행에서 세로로 정렬)
+  var rTop=function(o){return Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3);},rTot={};
+  shown.forEach(function(o){rTop(o).forEach(function(k){rTot[k]=(rTot[k]||0)+o.rs[k];});});
+  var rCols=Object.keys(rTot).sort(function(a,b){return rTot[b]-rTot[a];});
+  var trs=shown.map(function(o){var top=rTop(o);var rs='<span class="rsg">'+rCols.map(function(k){return '<span class="rsc" style="width:'+(k.length*.95+2.4)+'em">'+(top.indexOf(k)>=0?e(k)+' '+o.rs[k]:'')+'</span>';}).join('')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
   return '<div class="op"><div class="op-top"><div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
     +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th></tr></thead><tbody>'+trs+'</tbody></table>'
