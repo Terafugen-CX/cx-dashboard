@@ -271,7 +271,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .op-c ol{margin:0;padding-left:20px}
 .op-c li{font-size:14px;line-height:1.85;margin-bottom:3px}
 .op-th{font-size:14px;font-weight:800;margin:0 0 8px}
-.op-tb{width:100%;border-collapse:collapse;font-size:13px}
+.op-tb{width:100%;border-collapse:collapse;font-size:13px;table-layout:fixed}
+.op-tb th:nth-child(1){width:16%}.op-tb th:nth-child(2),.op-tb th:nth-child(3),.op-tb th:nth-child(4){width:6%}.op-tb th:nth-child(5){width:12%}.op-tb th:nth-child(6){width:27%}
 .op-tb th{font-size:12px;font-weight:600;color:#6b7076;text-align:center;padding:9px 12px;border-bottom:1px solid rgba(0,0,0,.12)}
 .op-tb td{text-align:center;padding:12px;border-bottom:1px solid rgba(0,0,0,.07);font-variant-numeric:tabular-nums}
 .op-tb .nm{text-align:left;font-weight:700}
@@ -3635,6 +3636,17 @@ var _CSS_WEEK_ISO={'2026-11-1':['2026-10-31','2026-11-06']};
 var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 - 11월 06일'};
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkDate(v){var m=/^(\d{2})-(\d{2})-(\d{2})$/.exec(String(v||'').trim());return m?'20'+m[1]+'-'+m[2]+'-'+m[3]:'';}
+// VOC 탭: 날짜(블록, 빈칸은 위 값) / 브랜드 / 상품명 / 유형 / 상세 유형 ...  -> 주간 범위(iso)만
+function _wkVocRows(csv,iso){
+  var rows=_parseCSV(csv||''),H={},hi=-1,out=[],blk='';
+  for(var i=0;i<rows.length&&hi<0;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('상품명')>=0&&t.indexOf('브랜드')>=0){t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
+  if(hi<0)return out;
+  function g(r,k){return H[k]==null?'':String(r[H[k]]||'').trim();}
+  rows.forEach(function(r,i){if(i<=hi)return;var d=_cssWkDate(g(r,'날짜'));if(d)blk=d;if(!g(r,'상품명'))return;
+    if(iso&&iso.length&&(blk<iso[0]||blk>iso[1]))return;
+    out.push({d:blk,brand:g(r,'브랜드'),prod:g(r,'상품명'),type:g(r,'유형'),detail:g(r,'상세 유형')||g(r,'유형')||'기타'});});
+  return out;
+}
 function _cssWkRows(csv){
   var rows=_parseCSV(csv),out=[],rets=[],blk='',H=null,hi=-1;
   for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('주문번호')>=0&&t.indexOf('브랜드')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
@@ -3855,10 +3867,12 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var rTop=function(o){return Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3);},rTot={};
   shown.forEach(function(o){rTop(o).forEach(function(k){rTot[k]=(rTot[k]||0)+o.rs[k];});});
   var rW=Math.max.apply(null,Object.keys(rTot).map(function(k){return k.length;}).concat([4]))*.95+2.6;
-  var trs=shown.map(function(o){var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);}).map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td></tr>';}).join('');
+  var vocCell=function(name){var m={},ks=[];(wk.voc||[]).forEach(function(v){if(v.prod===name){m[v.detail]=(m[v.detail]||0)+1;}});ks=Object.keys(m).sort(function(a,b){return m[b]-m[a];}).slice(0,2);
+    return ks.length?'<span class="rsg">'+ks.map(function(k){return '<span class="rsc" style="width:'+(Math.max(k.length,4)*.95+2.6)+'em">'+e(k)+' '+m[k]+'</span>';}).join('')+'</span>':'-';};
+  var trs=shown.map(function(o){var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);}).map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td><td class="rs">'+vocCell(o.n)+'</td></tr>';}).join('');
   return '<div class="op"><div class="op-top"><div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
-    +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th></tr></thead><tbody>'+trs+'</tbody></table>'
+    +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th><th class="rs">VOC</th></tr></thead><tbody>'+trs+'</tbody></table>'
     +'<div class="op-f">단위: 건 · 원 · 상품은 취소·반품이 많은 순 상위 '+shown.length+'개'+(list.length>shown.length?' (전체 '+list.length+'개 중)':'')+' · 취소율 = 취소 ÷ 주문 수량, 반품율 = 반품 ÷ 주문 수량</div></div>';
 }
 function _cssWeekHTML(wk,label,pd){
@@ -3967,12 +3981,14 @@ function _cssWeekLoad(box,y,m,w){
   var tok=++_cssWkTok;
   box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
   fetch(_CSS_WEEK_SHEET+gid+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
-  .then(function(t){
+  .then(function(t){return fetch(_RS_SHEET+'1595981393&t='+Date.now()).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}).then(function(v){return [t,v];});})
+  .then(function(tv){
+    var t=tv[0],vtxt=tv[1];
     if(tok!==_cssWkTok)return;
     var wk=_cssWkRows(t);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
-    wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];
+    wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];wk.voc=_wkVocRows(vtxt,wk.iso);
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
     var vp=document.getElementById('csd-vp');_cssIdx=0;_cssBusy=false;_cssWkFit();
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
