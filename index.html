@@ -574,11 +574,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 .stock-sync-btn,.seg-btn,.dp-btn{white-space:nowrap;flex:none}
 #voc-section-wrap .stock-section-hd{flex-wrap:wrap;row-gap:8px}
 #voc-content{width:0;min-width:100%;box-sizing:border-box} /* 긴 내용이 칸 폭을 늘리지 않고 줄바꿈되게 */
-#voc-content .voc-n{font-size:12px;font-weight:600;color:var(--fg,#222);margin-bottom:8px}
-#voc-content .voc-ln{font-size:12.5px;color:var(--fg,#333);line-height:1.6;padding:3px 0}
-#voc-content .voc-sep{border-top:1px solid rgba(0,0,0,.12);margin-top:6px;padding-top:9px} /* 날짜가 바뀔 때 구분선 */
-#voc-content .voc-d{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
-#voc-content .voc-b{color:var(--muted);margin-right:6px}
+#voc-content .voc-tb td{white-space:normal;word-break:keep-all;line-height:1.5}
 .stock-section-hd .plat-label{margin:0;position:relative}
 .stock-section-hd .plat-label::after{content:'시트 바로 가기';position:absolute;left:0;top:calc(100% + 5px);background:rgba(30,30,30,.82);color:#fff;font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:100}
 .stock-section-hd .plat-label:hover::after{opacity:1}
@@ -889,8 +885,8 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
           <button class="seg-btn" id="voc-seg-month" onclick="_setVocSeg('month')">월간</button>
         </div>
       </div>
-      <div style="min-height:16px;margin-bottom:6px"></div>
-      <div class="stock-card" style="min-width:220px;min-height:80px;padding:16px 18px">
+      <div style="min-height:16px;margin-bottom:6px"><span id="voc-status" style="font-size:11px;color:var(--muted)"></span></div>
+      <div class="stock-card" id="voc-card" style="min-width:220px;min-height:80px;padding:16px 18px">
         <div id="voc-content" style="font-size:12px;color:var(--muted);text-align:center;padding:20px 0">날짜를 선택하고 조회 버튼을 눌러주세요</div>
       </div>
     </div>
@@ -1796,6 +1792,7 @@ $$(".brand-nav").forEach((a,i)=>{
     }
 
     runQuery();
+    if(window._vocQueried) _fetchVocData(); // 이전 브랜드 VOC 결과가 남지 않게 바뀐 브랜드로 다시 조회
   });
 });
 
@@ -3669,13 +3666,18 @@ function _vocCSV(csv){
   if(cur||row.length){row.push(cur);rows.push(row);}
   return rows;
 }
-// 브랜드 화면 VOC 조회: 날짜 - 상품 - 유형 / 상세 유형. 내용(H열)은 '운영 · 프로세스' 가 있을 때만 괄호로 붙인다
+// 브랜드 화면 VOC 조회: 상품명 / 유형(F열) / 내용. 내용은 '운영 · 프로세스' 면 H열, 그 외는 G열 상세 유형
 function _fetchVocData(){
   var box=document.getElementById('voc-content'),qb=document.getElementById('voc-query-btn');if(!box)return;
   var s=(document.getElementById('voc-start-date')||{}).value||'',en=(document.getElementById('voc-end-date')||{}).value||'';
   var bn=activeBrand?BRAND_LABELS[activeBrand]:'',nk=function(x){return String(x||'').replace(/[\s·]+/g,'');};
+  window._vocQueried=1;var tok=window._vocTok=(window._vocTok||0)+1; // 브랜드를 빨리 바꿔도 마지막 조회 결과만 그린다
+  var st=document.getElementById('voc-status'),card=document.getElementById('voc-card');
+  // 조회 전 상태(안내 문구 모양)로 되돌린 뒤 결과가 있으면 표로 바꾼다
+  if(card)card.style.padding='16px 18px';box.style.cssText='font-size:12px;color:var(--muted);text-align:center;padding:20px 0';if(st)st.textContent='';
   if(qb){qb.disabled=true;qb.textContent='조회 중...';}
   fetch(_CSS_VOC_URL+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(csv){
+    if(tok!==window._vocTok)return;
     var rows=_vocCSV(csv),H=null,hi=-1,blk='',out=[];
     for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('상세 유형')>=0||t.indexOf('상세유형')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
     if(!H)throw new Error('VOC 탭 머리글을 찾지 못했습니다');
@@ -3684,14 +3686,16 @@ function _fetchVocData(){
       var d=_cssWkDate(g(cD));if(d)blk=d;
       var ty=g(cT),det=g(cG);if(!blk||!(ty||det))continue;
       if((s&&blk<s)||(en&&blk>en)||(bn&&nk(g(cB))!==nk(bn)))continue;
-      var parts=[],seen={},op=false;
-      ty.split(',').concat([det]).forEach(function(x){x=x.trim();var k=nk(x);if(!x||seen[k])return;seen[k]=1;parts.push(x);if(k==='운영프로세스')op=true;});
-      var h=op?g(cH).replace(/\s+/g,' '):'',p=g(cP);
-      out.push({d:blk.slice(2),b:g(cB),p:(!p||p==='-')?'-':p,t:parts.join(' / ')+(h?' ('+h+')':'')});}
+      var tys=ty.split(',').map(function(x){return x.trim();}).filter(Boolean),op=nk(det)==='운영프로세스'||tys.some(function(x){return nk(x)==='운영프로세스';});
+      var p=g(cP);
+      out.push({b:g(cB),p:(!p||p==='-')?'-':p,t:tys.join(' / ')||'-',c:(op?g(cH).replace(/\s+/g,' '):det)||'-'});}
     var e=_rsEsc;
-    box.style.textAlign='center';
-    box.innerHTML=out.length?'<div class="voc-n">'+(bn?e(bn)+' ':'')+'VOC '+out.length+'건</div>'+out.map(function(o,i){return '<div class="voc-ln'+(i&&o.d!==out[i-1].d?' voc-sep':'')+'"><span class="voc-d">'+o.d+'</span>'+(bn?'':'<span class="voc-b">'+e(o.b)+'</span>')+'<b>'+e(o.p)+'</b> - '+e(o.t)+'</div>';}).join(''):'해당 기간에 VOC가 없습니다';
-  }).catch(function(err){box.style.textAlign='center';box.textContent='VOC 시트를 불러오지 못했습니다 ('+err.message+')';})
+    if(st)st.textContent=out.length?(bn?bn+' ':'')+'VOC '+out.length+'건':'';
+    if(!out.length){box.textContent='해당 기간에 VOC가 없습니다';return;}
+    if(card)card.style.padding='0';box.style.padding='0';box.style.color='';box.style.fontSize='';
+    box.innerHTML='<table class="stock-table voc-tb"><thead><tr>'+(bn?'':'<th>브랜드</th>')+'<th>상품명</th><th>유형</th><th>내용</th></tr></thead><tbody>'
+      +out.map(function(o){return '<tr>'+(bn?'':'<td>'+e(o.b)+'</td>')+'<td>'+e(o.p)+'</td><td>'+e(o.t)+'</td><td class="voc-c">'+e(o.c)+'</td></tr>';}).join('')+'</tbody></table>';
+  }).catch(function(err){if(tok===window._vocTok)box.textContent='VOC 시트를 불러오지 못했습니다 ('+err.message+')';})
   .then(function(){if(qb){qb.disabled=false;qb.textContent='조회';}});
 }
 function _cssWkVoc(csv,iso){
