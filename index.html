@@ -575,6 +575,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 #voc-section-wrap .stock-section-hd{flex-wrap:wrap;row-gap:8px}
 /* VOC 표는 줄바꿈 없이 한 줄: VOC 칸이 오른쪽으로 늘어나고 재고·교환반품 칸은 줄어들지 않게 */
 #voc-content .voc-tb td{white-space:nowrap}
+#voc-content .voc-tb th:not(:last-child),#voc-content .voc-tb td:not(.voc-c){border-right:1px solid var(--line)} /* 열 사이 세로 구분선(묶인 칸 포함) */
 #stock-section-wrap,#return-section-wrap{flex-shrink:0}
 .stock-section-hd .plat-label{margin:0;position:relative}
 .stock-section-hd .plat-label::after{content:'시트 바로 가기';position:absolute;left:0;top:calc(100% + 5px);background:rgba(30,30,30,.82);color:#fff;font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:100}
