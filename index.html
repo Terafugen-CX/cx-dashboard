@@ -290,6 +290,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .dash{font-style:normal;color:rgba(0,0,0,.25)}
 .op-tb .rsc{display:inline-block;text-align:left;white-space:nowrap}
 .op-tb td:nth-child(7){text-align:left;padding-left:24px}
+.op-tb .vd{display:block;text-align:center;margin-left:-24px}
 .op-tb .vc{display:inline-block;text-align:left;line-height:1.55}.op-tb .vcl{display:block}.op-tb .vcl b{font-weight:600;color:var(--fg,#222);margin-right:2px}
 .op-f{font-size:12px;color:#6b7076;margin-top:14px}
 @media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -3904,7 +3905,7 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   shown.forEach(function(o){rTop(o).forEach(function(k){rTot[k]=(rTot[k]||0)+o.rs[k];});});
   var rW=Math.max.apply(null,Object.keys(rTot).map(function(k){return k.length;}).concat([4]))*.95+2.6;
   var V=wk.voc||{};
-  var vocCell=function(n){var L=V[n];if(!L||!L.length)return '<i class="dash">-</i>';var T={},TO=[];
+  var vocCell=function(n){var L=V[n];if(!L||!L.length)return '<i class="dash vd">-</i>';var T={},TO=[];
     L.forEach(function(x){var g=T[x.t];if(!g){g=T[x.t]={};TO.push(x.t);}x.ds.forEach(function(d){var o=g[d.k]||(g[d.k]={n:d.n,c:0,h:[]});o.c++;if(d.op&&x.h&&o.h.indexOf(x.h)<0)o.h.push(x.h);});});
     return '<span class="vc">'+TO.map(function(t){var g=T[t];return '<span class="vcl"><b>'+e(t)+'</b> '+Object.keys(g).sort(function(a,b){return g[b].c-g[a].c;}).map(function(k){var o=g[k];return (k===t.replace(/[\s·]+/g,'')?'':e(o.n)+' ')+o.c+(o.h.length?' ('+e(o.h.join(' / '))+')':'');}).join(' · ')+'</span>';}).join('')+'</span>';};
   // VOC 에만 있는 상품(상위 목록 밖, 상품 미기재)은 아래에 덧붙인다
