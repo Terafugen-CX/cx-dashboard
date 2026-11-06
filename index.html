@@ -289,6 +289,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .op-tb .rsg{display:inline-flex;gap:0;justify-content:flex-start}
 .dash{font-style:normal;color:rgba(0,0,0,.25)}
 .op-tb .rsc{display:inline-block;text-align:left;white-space:nowrap}
+.op-tb th:nth-child(7),.op-tb td:nth-child(7){text-align:left;padding-left:24px}
+.op-tb .vc{display:inline-block;text-align:left;line-height:1.55}.op-tb .vcl{display:block}.op-tb .vcl b{font-weight:600;color:var(--fg,#222);margin-right:2px}
 .op-f{font-size:12px;color:#6b7076;margin-top:14px}
 @media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
@@ -3646,6 +3648,32 @@ var _CSS_WEEK_ISO={'2026-11-1':['2026-10-31','2026-11-06']};
 var _CSS_WEEK_DISP={'2026-11-1':'2026년 10월 31일 - 11월 06일'};
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkDate(v){var m=/^(\d{2})-(\d{2})-(\d{2})$/.exec(String(v||'').trim());return m?'20'+m[1]+'-'+m[2]+'-'+m[3]:'';}
+// VOC 탭(리셀러 시트): 상품명 / 유형 / 상세 유형 / 내용. 내용은 상세 유형 '운영 · 프로세스' 일 때만 괄호로 붙인다
+var _CSS_VOC_URL='https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/export?format=csv&gid=1595981393';
+var _vocKm={};
+function _cssWkVoc(csv,iso){
+  var out={};if(!csv||!iso)return out;
+  // VOC 내용 칸은 줄바꿈이 들어 있어 따옴표 안 줄바꿈까지 처리하는 파서를 따로 쓴다
+  var rows=[],row=[],cur='',q=false;
+  for(var a=0;a<csv.length;a++){var ch=csv[a];
+    if(q){if(ch==='"'){if(csv[a+1]==='"'){cur+='"';a++;}else q=false;}else cur+=ch;}
+    else if(ch==='"')q=true;else if(ch===','){row.push(cur);cur='';}
+    else if(ch==='\n'||ch==='\r'){if(ch==='\r'&&csv[a+1]==='\n')a++;row.push(cur);rows.push(row);row=[];cur='';}
+    else cur+=ch;}
+  if(cur||row.length){row.push(cur);rows.push(row);}
+  var H=null,hi=-1,blk='';
+  for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('상세 유형')>=0||t.indexOf('상세유형')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
+  if(!H)return out;
+  var c=function(n,d){return H[n]!=null?H[n]:d;},cD=c('날짜',0),cP=c('상품명',c('상품',2)),cT=c('유형',5),cG=H['상세 유형']!=null?H['상세 유형']:c('상세유형',6),cH=c('내용',7);
+  for(var j=hi+1;j<rows.length;j++){var r=rows[j],g=function(k){return String(r[k]||'').trim();};
+    var d=_cssWkDate(g(cD));if(d)blk=d;
+    var det=g(cG);if(!blk||!det||blk<iso[0]||blk>iso[1])continue;
+    var p=g(cP);if(!p||p==='-')p='상품 미지정';
+    var ty=g(cT).split(',')[0].trim()||'기타',h=g(cH).replace(/\s+/g,' ');
+    var ds=det.split('/').map(function(s){return s.trim();}).filter(Boolean).map(function(s){var k=s.replace(/[\s·]+/g,'');return {k:k,n:_vocKm[k]||(_vocKm[k]=s),op:k==='운영프로세스'};});
+    (out[p]||(out[p]=[])).push({t:ty,ds:ds,h:h});}
+  return out;
+}
 function _cssWkRows(csv){
   var rows=_parseCSV(csv),out=[],rets=[],blk='',H=null,hi=-1;
   for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('주문번호')>=0&&t.indexOf('브랜드')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
@@ -3875,8 +3903,13 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var rTop=function(o){return Object.keys(o.rs).sort(function(a,b){return o.rs[b]-o.rs[a];}).slice(0,3);},rTot={};
   shown.forEach(function(o){rTop(o).forEach(function(k){rTot[k]=(rTot[k]||0)+o.rs[k];});});
   var rW=Math.max.apply(null,Object.keys(rTot).map(function(k){return k.length;}).concat([4]))*.95+2.6;
-  var vocCell=function(){return '<i class="dash">-</i>';}; // VOC 데이터는 별도 전달 예정 - 비워 둠
-  var trs=shown.map(function(o){var tp=rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);});var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+tp.map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+new Array(Math.max(0,3-tp.length)+1).join('<span class="rsc" style="width:'+rW+'em"><i class="dash">-</i></span>')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td><b>'+(o.c+o.t)+'</b></td><td>'+N(o.a)+'원</td><td class="rs">'+rs+'</td><td class="rs">'+vocCell(o.n)+'</td></tr>';}).join('');
+  var V=wk.voc||{};
+  var vocCell=function(n){var L=V[n];if(!L||!L.length)return '<i class="dash">-</i>';var T={},TO=[];
+    L.forEach(function(x){var g=T[x.t];if(!g){g=T[x.t]={};TO.push(x.t);}x.ds.forEach(function(d){var o=g[d.k]||(g[d.k]={n:d.n,c:0,h:[]});o.c++;if(d.op&&x.h&&o.h.indexOf(x.h)<0)o.h.push(x.h);});});
+    return '<span class="vc">'+TO.map(function(t){var g=T[t];return '<span class="vcl"><b>'+e(t)+'</b> '+Object.keys(g).sort(function(a,b){return g[b].c-g[a].c;}).map(function(k){var o=g[k];return (k===t.replace(/[\s·]+/g,'')?'':e(o.n)+' ')+o.c+(o.h.length?' ('+e(o.h.join(' / '))+')':'');}).join(' · ')+'</span>';}).join('')+'</span>';};
+  // VOC 에만 있는 상품(상위 목록 밖, 상품 미기재)은 아래에 덧붙인다
+  Object.keys(V).forEach(function(n){if(shown.some(function(o){return o.n===n;}))return;shown.push(P[n]||{n:n,c:0,t:0,a:0,rs:{}});});
+  var trs=shown.map(function(o){var tp=rTop(o).sort(function(a,b){return (rTot[b]||0)-(rTot[a]||0);});var rs='<span class="rsg" style="min-width:'+(rW*3)+'em">'+tp.map(function(k){return '<span class="rsc" style="width:'+rW+'em">'+e(k)+' '+o.rs[k]+'</span>';}).join('')+new Array(Math.max(0,3-tp.length)+1).join('<span class="rsc" style="width:'+rW+'em"><i class="dash">-</i></span>')+'</span>';return '<tr><td class="nm">'+e(o.n)+'</td><td>'+(o.c||'-')+'</td><td>'+(o.t||'-')+'</td><td>'+(o.c+o.t?'<b>'+(o.c+o.t)+'</b>':'-')+'</td><td>'+(o.a?N(o.a)+'원':'-')+'</td><td class="rs">'+rs+'</td><td class="rs">'+vocCell(o.n)+'</td></tr>';}).join('');
   return '<div class="op"><div class="op-top"><div><div class="wk-ttl"><h2>'+label+' 한 장 요약</h2>'+_wkSw()+'</div></div><div class="op-meta">'+period+'</div></div>'
     +kpis+'<div class="op-c"><div class="op-ch">결론</div><ol>'+concl.map(function(t){return '<li>'+t+'</li>';}).join('')+'</ol></div>'
     +'<div class="op-th">상품별 상황</div><table class="op-tb"><thead><tr><th class="nm">상품</th><th>취소</th><th>반품</th><th>합계</th><th>금액</th><th class="rs">주요 사유</th><th class="rs">VOC</th></tr></thead><tbody>'+trs+'</tbody></table>'
@@ -3989,10 +4022,14 @@ function _cssWeekLoad(box,y,m,w){
   if(!gid){box.innerHTML='<div class="csd-empty">'+m+'월 '+w+'주차 데이터는 아직 시트가 연결되지 않았습니다.</div>';return;}
   var tok=++_cssWkTok;
   box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  var vocP=fetch(_CSS_VOC_URL+'&t='+Date.now()).then(function(r){return r.ok?r.text():'';}).catch(function(){return '';}); // VOC 실패해도 요약은 표시
   fetch(_CSS_WEEK_SHEET+gid+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
-  .then(function(t){
+  .then(function(t){return vocP.then(function(v){return [t,v];});})
+  .then(function(tv){
+    var t=tv[0];
     if(tok!==_cssWkTok)return;
     var wk=_cssWkRows(t);
+    wk.voc=_cssWkVoc(tv[1],_CSS_WEEK_ISO[y+'-'+m+'-'+w]);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w];
