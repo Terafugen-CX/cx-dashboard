@@ -575,7 +575,8 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 #voc-section-wrap .stock-section-hd{flex-wrap:wrap;row-gap:8px}
 /* VOC 표는 줄바꿈 없이 한 줄: VOC 칸이 오른쪽으로 늘어나고 재고·교환반품 칸은 줄어들지 않게 */
 #voc-content .voc-tb td{white-space:nowrap}
-#voc-content .voc-tb th:not(:last-child),#voc-content .voc-tb td:not(.voc-c){border-right:1px solid var(--line)} /* 열 사이 세로 구분선(묶인 칸 포함) */
+#voc-content .voc-tb th:not(:last-child),#voc-content .voc-tb td:not(:last-child){border-right:1px solid var(--line)} /* 열 사이 세로 구분선(묶인 칸 포함) */
+#voc-content .voc-tb td.vl{border-bottom:none} /* 표 맨 아래까지 묶인 칸은 카드 테두리와 겹치지 않게 */
 #stock-section-wrap,#return-section-wrap{flex-shrink:0}
 .stock-section-hd .plat-label{margin:0;position:relative}
 .stock-section-hd .plat-label::after{content:'시트 바로 가기';position:absolute;left:0;top:calc(100% + 5px);background:rgba(30,30,30,.82);color:#fff;font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:100}
@@ -3675,8 +3676,8 @@ function _fetchVocData(){
   var bn=activeBrand?BRAND_LABELS[activeBrand]:'',nk=function(x){return String(x||'').replace(/[\s·]+/g,'');};
   window._vocQueried=1;var tok=window._vocTok=(window._vocTok||0)+1; // 브랜드를 빨리 바꿔도 마지막 조회 결과만 그린다
   var st=document.getElementById('voc-status'),card=document.getElementById('voc-card');
-  // 조회 전 상태(안내 문구 모양)로 되돌린 뒤 결과가 있으면 표로 바꾼다
-  if(card)card.style.padding='16px 18px';box.style.cssText='font-size:12px;color:var(--muted);text-align:center;padding:20px 0';if(st)st.textContent='';
+  // 안내 문구 모양. 다시 조회할 때는 기존 표를 그대로 두고 결과가 오면 바꿔서 칸 크기가 출렁이지 않게 한다
+  var ph=function(msg){if(card)card.style.padding='16px 18px';box.style.cssText='font-size:12px;color:var(--muted);text-align:center;padding:20px 0';if(st)st.textContent='';box.textContent=msg;};
   if(qb){qb.disabled=true;qb.textContent='조회 중...';}
   fetch(_CSS_VOC_URL+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(csv){
     if(tok!==window._vocTok)return;
@@ -3695,7 +3696,7 @@ function _fetchVocData(){
       if(!out[out.length-1].cs.length)out[out.length-1].cs=['-'];}
     var e=_rsEsc;
     if(st)st.textContent=out.length?(bn?bn+' ':'')+'VOC '+out.length+'건':'';
-    if(!out.length){box.textContent='해당 기간에 VOC가 없습니다';return;}
+    if(!out.length){ph('해당 기간에 VOC가 없습니다');return;}
     // 상품 > 유형 > 내용으로 묶는다(상품 미기재 '-' 는 맨 아래). 띄어쓰기만 다른 내용은 같은 것으로 센다
     var G={},GO=[];
     out.forEach(function(o){var pk=o.b+'|'+o.p,pg=G[pk];if(!pg){pg=G[pk]={b:o.b,p:o.p,T:{},TO:[]};GO.push(pk);}
@@ -3703,14 +3704,14 @@ function _fetchVocData(){
       o.cs.forEach(function(c){var k=c.replace(/\s+/g,''),cg=tg.C[k];if(!cg){cg=tg.C[k]={n:c,c:0};tg.CO.push(k);}cg.c++;});});
     GO.sort(function(a,b){return (G[a].p==='-')-(G[b].p==='-');});
     var trs='';
-    GO.forEach(function(pk){var pg=G[pk],pn=pg.TO.reduce(function(s,t){return s+pg.T[t].CO.length;},0),first=true;
-      pg.TO.forEach(function(t){var tg=pg.T[t];tg.CO.sort(function(a,b){return tg.C[b].c-tg.C[a].c;});
+    GO.forEach(function(pk,pi){var pg=G[pk],pn=pg.TO.reduce(function(s,t){return s+pg.T[t].CO.length;},0),first=true,lp=pi===GO.length-1,pv=lp?' class="vl"':'';
+      pg.TO.forEach(function(t,ti){var tg=pg.T[t],tv=lp&&ti===pg.TO.length-1?' class="vl"':'';tg.CO.sort(function(a,b){return tg.C[b].c-tg.C[a].c;});
         tg.CO.forEach(function(k,ci){var cg=tg.C[k];
-          trs+='<tr>'+(first?(bn?'':'<td rowspan="'+pn+'">'+e(pg.b)+'</td>')+'<td rowspan="'+pn+'">'+e(pg.p)+'</td>':'')+(ci?'':'<td rowspan="'+tg.CO.length+'">'+e(t)+'</td>')+'<td class="voc-c" data-tip="'+cg.c+'건">'+e(cg.n)+'</td></tr>';
+          trs+='<tr>'+(first?(bn?'':'<td rowspan="'+pn+'"'+pv+'>'+e(pg.b)+'</td>')+'<td rowspan="'+pn+'"'+pv+'>'+e(pg.p)+'</td>':'')+(ci?'':'<td rowspan="'+tg.CO.length+'"'+tv+'>'+e(t)+'</td>')+'<td class="voc-c">'+e(cg.n)+'</td><td>'+cg.c+'</td></tr>';
           first=false;});});});
     if(card)card.style.padding='0';box.style.padding='0';box.style.color='';box.style.fontSize='';
-    box.innerHTML='<table class="stock-table voc-tb"><thead><tr>'+(bn?'':'<th>브랜드</th>')+'<th>상품명</th><th>유형</th><th>내용</th></tr></thead><tbody>'+trs+'</tbody></table>';
-  }).catch(function(err){if(tok===window._vocTok)box.textContent='VOC 시트를 불러오지 못했습니다 ('+err.message+')';})
+    box.innerHTML='<table class="stock-table voc-tb"><thead><tr>'+(bn?'':'<th>브랜드</th>')+'<th>상품명</th><th>유형</th><th>내용</th><th>합</th></tr></thead><tbody>'+trs+'</tbody></table>';
+  }).catch(function(err){if(tok===window._vocTok)ph('VOC 시트를 불러오지 못했습니다 ('+err.message+')');})
   .then(function(){if(qb){qb.disabled=false;qb.textContent='조회';}});
 }
 function _cssWkVoc(csv,iso){
