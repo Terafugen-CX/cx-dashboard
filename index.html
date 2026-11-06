@@ -575,7 +575,8 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 #voc-section-wrap .stock-section-hd{flex-wrap:wrap;row-gap:8px}
 #voc-content{width:0;min-width:100%;box-sizing:border-box} /* 긴 내용이 칸 폭을 늘리지 않고 줄바꿈되게 */
 #voc-content .voc-n{font-size:12px;font-weight:600;color:var(--fg,#222);margin-bottom:8px}
-#voc-content .voc-ln{font-size:12.5px;color:var(--fg,#333);line-height:1.6;padding:3px 0;border-top:1px solid rgba(0,0,0,.05)}
+#voc-content .voc-ln{font-size:12.5px;color:var(--fg,#333);line-height:1.6;padding:3px 0}
+#voc-content .voc-sep{border-top:1px solid rgba(0,0,0,.12);margin-top:6px;padding-top:9px} /* 날짜가 바뀔 때 구분선 */
 #voc-content .voc-d{color:var(--muted);margin-right:8px;font-variant-numeric:tabular-nums}
 #voc-content .voc-b{color:var(--muted);margin-right:6px}
 .stock-section-hd .plat-label{margin:0;position:relative}
@@ -3688,8 +3689,8 @@ function _fetchVocData(){
       var h=op?g(cH).replace(/\s+/g,' '):'',p=g(cP);
       out.push({d:blk.slice(2),b:g(cB),p:(!p||p==='-')?'-':p,t:parts.join(' / ')+(h?' ('+h+')':'')});}
     var e=_rsEsc;
-    box.style.textAlign=out.length?'left':'center';
-    box.innerHTML=out.length?'<div class="voc-n">'+(bn?e(bn)+' ':'')+'VOC '+out.length+'건</div>'+out.map(function(o){return '<div class="voc-ln"><span class="voc-d">'+o.d+'</span>'+(bn?'':'<span class="voc-b">'+e(o.b)+'</span>')+'<b>'+e(o.p)+'</b> - '+e(o.t)+'</div>';}).join(''):'해당 기간에 VOC가 없습니다';
+    box.style.textAlign='center';
+    box.innerHTML=out.length?'<div class="voc-n">'+(bn?e(bn)+' ':'')+'VOC '+out.length+'건</div>'+out.map(function(o,i){return '<div class="voc-ln'+(i&&o.d!==out[i-1].d?' voc-sep':'')+'"><span class="voc-d">'+o.d+'</span>'+(bn?'':'<span class="voc-b">'+e(o.b)+'</span>')+'<b>'+e(o.p)+'</b> - '+e(o.t)+'</div>';}).join(''):'해당 기간에 VOC가 없습니다';
   }).catch(function(err){box.style.textAlign='center';box.textContent='VOC 시트를 불러오지 못했습니다 ('+err.message+')';})
   .then(function(){if(qb){qb.disabled=false;qb.textContent='조회';}});
 }
