@@ -573,8 +573,9 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 .stock-section-hd{display:flex;align-items:center;gap:10px;margin-bottom:4px;flex-wrap:nowrap}
 .stock-sync-btn,.seg-btn,.dp-btn{white-space:nowrap;flex:none}
 #voc-section-wrap .stock-section-hd{flex-wrap:wrap;row-gap:8px}
-#voc-content{width:0;min-width:100%;box-sizing:border-box} /* 긴 내용이 칸 폭을 늘리지 않고 줄바꿈되게 */
-#voc-content .voc-tb td{white-space:normal;word-break:keep-all;line-height:1.5}
+/* VOC 표는 줄바꿈 없이 한 줄: VOC 칸이 오른쪽으로 늘어나고 재고·교환반품 칸은 줄어들지 않게 */
+#voc-content .voc-tb td{white-space:nowrap}
+#stock-section-wrap,#return-section-wrap{flex-shrink:0}
 .stock-section-hd .plat-label{margin:0;position:relative}
 .stock-section-hd .plat-label::after{content:'시트 바로 가기';position:absolute;left:0;top:calc(100% + 5px);background:rgba(30,30,30,.82);color:#fff;font-size:11px;font-weight:500;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;opacity:0;transition:opacity .12s;z-index:100}
 .stock-section-hd .plat-label:hover::after{opacity:1}
@@ -875,7 +876,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     <!-- VOC 섹션 -->
     <div id="voc-section-wrap" class="stock-section">
       <div class="stock-section-hd">
-        <div class="plat-label" style="font-size:16px;font-weight:600">VOC</div>
+        <div class="plat-label" id="voc-view-label" style="cursor:pointer;font-size:16px;font-weight:600" ondblclick="window.open('https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit?gid=1595981393#gid=1595981393','_blank')">VOC</div>
         <button type="button" class="dp-btn" id="voc-start-date-btn" onclick="dpOpen('voc-start-date')">날짜</button><input type="hidden" id="voc-start-date" value="">
         <span style="font-size:12px;color:var(--muted)">~</span>
         <button type="button" class="dp-btn" id="voc-end-date-btn" onclick="dpOpen('voc-end-date')">날짜</button><input type="hidden" id="voc-end-date" value="">
@@ -3688,13 +3689,26 @@ function _fetchVocData(){
       if((s&&blk<s)||(en&&blk>en)||(bn&&nk(g(cB))!==nk(bn)))continue;
       var tys=ty.split(',').map(function(x){return x.trim();}).filter(Boolean),op=nk(det)==='운영프로세스'||tys.some(function(x){return nk(x)==='운영프로세스';});
       var p=g(cP);
-      out.push({b:g(cB),p:(!p||p==='-')?'-':p,t:tys.join(' / ')||'-',c:(op?g(cH).replace(/\s+/g,' '):det)||'-'});}
+      // 내용: 운영 · 프로세스면 H열 한 덩어리, 그 외는 G열 상세 유형을 '/' 로 나눠 각각 센다
+      out.push({b:g(cB),p:(!p||p==='-')?'-':p,t:tys.join(' / ')||'-',cs:op?[g(cH).replace(/\s+/g,' ')||'-']:(det.split('/').map(function(x){return x.trim();}).filter(Boolean))});
+      if(!out[out.length-1].cs.length)out[out.length-1].cs=['-'];}
     var e=_rsEsc;
     if(st)st.textContent=out.length?(bn?bn+' ':'')+'VOC '+out.length+'건':'';
     if(!out.length){box.textContent='해당 기간에 VOC가 없습니다';return;}
+    // 상품 > 유형 > 내용으로 묶는다(상품 미기재 '-' 는 맨 아래). 띄어쓰기만 다른 내용은 같은 것으로 센다
+    var G={},GO=[];
+    out.forEach(function(o){var pk=o.b+'|'+o.p,pg=G[pk];if(!pg){pg=G[pk]={b:o.b,p:o.p,T:{},TO:[]};GO.push(pk);}
+      var tg=pg.T[o.t];if(!tg){tg=pg.T[o.t]={C:{},CO:[]};pg.TO.push(o.t);}
+      o.cs.forEach(function(c){var k=c.replace(/\s+/g,''),cg=tg.C[k];if(!cg){cg=tg.C[k]={n:c,c:0};tg.CO.push(k);}cg.c++;});});
+    GO.sort(function(a,b){return (G[a].p==='-')-(G[b].p==='-');});
+    var trs='';
+    GO.forEach(function(pk){var pg=G[pk],pn=pg.TO.reduce(function(s,t){return s+pg.T[t].CO.length;},0),first=true;
+      pg.TO.forEach(function(t){var tg=pg.T[t];tg.CO.sort(function(a,b){return tg.C[b].c-tg.C[a].c;});
+        tg.CO.forEach(function(k,ci){var cg=tg.C[k];
+          trs+='<tr>'+(first?(bn?'':'<td rowspan="'+pn+'">'+e(pg.b)+'</td>')+'<td rowspan="'+pn+'">'+e(pg.p)+'</td>':'')+(ci?'':'<td rowspan="'+tg.CO.length+'">'+e(t)+'</td>')+'<td class="voc-c" data-tip="'+cg.c+'건">'+e(cg.n)+'</td></tr>';
+          first=false;});});});
     if(card)card.style.padding='0';box.style.padding='0';box.style.color='';box.style.fontSize='';
-    box.innerHTML='<table class="stock-table voc-tb"><thead><tr>'+(bn?'':'<th>브랜드</th>')+'<th>상품명</th><th>유형</th><th>내용</th></tr></thead><tbody>'
-      +out.map(function(o){return '<tr>'+(bn?'':'<td>'+e(o.b)+'</td>')+'<td>'+e(o.p)+'</td><td>'+e(o.t)+'</td><td class="voc-c">'+e(o.c)+'</td></tr>';}).join('')+'</tbody></table>';
+    box.innerHTML='<table class="stock-table voc-tb"><thead><tr>'+(bn?'':'<th>브랜드</th>')+'<th>상품명</th><th>유형</th><th>내용</th></tr></thead><tbody>'+trs+'</tbody></table>';
   }).catch(function(err){if(tok===window._vocTok)box.textContent='VOC 시트를 불러오지 못했습니다 ('+err.message+')';})
   .then(function(){if(qb){qb.disabled=false;qb.textContent='조회';}});
 }
