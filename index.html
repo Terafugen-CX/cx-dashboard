@@ -1956,7 +1956,14 @@ runQuery();
       popup.hidden = true;
       if(!activeBrand) return;
       if(card.id === 'sc-link-cafe24'){
-        loginCafe24(activeBrand);
+        // 동기화 서버가 켜져 있으면 회수 하기와 같은 방식(쇼핑몰ID/아이디/비밀번호 자동 입력, 캡차만 직접). 꺼져 있으면 기존 방식
+        const b=activeBrand, info=BRAND_CAFE24[b];
+        if(!info||!info.mallId||info.mallId==='___') return;
+        // 예전 서버는 recover:false 를 모르고 적립금 회수를 시작하므로, /ping 의 loginOnly 를 먼저 확인한다
+        fetch('http://localhost:3355/ping').then(r=>r.json()).then(p=>{if(!p.loginOnly)throw new Error('old');
+          return fetch('http://localhost:3355/cafe24-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info,recover:false})});})
+          .then(r=>r.json()).then(d=>{if(!d.ok)throw new Error(d.error||'실패');})
+          .catch(()=>loginCafe24(b));
       } else if(card.href && card.href !== '#'){
         window.open(card.href, '_blank');
       }
