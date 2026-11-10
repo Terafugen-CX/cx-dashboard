@@ -3936,7 +3936,7 @@ function _wkPlatPanel(rows,sel){
   var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'전체';
   return '<div class="wk5-ph">플랫폼별 · '+lab+'</div>'+(ks.length?ks.map(function(k){return '<div class="wk5-pr"><span>'+_rsEsc(k)+'</span><u><i style="width:'+(m[k]/mx*100)+'%"></i></u><b>'+m[k]+'건</b></div>';}).join(''):'<div class="wk5-pr"><span class="dash">-</span></div>');
 }
-// prev: 전주 행. 있으면 같은 요일(7일 전) 건수를 희미한 주황 점선으로 함께 그리고,
+// prev: 전주 행. 있으면 같은 요일(7일 전) 건수를 희미한 주황 실선으로 함께 그리고,
 // 이번 주 숫자는 전주보다 많으면 빨강, 적으면 파랑, 같으면 회색으로 표시
 function _wkTrend(list,color,kind,src,prev){
   if(!list.length)return '<div class="csd-empty" style="margin:8px 0 0;text-align:left">표시할 데이터가 없습니다.</div>';
@@ -3953,9 +3953,9 @@ function _wkTrend(list,color,kind,src,prev){
   var line=n>1?'<polyline points="'+pts+'" fill="none" stroke="'+color+'" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>':'';
   var cw=n>1?pw/(n-1):pw,PC='#f0a35e';
   var pline='',lg='';
-  if(pv){pline=(n>1?'<polyline points="'+pv.map(function(v,i){return X(i)+','+Y(v);}).join(' ')+'" fill="none" stroke="'+PC+'" stroke-opacity=".45" stroke-width="1.8" stroke-dasharray="4 3" stroke-linejoin="round"/>':'')
+  if(pv){pline=(n>1?'<polyline points="'+pv.map(function(v,i){return X(i)+','+Y(v);}).join(' ')+'" fill="none" stroke="'+PC+'" stroke-opacity=".45" stroke-width="1.8" stroke-linejoin="round"/>':'')
       +pv.map(function(v,i){return '<circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.4" fill="'+PC+'" fill-opacity=".45"/><text x="'+X(i)+'" y="'+(Y(v)+14)+'" text-anchor="middle" font-size="9.5" fill="'+PC+'" fill-opacity=".8">'+v+'</text>';}).join('');
-    lg='<g font-size="10" fill="#8a9099"><line x1="'+(W-R-118)+'" x2="'+(W-R-104)+'" y1="6" y2="6" stroke="'+color+'" stroke-width="2.2"/><text x="'+(W-R-100)+'" y="9.5">이번 주</text><line x1="'+(W-R-50)+'" x2="'+(W-R-36)+'" y1="6" y2="6" stroke="'+PC+'" stroke-opacity=".6" stroke-width="1.8" stroke-dasharray="4 3"/><text x="'+(W-R-32)+'" y="9.5">전주</text></g>';}
+    lg='<g font-size="10" fill="#8a9099"><line x1="'+(W-R-118)+'" x2="'+(W-R-104)+'" y1="6" y2="6" stroke="'+color+'" stroke-width="2.2"/><text x="'+(W-R-100)+'" y="9.5">이번 주</text><line x1="'+(W-R-50)+'" x2="'+(W-R-36)+'" y1="6" y2="6" stroke="'+PC+'" stroke-opacity=".6" stroke-width="1.8"/><text x="'+(W-R-32)+'" y="9.5">전주</text></g>';}
   var lc=function(i){if(!pv)return color;var v=list[i].v;return v>pv[i]?'var(--c-red,#d6203a)':v<pv[i]?'var(--c-blue,#2b7de0)':'#8a9099';};
   var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"></circle><text x="'+X(i)+'" y="'+(Y(x.v)-8)+'" text-anchor="middle" font-size="11" font-weight="700" fill="'+lc(i)+'">'+x.v+'</text><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text></g>';}).join('')
     +list.map(function(x,i){return '<rect class="wk5-hit" data-kind="'+kind+'" data-k="'+x.k+'" data-tip="'+_wkPlatTip(x,src)+'" x="'+(X(i)-cw/2)+'" y="0" width="'+cw+'" height="'+H+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';}).join('');
