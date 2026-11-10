@@ -1073,7 +1073,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 <div class="bf-meta">2026-11-10 배포본 · 봇 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span> · 지식 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span><br>AI 모델 없이 키워드·FAQ 규칙으로만 판단</div>
 
 <div class="bf-card"><div class="bf-h">구성</div>
-<div class="bf-pipe"><span>제로톡 웹훅</span><i>→</i><span>봇 서버<small><span class="bf-mask" title="내부 정보 가림">●●●●●●</span></small></span><i>→</i><span>규칙 엔진</span><i>→</i><span>자동 답변 / 상담원 연결</span><i>→</i><span>CS RAW 시트 기록</span></div></div>
+<div class="bf-pipe"><span>제로톡 웹훅</span><i>→</i><span>봇 서버</span><i>→</i><span>규칙 엔진</span><i>→</i><span>자동 답변 · 상담원 연결</span><i>→</i><span>시트 기록</span></div></div>
 
 <div class="bf-card"><div class="bf-h">1. 전체 흐름</div>
 <div class="bf-flow">
@@ -1123,15 +1123,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 <li>담당자 없으면 CS쉐어링 배정 <small>상담방당 하루 1회 · 상담원이 해제하면 그날 재배정 안 함</small></li>
 </ol></div>
 
-<div class="bf-card"><div class="bf-h">6. 상담 기록 시트 <small>CS RAW "상담봇 상담 이력" 탭 · 상담방+날짜당 한 줄</small></div>
-<div class="bf-cols">
-<div><b>A</b>날짜</div><div><b>B</b>브랜드</div><div><b>C</b>상품명<small>인식한 제품</small></div><div class="man"><b>D</b>플랫폼<small>직접 작성</small></div>
-<div><b>E</b>주문번호<small>8-7자리</small></div><div><b>F</b>이름</div><div><b>G</b>연락처</div><div class="man"><b>H</b>분류<small>직접 작성</small></div>
-<div><b>I</b>문의내용</div><div><b>J</b>답변<small>이관 건은 비움</small></div><div><b>K</b>이관 여부<small>종결 / 상담원 이관</small></div><div><b>L</b>링크</div>
-</div>
-<div class="bf-note warn">A(날짜)·L(링크)를 지우면 그 줄을 못 찾아 새 줄이 생기거나 섞일 수 있음 · 기록 실패해도 상담 처리는 계속됨</div></div>
-
-<div class="bf-card"><div class="bf-h">7. 운영·변경 방법</div>
+<div class="bf-card"><div class="bf-h">6. 운영·변경 방법</div>
 <table class="bf-tb"><thead><tr><th>바꿀 것</th><th>위치</th><th>반영</th></tr></thead><tbody>
 <tr><td>FAQ 질문·답변, 제품명·별칭</td><td>Google 시트 → 지식 <span class="bf-mask" title="내부 정보 가림">●●●●●●</span> 빌드·배포</td><td>최대 10분</td></tr>
 <tr><td>키워드 (민감·처리 유형·주제·같은 표현)</td><td>지식 <span class="bf-mask" title="내부 정보 가림">●●●●●●●●●●</span></td><td>최대 10분</td></tr>
