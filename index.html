@@ -250,6 +250,14 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-pr u{display:block;height:5px;border-radius:3px;background:#eceef1;text-decoration:none;overflow:hidden}
 .wk5-pr u i{display:block;height:100%;background:#9aa1ab;border-radius:3px}
 .wk5-pr b{text-align:right;min-width:30px}
+/* 전주 비교 막대: 위 이번 주(기존 색), 아래 전주(주황, 희미하게). 건수 옆 작은 숫자 = 전주 건수 */
+.wk5-pr u.two{height:auto;background:none;display:flex;flex-direction:column;gap:2px;overflow:visible}
+.wk5-pr u.two i{height:5px;background:#9aa1ab}
+.wk5-pr u.two i.pv{background:#f0a35e;opacity:.4}
+.wk5-pr b em{font-style:normal;font-weight:500;color:#e08a3c;opacity:.65;margin-left:4px;font-size:11px}
+.wk5-lg{float:right;font-weight:500;color:#8a9099}
+.wk5-lg i{display:inline-block;width:10px;height:5px;border-radius:2px;background:#9aa1ab;margin:0 3px 1px 8px;vertical-align:middle}
+.wk5-lg i.pv{background:#f0a35e;opacity:.4}
 .wk5-hit{cursor:pointer}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
@@ -3928,12 +3936,18 @@ function _wkDays(keys,iso){
 }
 function _wkPlatTip(x){return _rsEsc(x.l+' · '+x.v+'건');}
 // 그래프 오른쪽 패널: 플랫폼별 건수(선택한 날이 있으면 그날만)
-function _wkPlatPanel(rows,sel){
-  var f=sel?rows.filter(function(r){return r.cd===sel;}):rows,m={},mx=0;
+// prev: 전주 행(주간 전체를 볼 때만 비교 막대를 함께 그림. 날짜를 고르면 그날만 표시)
+function _wkPlatPanel(rows,sel,prev){
+  var f=sel?rows.filter(function(r){return r.cd===sel;}):rows,m={},pm={},mx=0,cmp=!sel&&prev;
   f.forEach(function(r){var p=r.plat||'미기재';m[p]=(m[p]||0)+1;});
-  var ks=Object.keys(m).sort(function(a,b){return m[b]-m[a];});mx=ks.length?m[ks[0]]:1;
+  if(cmp)prev.forEach(function(r){var p=r.plat||'미기재';pm[p]=(pm[p]||0)+1;});
+  var ks=Object.keys(m).concat(Object.keys(pm).filter(function(k){return !m[k];})).sort(function(a,b){return (m[b]||0)-(m[a]||0)||(pm[b]||0)-(pm[a]||0);});
+  ks.forEach(function(k){mx=Math.max(mx,m[k]||0,pm[k]||0);});mx=mx||1;
   var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'전체';
-  return '<div class="wk5-ph">플랫폼별 · '+lab+'</div>'+(ks.length?ks.map(function(k){return '<div class="wk5-pr"><span>'+_rsEsc(k)+'</span><u><i style="width:'+(m[k]/mx*100)+'%"></i></u><b>'+m[k]+'건</b></div>';}).join(''):'<div class="wk5-pr"><span class="dash">-</span></div>');
+  var lg=cmp?'<span class="wk5-lg"><i></i>이번 주<i class="pv"></i>전주</span>':'';
+  return '<div class="wk5-ph">플랫폼별 · '+lab+lg+'</div>'+(ks.length?ks.map(function(k){var n=m[k]||0;
+    if(!cmp)return '<div class="wk5-pr"><span>'+_rsEsc(k)+'</span><u><i style="width:'+(n/mx*100)+'%"></i></u><b>'+n+'건</b></div>';
+    var p=pm[k]||0;return '<div class="wk5-pr"><span>'+_rsEsc(k)+'</span><u class="two"><i style="width:'+(n/mx*100)+'%"></i><i class="pv" style="width:'+(p/mx*100)+'%"></i></u><b>'+n+'건<em>'+p+'</em></b></div>';}).join(''):'<div class="wk5-pr"><span class="dash">-</span></div>');
 }
 function _wkTrend(list,color,kind,src){
   if(!list.length)return '<div class="csd-empty" style="margin:8px 0 0;text-align:left">표시할 데이터가 없습니다.</div>';
@@ -4065,17 +4079,17 @@ function _cssWeekHTML(wk,label,pd){
   // 전주 대비(건수 · 금액). 날짜를 눌러 숫자가 바뀌어도 이 줄은 주간 전체 기준으로 남는다
   var pw=wk.pw,pwLine=function(n,a,kn,ka){if(!pw)return '';var p=[_wkDl(n,pw[kn],'건수'),_wkDl(a,pw[ka],'금액')].filter(Boolean);return p.length?'<div style="margin-top:2px">전주 대비 '+p.join(' · ')+'</div>':'';};
   var rateLine=function(v,k){if(!pw||v==null||pw[k]==null)return '';var d=_wkDl(v,pw[k],'');return d?'<div style="margin-top:2px">전주 대비 '+d+' <span style="margin-left:4px">전주 '+(pw[k]*100).toFixed(1)+'%</span></div>':'';};
-  window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,retSub:retSubTxt,cRows:rows,rRows:rr};window._wkSel={};window._wkPS={};
+  window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,retSub:retSubTxt,cRows:rows,rRows:rr,pc:wk.pw?wk.pw.cRows:null,pr:wk.pw?wk.pw.rRows:null};window._wkSel={};window._wkPS={};
   var cmin=cdays.concat(rr.map(function(r){return r.cd||'';})).filter(Boolean).sort()[0]||'',axisStart=cmin||(wk.iso?wk.iso[0]:'');
   var kpis='<div class="wk5">'
     +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('취소율',noOrd?'-':(cur*100).toFixed(1)+'%',(noOrd?'주문 수량 입력 전':prev==null?'':_cssDl(cur,prev)+' <span style="margin-left:4px">전월 '+(prev*100).toFixed(1)+'%</span>')+rateLine(noOrd?null:cur,'cr'),1)
     +kpi('<span id="wk-c-l">취소</span>','<span id="wk-c-n">'+_cssN(tot)+'</span>'+unit('건'),'<span id="wk-c-s">취소금액 '+_cssN(sum)+'원 · 건당 '+_cssN(tot?Math.round(sum/tot):0)+'원</span>'+pwLine(tot,sum,'c','ca'))
-    +'</div><div class="wk5-t">'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0','c',rows)+'<div class="wk5-p" id="wk-c-plat">'+_wkPlatPanel(rows,'')+'</div></div><div class="wk6" id="wk-c-list">'+_wkList(rows,'','취소 내역')+'</div></div>'
+    +'</div><div class="wk5-t">'+_wkTrend(_wkDays(cdays,wk.iso?[axisStart,wk.iso[1]]:null),'#2b7de0','c',rows)+'<div class="wk5-p" id="wk-c-plat">'+_wkPlatPanel(rows,'',window._wkD.pc)+'</div></div><div class="wk6" id="wk-c-list">'+_wkList(rows,'','취소 내역')+'</div></div>'
     +'<div class="wk5-c"><div class="wk5-k">'
     +kpi('반품율',ordTot?(retCur*100).toFixed(1)+'%':'-',(ordTot?_cssDl(retCur,prevRet===''?null:prevRet)+(prevRet===''?'':' <span style="margin-left:4px">전월 '+(prevRet*100).toFixed(1)+'%</span>'):'주문 수량 입력 전')+rateLine(ordTot?retCur:null,'rr'),1)
     +kpi('<span id="wk-r-l">반품</span>','<span id="wk-ret-n">'+_cssN(rr.length)+'</span>'+unit('건'),'<span id="wk-ret-s">'+retSubTxt+'</span>'+pwLine(rr.length,retAmt,'r','ra'))
-    +'</div><div class="wk5-t"><div id="wk-ret-chart">'+_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r',rr)+'</div><div class="wk5-p" id="wk-r-plat">'+_wkPlatPanel(rr,'')+'</div></div><div class="wk6" id="wk-r-list">'+_wkList(rr,'','반품 내역')+'</div></div>'
+    +'</div><div class="wk5-t"><div id="wk-ret-chart">'+_wkTrend(_wkDays(rr.map(function(r){return r.cd||'';}),wk.iso?[axisStart,wk.iso[1]]:null),'#6b7280','r',rr)+'</div><div class="wk5-p" id="wk-r-plat">'+_wkPlatPanel(rr,'',window._wkD.pr)+'</div></div><div class="wk6" id="wk-r-list">'+_wkList(rr,'','반품 내역')+'</div></div>'
     +'</div>';
   var s='<div class="csd-slide csd-lt csd-fill"><div class="csd-head"><div><div class="wk-ttl"><h2>주간 취소 · 반품 현황</h2>'+_wkSw()+'</div></div><div class="csd-tot"><span class="wk-meta">'+(_wkPeriod(wk)||label)+'</span></div></div>'
     +'<p style="font-size:clamp(15px,1.5vw,19px);font-weight:600;line-height:1.55;margin:0 0 10px;letter-spacing:-.01em">'+headline+'</p>'
@@ -4103,13 +4117,13 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
       var o=sel?(D.c[sel]||{c:0,a:0}):D.ct;
       if($('wk-c-n'))$('wk-c-n').textContent=_cssN(o.c);
       if($('wk-c-s'))$('wk-c-s').textContent='취소금액 '+_cssN(o.a)+'원 · 건당 '+_cssN(o.c?Math.round(o.a/o.c):0)+'원';
-      if($('wk-c-plat'))$('wk-c-plat').innerHTML=_wkPlatPanel(D.cRows,sel);
+      if($('wk-c-plat'))$('wk-c-plat').innerHTML=_wkPlatPanel(D.cRows,sel,D.pc);
       if($('wk-c-list'))$('wk-c-list').innerHTML=_wkList(D.cRows,sel,'취소 내역');
     }else{
       var n=sel?(D.r[sel]||0):D.rt;
       if($('wk-ret-n'))$('wk-ret-n').textContent=_cssN(n);
       if($('wk-ret-s'))$('wk-ret-s').textContent=sel?'반품금액 '+_cssN(D.ra[sel]||0)+'원':D.retSub;
-      if($('wk-r-plat'))$('wk-r-plat').innerHTML=_wkPlatPanel(D.rRows,sel);
+      if($('wk-r-plat'))$('wk-r-plat').innerHTML=_wkPlatPanel(D.rRows,sel,D.pr);
       if($('wk-r-list'))$('wk-r-list').innerHTML=_wkList(D.rRows,sel,'반품 내역');
     }
   });
@@ -4171,7 +4185,7 @@ function _cssWeekLoad(box,y,m,w){
     var wk=_cssWkRows(t);
     wk.voc=_cssWkVoc(tv[1],iso);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
-    if(tv[2]){var pwk=_cssWkRows(tv[2]);if(pwk.rows.length||(pwk.retRows||[]).length)wk.pw=_wkSum(pwk);}
+    if(tv[2]){var pwk=_cssWkRows(tv[2]);if(pwk.rows.length||(pwk.retRows||[]).length){wk.pw=_wkSum(pwk);wk.pw.cRows=pwk.rows;wk.pw.rRows=pwk.retRows||[];}}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w]||iso;
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
