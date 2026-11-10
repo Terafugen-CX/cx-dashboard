@@ -710,7 +710,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
           <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7a4 4 0 1 0 8 0a4 4 0 0 0 -8 0"/><path d="M6 21v-2a4 4 0 0 1 4 -4h4a4 4 0 0 1 4 4v2"/></svg></span>
           <span><b>리셀러</b><small>리셀러 관리</small></span>
         </a>
-        <a href="#" id="nav-ai-bot" aria-current="false" onclick="return false"><!-- 화면은 아직 없음: 메뉴만 추가 -->
+        <a href="#" id="nav-ai-bot" aria-current="false">
           <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg></span>
           <span><b>AI 상담 봇</b></span>
         </a>
@@ -913,6 +913,9 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     </section>
 
     <!-- 리셀러 뷰 -->
+    <section id="ai-bot-view" style="display:none;padding:24px 0">
+      <div class="stock-card" style="padding:40px 20px;text-align:center;font-size:12px;color:var(--muted)">AI 상담 봇 화면은 준비 중입니다.</div>
+    </section>
     <section id="reseller-view" style="display:none;padding:24px 0">
       <div class="rs-layout">
       <div class="rs-left">
@@ -1678,7 +1681,8 @@ function _ghWrite(path, data, sha, msg, cb) {
   const stockWrap=document.getElementById('stock-section-wrap');
   const returnWrap=document.getElementById('return-section-wrap');
   const vocWrap=document.getElementById('voc-section-wrap');
-  function hideReseller(){var v=document.getElementById('reseller-view');if(v)v.style.display='none';var n=document.getElementById('nav-reseller');if(n){n.classList.remove('on');n.setAttribute('aria-current','false');}}
+  // 리셀러 / AI 상담 봇 화면을 함께 닫는다(다른 메뉴·브랜드로 이동할 때 모두 여기를 거친다)
+  function hideReseller(){['reseller-view','ai-bot-view'].forEach(function(id){var v=document.getElementById(id);if(v)v.style.display='none';});['nav-reseller','nav-ai-bot'].forEach(function(id){var n=document.getElementById(id);if(n){n.classList.remove('on');n.setAttribute('aria-current','false');}});}
   window._hideReseller=hideReseller;
   function showCalendar(){
     hideReseller();
@@ -1732,6 +1736,7 @@ function _ghWrite(path, data, sha, msg, cb) {
   const navReseller=document.getElementById('nav-reseller');
   const resellerView=document.getElementById('reseller-view');
   function showReseller(){
+    hideReseller();
     if(brandSection) brandSection.style.display='none';
     if(calView) calView.style.display='none';
     if(csSummaryView) csSummaryView.style.display='none';
@@ -1748,6 +1753,26 @@ function _ghWrite(path, data, sha, msg, cb) {
     e.preventDefault();
     if(resellerView&&resellerView.style.display!=='none'){ showDashboard(); var _ab=document.querySelector('.brand-nav.active .brand-logo-name'); if(pageTitleEl) pageTitleEl.textContent=_ab?_ab.textContent:'CX 대시보드'; }
     else { showReseller(); }
+  });
+
+  // AI 상담 봇 네비게이션(화면 내용은 아직 준비 중)
+  const navAiBot=document.getElementById('nav-ai-bot');
+  const aiBotView=document.getElementById('ai-bot-view');
+  if(navAiBot) navAiBot.addEventListener('click',e=>{
+    e.preventDefault();
+    if(aiBotView&&aiBotView.style.display!=='none'){ showDashboard(); var _ab=document.querySelector('.brand-nav.active .brand-logo-name'); if(pageTitleEl) pageTitleEl.textContent=_ab?_ab.textContent:'CX 대시보드'; return; }
+    hideReseller();
+    if(brandSection) brandSection.style.display='none';
+    if(calView) calView.style.display='none';
+    if(csSummaryView) csSummaryView.style.display='none';
+    if(stockWrap) stockWrap.style.display='none';
+    if(returnWrap) returnWrap.style.display='none';
+    if(vocWrap) vocWrap.style.display='none';
+    if(aiBotView) aiBotView.style.display='';
+    if(pageTitleEl) pageTitleEl.textContent='AI 상담 봇';
+    navCal.classList.remove('on'); navCal.setAttribute('aria-current','false');
+    if(navCsSummary){ navCsSummary.classList.remove('on'); navCsSummary.setAttribute('aria-current','false'); }
+    navAiBot.classList.add('on'); navAiBot.setAttribute('aria-current','page');
   });
 
   navCal.addEventListener('click',e=>{
