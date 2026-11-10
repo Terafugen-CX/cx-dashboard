@@ -314,8 +314,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .bf-h small{font-weight:500;color:var(--muted);font-size:11px;margin-left:4px}
 .bf small{display:block;font-size:10.5px;color:var(--muted);font-weight:400;margin-top:2px}
 .bf .bf-h small{display:inline;font-size:11px;font-weight:500;margin:0 0 0 4px}
-.bf-pipe{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-.bf-pipe span{background:var(--surface-2);border-radius:6px;padding:5px 9px;font-weight:600;text-align:center}
+.bf-pipe{display:flex;flex-wrap:nowrap;align-items:center;gap:5px;overflow-x:auto}
+.bf-pipe span{background:var(--surface-2);border-radius:6px;padding:5px 8px;font-weight:600;text-align:center;white-space:nowrap;font-size:11.5px}
 .bf-pipe i{font-style:normal;color:var(--muted)}
 .bf-flow{display:flex;flex-direction:column;align-items:center}
 .bf-n,.bf-d{border-radius:8px;padding:7px 12px;text-align:center;font-weight:600;max-width:270px;width:100%}
@@ -354,10 +354,6 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .bf-num li{margin-bottom:6px}
 .bf-num small{display:inline;margin-left:4px}
 .bf-num blockquote{margin:5px 0 0;padding:6px 10px;border-left:3px solid #f0a35e;background:#fdf6ef;border-radius:0 6px 6px 0;font-size:11.5px}
-.bf-cols{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
-.bf-cols div{background:var(--surface-2);border-radius:6px;padding:5px 7px;line-height:1.35}
-.bf-cols div.man{background:#fff;border:1px dashed #c9cdd3}
-.bf-cols b{color:#1f65b8;margin-right:5px}
 .bf-tb{width:100%;border-collapse:collapse;font-size:11.5px}
 .bf-tb th{text-align:left;color:var(--muted);font-weight:600;padding:5px 6px;border-bottom:1px solid var(--line)}
 .bf-tb td{padding:6px;border-bottom:1px solid var(--line);vertical-align:top;line-height:1.5}
