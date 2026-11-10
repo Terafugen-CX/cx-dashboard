@@ -295,12 +295,13 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .op-f{font-size:12px;color:#6b7076;margin-top:14px}
 @media(max-width:1100px){.op-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .wk6-h{font-size:10.5px;font-weight:700;letter-spacing:.04em;color:var(--c-mut);margin:0 0 6px}
-.wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),minmax(44px,1fr));gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
+.wk6-r,.wk6-hd{display:grid;grid-template-columns:minmax(90px,22%) minmax(70px,92px) 38px minmax(80px,120px) repeat(var(--n,5),var(--rw,minmax(44px,1fr))) var(--tail,);gap:2px 12px;font-size:12px;padding:4px 6px;margin:0 -6px;align-items:center;border-radius:6px}
 .wk6-r{cursor:pointer}
 .wk6-r:hover{background:rgba(0,0,0,.025)}
 .wk6-r.sel{background:rgba(43,125,224,.08)}
 .wk6-hd{font-size:10.5px;color:var(--c-mut);font-weight:600;padding-top:0;padding-bottom:4px;border-bottom:1px solid var(--c-line);border-radius:0;margin-bottom:2px}
 .wk6-hd .am,.wk6-hd .ct{text-align:right}
+.wk6-hd .gh{text-align:center}
 .wk6-hd .rh{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wk6-r .nm{font-weight:600}
 .wk6-r .am{text-align:right;font-variant-numeric:tabular-nums}
@@ -3995,8 +3996,9 @@ function _wkList(rows,sel,title,psel){
   });
   function gtip(name,x){return _wkGT(x);}
   var list=Object.keys(g).map(function(k){return g[k];}).sort(function(a,b){return b.c-a.c;});
-  var mx=list[0].c,st=' style="--n:'+cols.length+'"';
-  var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span>성별</span>'+cols.map(function(k){return '<span class="rh" data-tip="'+gtip(k,ct[k]||{m:0,f:0,u:0})+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
+  // 사유가 1~2개뿐이면 사유 칸을 넓게 벌리지 않고 성별 바로 오른쪽에 붙인다(남는 폭은 맨 끝 빈 칸)
+  var mx=list[0].c,st=' style="--n:'+cols.length+(cols.length<3?';--rw:minmax(56px,96px);--tail:1fr':'')+'"';
+  var hd='<div class="wk6-hd"'+st+'><span>제품</span><span class="am">금액</span><span class="ct">건수</span><span class="gh">성별</span>'+cols.map(function(k){return '<span class="rh" data-tip="'+gtip(k,ct[k]||{m:0,f:0,u:0})+'">'+_rsEsc(k)+'</span>';}).join('')+'</div>';
   return head+hd+list.map(function(o){
     var cells=cols.map(function(k){return '<span class="rc"'+(o.rc[k]?' data-tip="'+gtip(k,o.rg[k])+'"':'')+'>'+(o.rc[k]?'<b>'+o.rc[k]+'</b>':'<i class="dash">-</i>')+'</span>';}).join('');
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
