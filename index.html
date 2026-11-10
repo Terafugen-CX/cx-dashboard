@@ -302,6 +302,24 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk6-hd{font-size:10.5px;color:var(--c-mut);font-weight:600;padding-top:0;padding-bottom:4px;border-bottom:1px solid var(--c-line);border-radius:0;margin-bottom:2px}
 .wk6-hd .am,.wk6-hd .ct{text-align:right}
 .wk6-hd .gh{text-align:center}
+/* AI 상담 봇 화면 */
+.bot-wrap{max-width:1400px}
+.bot-title{font-size:18px;font-weight:700;margin:0 0 12px}
+.bot-h2{font-size:15px;font-weight:700;margin:26px 0 10px}
+.bot-h3{font-size:13px;font-weight:700;padding:12px 14px 8px}
+.bot-card{margin-bottom:14px}
+.bot-info ul,.bot-ul{margin:0;padding:12px 14px 12px 30px;font-size:12.5px;line-height:1.8;color:var(--fg)}
+.bot-ul{padding-top:8px;color:var(--muted)}
+.bot-scroll{overflow-x:auto}
+.stock-table.bot-tb td,.stock-table.bot-tb th{text-align:left;white-space:normal;vertical-align:top;line-height:1.6}
+.stock-table.bot-tb th{white-space:nowrap}
+.stock-table.bot-tb td:first-child{white-space:nowrap;font-weight:600}
+.bot-tb td.bot-kw{color:var(--muted);font-size:12px;min-width:200px}
+.bot-tb td.bot-ans{min-width:320px;max-width:560px}
+.bot-tb details summary{cursor:pointer;color:var(--fg)}
+.bot-tb details summary::marker{color:var(--muted)}
+.bot-tb details[open] summary{margin-bottom:4px}
+.bot-wrap code{font-size:11.5px;background:var(--surface-2);padding:1px 5px;border-radius:4px}
 .wk6-hd .rh{text-align:center;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .wk6-r .nm{font-weight:600}
 .wk6-r .am{text-align:right;font-variant-numeric:tabular-nums}
@@ -915,7 +933,77 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 
     <!-- 리셀러 뷰 -->
     <section id="ai-bot-view" style="display:none;padding:24px 0">
-      <div class="stock-card" style="padding:40px 20px;text-align:center;font-size:12px;color:var(--muted)">AI 상담 봇 화면은 준비 중입니다.</div>
+      <!-- 덴티플라_상담봇_정리.md 기준(2026-11-10). 내용이 바뀌면 md 를 다시 변환해 이 블록을 교체 -->
+      <div class="bot-wrap"><h2 class="bot-title">덴티플라 AI 상담봇 정리</h2><div class="stock-card bot-card bot-info"><ul><li>기준: cs-knowledge 지식 버전 <code>2b2ee079f2b35c63</code>, 2026-11-10 생성</li><li>작동 조건: 평일 10:00-12:00, 13:00-17:00 (공휴일 제외), 허용된 상담방만, 상담원이 그날 직접 답한 상담방은 봇이 빠짐</li><li>자동 답변 앞에 <code>[AI 상담봇]</code> 표시, 인사말은 하루 첫 답변에만</li><li>상담원 연결 시: 고객에게 &quot;고객님, 문의하신 내용은 상담원이 확인 후 정확하게 안내드리겠습니다. / 원활한 상담을 위해 성함 / 연락처 기재와 함께 잠시만 기다려주세요.&quot; 1회 + 상담 메모 + <code>AI이관</code> 태그 + 담당자 없으면 CS쉐어링 배정(하루 1회)</li><li>상담 기록: CS RAW 시트 &quot;상담봇 상담 이력&quot; 탭에 상담방·날짜당 한 줄 (자동 답변 = 종결, 상담원 연결 = 상담원 이관)</li></ul></div>
+<h3 class="bot-h2">1. 자동 답변</h3>
+<div class="stock-card bot-card"><div class="bot-h3">1-1. 공통 자동 답변</div>
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>유형</th><th>인입 키워드·조건</th><th>예시 문장</th><th>답변</th></tr></thead><tbody>
+<tr><td>상담 요청</td><td class="bot-kw">상담, 상담요청, 상담신청, 문의, 문의요청, 문의신청 (메시지 전체가 이 말일 때만, 띄어쓰기·끝의 &quot;요&quot;·문장부호 무시)</td><td>상담 요청</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>원하시는 문의 내용 말씀해 주시면 확인 후, 안내 도와드리겠습니다.</td></tr>
+<tr><td>제품명 되묻기</td><td class="bot-kw">제품명 없이 질문 / 제품 2개 이상 언급 / 의미 없는 입력(ㅋㅋ, abc, 네 등 한글 2글자 미만)</td><td>효과 있나요? / 문의드려요</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>원하시는 제품명, 상세 문의 내용을 기재해 주시면 확인 후, 안내 도와드리겠습니다.</td></tr>
+<tr><td>문의 내용 되묻기</td><td class="bot-kw">제품명만 보내거나 제품명 + 사전에 없는 질문</td><td>구강케어정 / 구강케어정 언제부터 판매했어요</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>덴티플라 구강케어 정 관련하여 궁금하신 내용을 말씀해 주시면 확인 후 바로 안내드리겠습니다.</td></tr>
+<tr><td>먹는 제품 자동 지정</td><td class="bot-kw">제품명 없이 먹는 표현(먹, 드셔, 섭취, 복용, 삼키, 씹어 등)</td><td>임산부도 먹어도 되나요? / 하루 몇 알 먹어요?</td><td class="bot-ans">구강케어 정 FAQ로 답변</td></tr>
+</tbody></table></div>
+</div>
+<div class="stock-card bot-card"><div class="bot-h3">1-2. 제품 인식 이름</div>
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>제품</th><th>고객이 이렇게 써도 인식</th></tr></thead><tbody>
+<tr><td>덴티플라 구강케어 정</td><td class="bot-kw">덴티플라 구강케어 정, 구강케어정, 구강케어 정, 덴티플라 구강케어, 구강케어</td></tr>
+<tr><td>덴티플라 잇몸케어 치약</td><td class="bot-kw">덴티플라 잇몸케어 치약, 잇몸케어치약, 잇몸케어 치약, 덴티플라 치약, 잇몸케어, 치약</td></tr>
+</tbody></table></div>
+</div>
+<div class="stock-card bot-card"><div class="bot-h3">1-3. 제품 FAQ 자동 답변</div>
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>제품</th><th>FAQ 질문</th><th>매칭 키워드</th><th>예시 문장</th><th>자동 발송</th><th>답변</th></tr></thead><tbody>
+<tr><td>구강케어 정</td><td>섭취 방법</td><td class="bot-kw">섭취방법, (같은 표현: 섭취방법, 먹는법, 먹는방법, 복용법, 복용방법, 섭취량, 복용량, 몇알, 몇정, 몇포, 몇개먹, 몇개씩, 몇개드, 하루몇, 하루에몇, 어떻게먹)</td><td>구강케어정 섭취 방법</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 하루 2회, 식사 후 1정씩 섭취해 주시면 됩니다.</summary>해당 제품은 구강에서 흡수되는 ‘붕해정’ 타입으로,<br>물과 함께 삼키지 마시고 입안에서 천천히 씹어 녹이듯 섭취해 주시는 것을 권장드립니다.<br><br>다만 공복에 섭취하실 경우 위에 부담이 될 수 있으므로 반드시 식사 후 섭취해 주시길 바랍니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>섭취 후 양치 해야하나요?</td><td class="bot-kw">양치</td><td>구강케어정 섭취 후 양치 해야하나요?</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 섭취 후 반드시 양치하실 필요는 없습니다.</summary><br>다만, 구강 위생에 민감하신 경우에는 가볍게 물로 헹구시거나 양치를 하셔도 무방하며<br>취침 전 섭취 시에는 구강 위생을 위해 섭취 후 양치하시는 것을 권장드립니다.<br><br>또한 가글이나 양치를 하실 경우에는 섭취 후 약 10~15분 정도 지난 뒤에 진행하시는 것이 좋습니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>퇴축된 잇몸(내려간 잇몸)회복 되나요?</td><td class="bot-kw">회복, 잇몸</td><td>구강케어정 퇴축된 잇몸(내려간 잇몸)회복 되나요?</td><td>자동</td><td class="bot-ans"><details><summary>이미 퇴축된 잇몸은 개인의 구강 상태에 따라 차이가 있을 수 있으며,</summary>꾸준히 섭취 시 잇몸과 치조골이 보다 건강하게 유지될 수 있도록 지원하는 제품으로 이해해 주시면 좋습니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>섭취 후 이시려요</td><td class="bot-kw">이시려, 시려요</td><td>구강케어정 섭취 후 이시려요</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 식약처에서 기능성과 안전성을 인정받은 건강기능식품으로,</summary>잇몸 통증, 치아 흔들림, 구취, 입마름 등<br>다양한 구강 건강 문제를 올인원으로 관리할 수 있도록 설계된 제품입니다.<br><br>칼슘, 비타민D3, 비타민K2, 프로폴리스, 폴리감마글루탐산 등 다양한 성분을 포함하고 있으며,<br>입안에서 녹는 붕해정 특성상 성분이 치아 표면이나 잇몸에 직접 닿으면서,<br>개인의 치아 상태에 따라 일시적인 민감감이나 시림 증상이 나타날 수 있습니다.<br><br>또한 제품에는 페퍼민트 성분이 포함되어 있어 섭취 시 개운하고 깔끔한 느낌을 주지만,<br>맛에 민감한 분들은 화한 느낌을 받을 수 있습니다.<br><br>특히 섭취 직후 물을 마시면 그 느낌이 더 강해질 수 있으며,<br>이로 인해 일부 분들은 이가 시리다고 느끼실 수 있습니다.<br><br>구강케어정은 치아 표면을 손상시키거나 잇몸에 과도한 자극을 주지 않도록 설계되었으며,<br>일반적으로 시림 증상은 치아와 잇몸 사이의 경부가 칫솔질로 인한 과도한 자극으로 발생하는 경우가 많습니다.<br><br>칫솔질 시에는 잇몸을 과도하게 자극하기보다는 부드럽게 쓸어주시고,<br>치간 칫솔이나 치실을 사용하여 구강 청결을 유지하는 것이 잇몸 회복에 도움이 될 수 있습니다.<br><br>만약 시림이 심하거나 지속될 경우에는 복용을 잠시 중단하시고,<br>치과 진료를 통해 치아 상태를 확인한 후 섭취 여부를 상담 받으시는 것이 안전합니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>임산부나 수유부가 섭취해도되나요?(임신준비기간 포함)</td><td class="bot-kw">임신, 임산부, 수유, 섭취해도</td><td>구강케어정 임산부나 수유부가 섭취해도되나요?(임신준비기간 포함)</td><td>자동</td><td class="bot-ans"><details><summary>저희 구강케어정은 식약처 기준에 따라 제조·관리되는 건강기능식품으로</summary>일반적으로 권장 섭취 방법에 따라 안전하게 섭취하실 수 있는 제품입니다.<br><br>다만, 임신 준비 중이거나 임산부, 수유부의 경우 중요한 시기이므로 섭취에 있어 더욱 주의가 필요합니다.<br>안전한 섭취를 위해 섭취 전 반드시 주치의와 상담 후 섭취하시길 권장드립니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>충치예방에 도움이 되나요?</td><td class="bot-kw">도움이되, 충치</td><td>구강케어정 충치예방에 도움이 되나요?</td><td>자동</td><td class="bot-ans"><details><summary>구강케어 정은 칼슘, 비타민D3, 비타민K2 등 치아와 잇몸뼈 강화에 중요한 성분들을 함유하고 있으며,</summary>구강 내 유해균 억제를 통해 충치 예방에 도움을 줄 수 있습니다.<br><br>올바른 구강 관리와 함께 꾸준한 섭취를 권장드립니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>하루 한번만 먹어도 될까요</td><td class="bot-kw">하루, 한번만</td><td>구강케어정 하루 한번만 먹어도 될까요</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 구강 건강, 잇몸 강화, 구취 예방 등에 도움을 줄 수 있는 제품으로,</summary>하루 2회, 1정씩 섭취하시는 것을 권장드립니다.<br><br>제품은 권장 섭취량 기준으로 구강 건강 관리에 도움을 줄 수 있도록 설계되어 있어,<br>가능하다면 권장 섭취량과 방법을 지켜주시고,<br>어려운 경우라면 하루 1회 꾸준히 섭취해 주시는 것이 가장 좋습니다.<br><br>단, 하루 1회만 섭취하시는 경우<br>체감 시기나 정도에는 차이가 있을 수 있는 점 참고 부탁드립니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>제품 맛이 뭔가요?</td><td class="bot-kw">맛이</td><td>구강케어정 제품 맛이 뭔가요?</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 상쾌한 민트맛으로 섭취 시 개운하고 깔끔한 느낌을 느끼실 수 있습니다.</summary><br>다만 프로폴리스 등 성분 특성상 약간의 쌉쌀한 맛이 느껴질 수 있는 점 참고 부탁드립니다.<br><br>일반적으로 프로폴리스 제품은 맛이 강해 섭취에 부담을 느끼실 수 있으나,<br>구강케어정은 이러한 점을 고려하여 프로폴리스 특유의 맛을 최소화하고 부담 없이 깔끔하게 섭취하실 수 있도록 설계된 제품입니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>혈압약 먹는 사람이 먹어도 되나요?</td><td class="bot-kw">약먹, 혈압약</td><td>구강케어정 혈압약 먹는 사람이 먹어도 되나요?</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정에는 치아와 잇몸뼈(치조골) 건강 유지에 도움을 줄 수 있는 성분들이 포함되어 있어 구강 건강 관리와 잇몸 건강 유지에 보조적으로 도움을 줄 수 있는 건강기능식품입니다.</summary>다만, 현재복용 중인 의약품이 있으신 경우에는 섭취 전 반드시 전문의와 상담 후 섭취여부를 결정하시기를 권장 드립니다.</details></td></tr>
+<tr><td>구강케어 정</td><td>씹어서 삼키니 써요 &amp; 먹기 힘들어요</td><td class="bot-kw">씹어, 삼키, 써요, 먹기힘들</td><td>구강케어정 씹어서 삼키니 써요 &amp; 먹기 힘들어요</td><td>자동</td><td class="bot-ans"><details><summary>구강케어정은 상쾌한 민트맛으로  섭취 시 개운하고 깔끔한 구강 상태를 유지할 수 있도록 개발되었습니다.</summary>일반적으로 프로폴리스 제품은 맛이 강해 섭취가 부담스러울 수 있으나,  구강케어정은 프로폴리스 특유의 맛을 최소화하여 보다 깔끔하고 부담없이 섭취하실 수 있도록 설계되었습니다.<br>다만, 개인에 따라 맛이 강하게 느껴질 수 있으니,  이경우 물과 함께 씹어 녹이듯 섭취해 주시면 보다 편안하게 드실 수 있습니다.</details></td></tr>
+<tr><td>잇몸케어 치약</td><td>무슨 향(맛)인가요?</td><td class="bot-kw">무슨향</td><td>잇몸케어치약 무슨 향(맛)인가요?</td><td>자동</td><td class="bot-ans"><details><summary>저희 잇몸케어 치약은 보다 깔끔하고 상쾌한 사용감을 위해 스피아민트와 페퍼민트 향을 적용하여,</summary>사용 후 입안이 개운하고 산뜻하게 유지될 수 있도록 설계된 제품입니다.<br><br>또한, 잇몸 질환 예방뿐만 아니라 치태·치석 관리, 충치 예방, 구취 제거까지 한 번에 케어할 수 있는 유효 성분을 함유하고 있습니다.<br>자극적인 사용감보다는 매일 부담 없이 사용할 수 있도록 밸런스를 고려해 개발된 제품으로 건강한 잇몸 관리를 원하시는 분들께 추천드립니다😊</details></td></tr>
+</tbody></table></div>
+</div>
+<h3 class="bot-h2">2. 상담원 연결 (자동 답변 안 함)</h3>
+<div class="stock-card bot-card"><div class="bot-h3">2-1. 상담원 처리 유형 (키워드가 들어가면 바로 연결)</div>
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>유형</th><th>키워드</th></tr></thead><tbody>
+<tr><td>결제·사이트 오류</td><td class="bot-kw">결제가안, 결제안, 결제오류, 오류, 에러, 로딩, 먹통, 접속이안, 안눌, 안넘어, 튕겨, 빙빙, 클릭안, 클릭이안, 적용이안, 적용안, 구매가안, 구매안돼, 구입이안, 구입불가, 구매불가, 결제과정, 결제실패, 진행이안, 진행안되, 열리질않, 뜨질않</td></tr>
+<tr><td>입금·결제 확인</td><td class="bot-kw">입금, 무통장, 계좌이체, 할부, 일시불, 카드결제, 현금영수증, 송금, 입급</td></tr>
+<tr><td>회원·로그인</td><td class="bot-kw">로그인, 비번, 비밀번호, 아이디, 회원가입, 탈퇴, 인증이, 인증중, 카카오연동, 호원가입, 이름수정</td></tr>
+<tr><td>취소·반품·환불</td><td class="bot-kw">취소, 반품, 환불, 교환, 차감, 보내지마, 보내지말</td></tr>
+<tr><td>주문·배송</td><td class="bot-kw">주문, 배송, 택배, 출고, 송장, 언제와, 언제오, 도착, 주소변경, 배송지, 출발, 받을수, 언제받, 못받, 안왔, 왔어요, 문앞, 보내주, 수령, 사은품, 증정, 주문이력, 배송조회</td></tr>
+<tr><td>구매 방법</td><td class="bot-kw">구매하려, 구매원, 구매하고싶, 구입하고싶, 구입하고자, 어떻게구매, 어떻게구입, 구매방법, 구입방법, 구입할수, 구매할수, 살수있, 판매처, 구매링크, 구매요, 구입요, 고입방법, 구입을하나요, 어떻게사나요, 해보고싶, 사보고싶, 먹어보고싶, (단독) 구매, (단독) 구입, (단독) 치야구매, (단독) 치약구매</td></tr>
+<tr><td>가격 문의</td><td class="bot-kw">가격, 금액, 원이라고, 얼마예요, 얼마에요, 얼마인가, 얼마죠, 얼마나해</td></tr>
+<tr><td>제휴·영업</td><td class="bot-kw">납품, 제휴, 입점, 소싱, 협업, ppl, 촬영제안, 광고제안</td></tr>
+<tr><td>상담원 요청</td><td class="bot-kw">상담원, 상담사, 사람이랑, 사람과, 직원분, 통화하고, 전화요망, 전화주세요, 전화부탁</td></tr>
+<tr><td>사진·파일</td><td class="bot-kw">사진·파일만 보낸 경우</td></tr>
+</tbody></table></div>
+</div>
+<div class="stock-card bot-card"><div class="bot-h3">2-2. 분류되지 않아 상담원 연결</div>
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>경우</th><th>예시</th></tr></thead><tbody>
+<tr><td>주제는 맞지만 맞는 FAQ 없음</td><td>구강케어정 보관은 어떻게 해요? (보관 FAQ 없음)</td></tr>
+<tr><td>FAQ는 찾았지만 정확도 낮음 (질문 표현이 다름)</td><td>치약 맛이 이상해요</td></tr>
+<tr><td>다른 브랜드 제품 문의</td><td>콜레스컷 임산부도 먹어도 되나요?</td></tr>
+<tr><td>답변에 금지 표현 포함 (완치, 치료가/를/해/됩, 효과가 나타나는 시기) 또는 등록 안 된 전화번호</td><td>-</td></tr>
+<tr><td>쿠폰 문의 (덴티플라 쿠폰 답변 미등록)</td><td>쿠폰, 할인코드, 플친, 플러스친구, 적립금, 할인권 …</td></tr>
+<tr><td>고객센터 번호 문의 (번호 미등록)</td><td>전화번호, 고객센터, 연락처, 통화가능</td></tr>
+<tr><td>제품명·질문 없이 질문이 아닌 말</td><td>감사합니다, 알겠습니다 (상담원 안내 문구가 나감)</td></tr>
+</tbody></table></div>
+</div>
+<h3 class="bot-h2">3. 민감 키워드 (들어가면 상담원 연결)</h3>
+<div class="stock-card bot-card">
+<div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>묶음</th><th>키워드</th></tr></thead><tbody>
+<tr><td>클레임</td><td class="bot-kw">신고, 소비자원, 고소, 소송, 사기, 법적, 책임자, 소보원, 공정거래위원회, 공정위, 식약처, 민원, 보상, 변호사, 고발, 언론, 제보</td></tr>
+<tr><td>불만·감정</td><td class="bot-kw">짜증, 어이없, 황당, 최악, 불만, 실망, 장난하, 답답, 무조건환불, 무조건반품, 100%반품, 100%환불, 백프로반품, 백프로환불, 씨발, 시발, 씨바, ㅅㅂ, ㅆㅂ, 병신, ㅂㅅ, 개새, 새끼, 좆, 존나, 지랄, 미친, 꺼져, 썅, 개병, 개씨, 개시, ㄱㅅㅂ, ㅈㄴ, ㅈㄹ, ㅁㅊ, ㄲㅈ</td></tr>
+<tr><td>건강 이상</td><td class="bot-kw">병원, 응급실, 입원, 피부과, 치과, 내과, 알레르기, 알러지, 구토, 염증, 두통, 어지러, 부어, 부었, 출혈, 치통, 복통, 탈모가심해, 머리가더빠, 빠짐, 진물, 붉은, 붉어, 빨개, 빨갛</td></tr>
+<tr><td>제품 이상</td><td class="bot-kw">이물질, 변색, 상했, 깨져, 파손, 불량, 하자, 효과없</td></tr>
+<tr><td>맛 이상 (덴티플라 제외 → FAQ 답변)</td><td class="bot-kw">맛이상, 맛이이상</td></tr>
+<tr><td>결제·배송 사고</td><td class="bot-kw">중복결제, 이중결제, 오주문, 누락, 분실, 안와, 제품분실</td></tr>
+<tr><td>개인정보</td><td class="bot-kw">개인정보, 수신거부, 다른번호, 연락처다름, 번호다름, 번호바뀜, 연락처바뀜, 번호바꼈, 연락처바꼈</td></tr>
+</tbody></table></div>
+<ul class="bot-ul"><li>키워드는 띄어쓰기 무시하고 메시지 안에 들어 있으면 적용 (예: &quot;공정 거래 위원회&quot; = 공정거래위원회)</li><li>오인 가능: &quot;빠짐&quot;(빠짐없이), &quot;미친&quot;(미친 듯이 좋아요), &quot;개시&quot;(판매 개시), &quot;치과&quot;(치과에서 추천받았어요), &quot;안와&quot;(안와요 전부)</li></ul>
+</div></div>
     </section>
     <section id="reseller-view" style="display:none;padding:24px 0">
       <div class="rs-layout">
