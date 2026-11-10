@@ -3811,7 +3811,7 @@ function _wkDl(cur,prev,lab){
   if(prev==null||!isFinite(prev)||prev<=0)return '';
   var rel=(cur-prev)/prev*100,l=lab?lab+' ':'';
   if(Math.abs(rel)<0.05)return '<span style="color:var(--c-mut)">'+l+'동일</span>';
-  return '<span style="color:'+(rel>0?'var(--c-red)':'var(--c-blue)')+'">'+l+(rel>0?'▲':'▼')+' '+Math.abs(rel).toFixed(1)+'%</span>';
+  return '<span style="color:'+(rel>0?'var(--c-red,#d6203a)':'var(--c-blue,#2b7de0)')+'">'+l+(rel>0?'▲':'▼')+' '+Math.abs(rel).toFixed(1)+'%</span>';
 }
 function _cssAmt(s){return parseInt(String(s||'').replace(/[^0-9]/g,''),10)||0;}
 function _cssWkDate(v){var m=/^(\d{2})-(\d{2})-(\d{2})$/.exec(String(v||'').trim());return m?'20'+m[1]+'-'+m[2]+'-'+m[3]:'';}
@@ -4024,8 +4024,7 @@ function _wkPlatPanel(rows,sel){
   var lab=sel?(+sel.slice(5,7))+'/'+(+sel.slice(8)):'전체';
   return '<div class="wk5-ph">플랫폼별 · '+lab+'</div>'+(ks.length?ks.map(function(k){return '<div class="wk5-pr"><span>'+_rsEsc(k)+'</span><u><i style="width:'+(m[k]/mx*100)+'%"></i></u><b>'+m[k]+'건</b></div>';}).join(''):'<div class="wk5-pr"><span class="dash">-</span></div>');
 }
-// prev: 전주 행. 있으면 같은 요일(7일 전) 건수를 희미한 주황 실선으로 함께 그리고,
-// 이번 주 숫자는 전주보다 많으면 빨강, 적으면 파랑, 같으면 회색으로 표시
+// prev: 전주 행. 있으면 같은 요일(7일 전) 건수를 희미한 주황 실선으로 함께 그린다
 function _wkTrend(list,color,kind,src,prev){
   if(!list.length)return '<div class="csd-empty" style="margin:8px 0 0;text-align:left">표시할 데이터가 없습니다.</div>';
   var W=560,H=150,L=28,R=16,T=18,B=24,pw=W-L-R,ph=H-T-B,n=list.length;
@@ -4052,7 +4051,7 @@ function _wkTrend(list,color,kind,src,prev){
   if(pv){pline=n>1?'<polyline points="'+pv.map(function(v,i){return X(i)+','+Y(v);}).join(' ')+'" fill="none" stroke="'+PC+'" stroke-opacity=".45" stroke-width="1.8" stroke-linejoin="round"/>':'';
     pdots=pv.map(function(v,i){return '<g class="wk5-pt wk5-pp" data-src="p" data-kind="'+kind+'" data-k="'+pk[i]+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(v)+'" r="6" fill="none" stroke="'+PC+'"/><circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.8" fill="'+PC+'" fill-opacity=".6"/><text '+lab(i,v,!tAbove(i))+' font-size="9.5" fill="'+PC+'">'+v+'</text></g>';}).join('');
     lg='<g font-size="10" fill="#8a9099"><line x1="'+(W-R-118)+'" x2="'+(W-R-104)+'" y1="6" y2="6" stroke="'+color+'" stroke-width="2.2"/><text x="'+(W-R-100)+'" y="9.5">이번 주</text><line x1="'+(W-R-50)+'" x2="'+(W-R-36)+'" y1="6" y2="6" stroke="'+PC+'" stroke-opacity=".6" stroke-width="1.8"/><text x="'+(W-R-32)+'" y="9.5">전주</text></g>';}
-  var lc=function(i){if(!pv)return color;var v=list[i].v;return v>pv[i]?'var(--c-red,#d6203a)':v<pv[i]?'var(--c-blue,#2b7de0)':'#8a9099';};
+  var lc=function(){return color;}; // 점 위 숫자는 선 색 그대로(증감 색은 '전주 대비' 글자에만)
   var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"></circle><text '+lab(i,x.v,tAbove(i))+' font-size="11" font-weight="700" fill="'+lc(i)+'">'+x.v+'</text><text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text></g>';}).join('');
   // 클릭 영역: 날짜 칸마다 하나. 전주가 있으면 그 칸을 두 점 사이 높이에서 위/아래로 나눠 가까운 쪽 점(이번 주 / 전주)을 고른다
   var hit=function(k,tip,y0,y1,i,p){return '<rect class="wk5-hit" data-kind="'+kind+'" data-k="'+k+'"'+(p?' data-src="p"':'')+' data-tip="'+tip+'" x="'+(X(i)-cw/2)+'" y="'+y0+'" width="'+cw+'" height="'+(y1-y0)+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';};
