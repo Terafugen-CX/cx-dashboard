@@ -739,8 +739,10 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 .brand-nav{display:flex;gap:10px;align-items:center;padding:8px 10px;border-radius:10px;text-decoration:none;color:var(--fg)}
 .brand-nav:hover{background:var(--surface-2)}
-.brand-nav.active{background:var(--accent-soft);color:var(--accent)}
-.brand-nav.active .brand-logo-name{color:var(--accent)}
+/* 선택한 브랜드: 파란 배경 대신 흰 카드 + 옅은 테두리·그림자 */
+.brand-nav{border:1px solid transparent}
+.brand-nav.active{background:#fff;border-color:rgba(17,24,39,.09);box-shadow:0 1px 2px rgba(16,24,40,.04),0 1px 3px rgba(16,24,40,.05);color:var(--fg)}
+.brand-nav.active .brand-logo-name{color:var(--fg);font-weight:700}
 .brand-logo-ic{width:68px;height:38px;display:flex;align-items:center;justify-content:center;flex:none}
 .brand-logo-ic img{max-width:66px;max-height:36px;width:auto;height:auto;object-fit:contain;image-rendering:auto;-webkit-font-smoothing:antialiased;transform:translateZ(0) scale(1);backface-visibility:hidden}
 .brand-logo-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
