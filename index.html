@@ -1006,11 +1006,12 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       <!-- 브랜드 선택: data-bot 이 같은 블록만 보인다. 정리가 없는 브랜드는 준비 중 문구 -->
       <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px"><select class="css-sel" id="bot-brand" onchange="var b=this.value,f=0;document.querySelectorAll('#ai-bot-view [data-bot]').forEach(function(d){var on=d.getAttribute('data-bot')===b;d.style.display=on?'':'none';if(on)f=1;});document.getElementById('bot-none').style.display=f?'none':'';"><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla" selected>덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select><a class="bot-link" href="https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit?gid=1540406561#gid=1540406561" target="_blank" rel="noopener">CS RAW<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/></svg></a></div>
       <div id="bot-none" class="stock-card" style="display:none;padding:40px 20px;text-align:center;font-size:12px;color:var(--muted)">이 브랜드의 AI 상담봇 정리는 아직 없습니다.</div>
-      <div class="bot-2col" data-bot="dentipla"><div class="bot-wrap"><h2 class="bot-title">덴티플라 AI 상담봇 정리</h2><div class="stock-card bot-card bot-info"><ul><li>기준: 지식 버전 <span class="bf-mask" title="내부 정보 가림">●●●●●●●●●●</span>, 2026-11-10 생성</li><li>작동 조건: 평일 10:00-12:00, 13:00-17:00 (공휴일 제외), 허용된 상담방만, 상담원이 그날 직접 답한 상담방은 봇이 빠짐</li><li>자동 답변 앞에 <code>[AI 상담봇]</code> 표시, 인사말은 하루 첫 답변에만</li><li>상담원 연결 시: 고객에게 &quot;고객님, 문의하신 내용은 상담원이 확인 후 정확하게 안내드리겠습니다. / 원활한 상담을 위해 성함 / 연락처 기재와 함께 잠시만 기다려주세요.&quot; 1회 + 상담 메모 + <code>AI이관</code> 태그 + 담당자 없으면 CS쉐어링 배정(하루 1회)</li><li>상담 기록: CS RAW 시트 &quot;상담봇 상담 이력&quot; 탭에 상담방·날짜당 한 줄 (자동 답변 = 종결, 상담원 연결 = 상담원 이관)</li></ul></div>
+      <div class="bot-2col" data-bot="dentipla"><div class="bot-wrap"><h2 class="bot-title">덴티플라 AI 상담봇 정리</h2><div class="stock-card bot-card bot-info"><ul><li>기준: 지식 버전 <span class="bf-mask" title="내부 정보 가림">●●●●●●●●●●</span>, 2026-11-11 생성</li><li>작동 조건: 평일 10:00-12:00, 13:00-17:00 (공휴일 제외), 허용된 상담방만, 상담원이 그날 직접 답한 상담방은 봇이 빠짐</li><li>자동 답변 앞에 <code>[AI 상담봇]</code> 표시, 인사말은 하루 첫 답변에만</li><li>상담원 연결 시: 고객에게 &quot;고객님, 문의하신 내용은 상담원이 확인 후 정확하게 안내드리겠습니다. / 원활한 상담을 위해 성함 / 연락처 기재와 함께 잠시만 기다려주세요.&quot; 1회 + 상담 메모 + <code>AI이관</code> 태그 + 담당자 없으면 CS쉐어링 배정(하루 1회)</li><li>상담 기록: CS RAW 시트 &quot;상담봇 상담 이력&quot; 탭에 상담방·날짜당 한 줄 (자동 답변 = 종결, 상담원 연결 = 상담원 이관)</li></ul></div>
 <h3 class="bot-h2">1. 자동 답변</h3>
 <div class="stock-card bot-card"><div class="bot-h3">1-1. 공통 자동 답변</div>
 <div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>유형</th><th>인입 키워드·조건</th><th>예시 문장</th><th>답변</th></tr></thead><tbody>
 <tr><td>상담 요청</td><td class="bot-kw">상담, 상담요청, 상담신청, 문의, 문의요청, 문의신청 (메시지 전체가 이 말일 때만, 띄어쓰기·끝의 &quot;요&quot;·문장부호 무시)</td><td>상담 요청</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>원하시는 문의 내용 말씀해 주시면 확인 후, 안내 도와드리겠습니다.</td></tr>
+<tr><td>회원 탈퇴</td><td class="bot-kw">탈퇴 (불만 표현이 같이 있으면 상담원)</td><td>회원탈퇴 해주세요</td><td class="bot-ans"><details><summary>안녕하세요 고객님, 덴티플라입니다.</summary><br>번거로우시겠지만 회원 탈퇴는 직접 진행해 주셔야 합니다.<br>로그인 후 [마이페이지-회원정보 수정-하단의 회원탈퇴] 클릭하시면 진행 가능합니다.<br>카카오 연동 아이디는 탈퇴 후 동일한 카카오 연동 가입 불가한 점 참고 부탁드립니다.<br><br>직접 진행하시기 어려우신 경우에는 성함/연락처와 함께 재문의 부탁드립니다.<br>감사합니다.</details></td></tr>
 <tr><td>제품명 되묻기</td><td class="bot-kw">제품명 없이 질문 / 제품 2개 이상 언급 / 의미 없는 입력(ㅋㅋ, abc, 네 등 한글 2글자 미만)</td><td>효과 있나요? / 문의드려요</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>원하시는 제품명, 상세 문의 내용을 기재해 주시면 확인 후, 안내 도와드리겠습니다.</td></tr>
 <tr><td>문의 내용 되묻기</td><td class="bot-kw">제품명만 보내거나 제품명 + 사전에 없는 질문</td><td>구강케어정 / 구강케어정 언제부터 판매했어요</td><td class="bot-ans">안녕하세요 고객님, 덴티플라입니다.<br><br>덴티플라 구강케어 정 관련하여 궁금하신 내용을 말씀해 주시면 확인 후 바로 안내드리겠습니다.</td></tr>
 <tr><td>먹는 제품 자동 지정</td><td class="bot-kw">제품명 없이 먹는 표현(먹, 드셔, 섭취, 복용, 삼키, 씹어 등)</td><td>임산부도 먹어도 되나요? / 하루 몇 알 먹어요?</td><td class="bot-ans">구강케어 정 FAQ로 답변</td></tr>
@@ -1051,7 +1052,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 <div class="bot-scroll"><table class="stock-table bot-tb"><thead><tr><th>유형</th><th>키워드</th></tr></thead><tbody>
 <tr><td>결제·사이트 오류</td><td class="bot-kw">결제가안, 결제안, 결제오류, 오류, 에러, 로딩, 먹통, 접속이안, 안눌, 안넘어, 튕겨, 빙빙, 클릭안, 클릭이안, 적용이안, 적용안, 구매가안, 구매안돼, 구입이안, 구입불가, 구매불가, 결제과정, 결제실패, 진행이안, 진행안되, 열리질않, 뜨질않</td></tr>
 <tr><td>입금·결제 확인</td><td class="bot-kw">입금, 무통장, 계좌이체, 할부, 일시불, 카드결제, 현금영수증, 송금, 입급</td></tr>
-<tr><td>회원·로그인</td><td class="bot-kw">로그인, 비번, 비밀번호, 아이디, 회원가입, 탈퇴, 인증이, 인증중, 카카오연동, 호원가입, 이름수정</td></tr>
+<tr><td>회원·로그인</td><td class="bot-kw">로그인, 비번, 비밀번호, 아이디, 회원가입, 인증이, 인증중, 카카오연동, 호원가입, 이름수정</td></tr>
 <tr><td>취소·반품·환불</td><td class="bot-kw">취소, 반품, 환불, 교환, 차감, 보내지마, 보내지말</td></tr>
 <tr><td>주문·배송</td><td class="bot-kw">주문, 배송, 택배, 출고, 송장, 언제와, 언제오, 도착, 주소변경, 배송지, 출발, 받을수, 언제받, 못받, 안왔, 왔어요, 문앞, 보내주, 수령, 사은품, 증정, 주문이력, 배송조회</td></tr>
 <tr><td>구매 방법</td><td class="bot-kw">구매하려, 구매원, 구매하고싶, 구입하고싶, 구입하고자, 어떻게구매, 어떻게구입, 구매방법, 구입방법, 구입할수, 구매할수, 살수있, 판매처, 구매링크, 구매요, 구입요, 고입방법, 구입을하나요, 어떻게사나요, 해보고싶, 사보고싶, 먹어보고싶, (단독) 구매, (단독) 구입, (단독) 치야구매, (단독) 치약구매</td></tr>
@@ -1088,7 +1089,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 <!-- 덴티플라_상담봇_작동방식.md 기준(2026-11-10) -->
 <aside class="bf">
 <h2 class="bot-title">작동 방식</h2>
-<div class="bf-meta">2026-11-10 배포본 · 봇 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span> · 지식 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span><br>AI 모델 없이 키워드·FAQ 규칙으로만 판단</div>
+<div class="bf-meta">2026-11-11 배포본 · 봇 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span> · 지식 <span class="bf-mask" title="내부 정보 가림">●●●●●●●</span><br>AI 모델 없이 키워드·FAQ 규칙으로만 판단</div>
 
 <div class="bf-card"><div class="bf-h">구성</div>
 <div class="bf-pipe"><span>제로톡 웹훅</span><i>→</i><span>봇 서버</span><i>→</i><span>규칙 엔진</span><i>→</i><span>자동 답변 · 상담원 연결</span><i>→</i><span>시트 기록</span></div></div>
@@ -1129,7 +1130,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 <div class="bf-card"><div class="bf-h">3-1. FAQ 우선 안내 규칙 <small>시트에 행 추가 없이 답변 선택</small></div><div class="bf-pref"><div><span class="bf-kws">써요 · 쓴맛 · 먹기힘들 · 먹기어려</span><i>→</i><b>씹어서 삼키니 써요 &amp; 먹기 힘들어요</b><small>예: 민트맛인데 써요 / 민트맛이라 먹기 힘들어요</small></div><div><span class="bf-kws">삼켜도 · 삼키면 · 알약처럼 · 통째로</span><i>→</i><b>섭취 방법</b><small>예: 민트맛 못 먹는데 그냥 삼키면 안되나요? / 통째로 삼켜도 되나요?</small></div></div><div class="bf-note">메시지에 왼쪽 단어가 하나라도 있으면, 질문 제목에 오른쪽 문구가 든 FAQ를 먼저 고름 · 민트만 물으면(예: 민트맛 강한가요?) 우선 규칙 없이 "민트 맛이 어느정도인가요?" FAQ로 답변</div></div>
 <div class="bf-card"><div class="bf-h">4. 자동 발송 조건</div>
 <div class="bf-two">
-<div><div class="bf-sub ok">자동으로 나가는 답변</div><ul class="bf-ul"><li>제품명 되묻기 (상담방당 하루 1회, 이미 물었으면 상담원 연결)</li><li>문의 내용 되묻기 (덴티플라 제품)</li><li>공통 답변</li><li>덴티플라 FAQ 중 정확도 "높음"</li></ul></div>
+<div><div class="bf-sub ok">자동으로 나가는 답변</div><ul class="bf-ul"><li>제품명 되묻기 (상담방당 하루 1회, 이미 물었으면 상담원 연결)</li><li>문의 내용 되묻기 (덴티플라 제품)</li><li>공통 답변 (상담 요청, 회원 탈퇴)</li><li>덴티플라 FAQ 중 정확도 "높음"</li></ul></div>
 <div><div class="bf-sub hand">보내기 직전 검사 → 걸리면 상담원 연결</div><ul class="bf-ul"><li>금지 표현: 완치, 치료가/를/해/됩/효과, 효과가 나타나는 시기</li><li>등록되지 않은 전화번호</li></ul></div>
 </div>
 <div class="bf-note">답변 맨 앞 <code>[AI 상담봇]</code> 표시 · "안녕하세요 고객님, 덴티플라입니다." 인사는 하루 첫 답변에만</div></div>
