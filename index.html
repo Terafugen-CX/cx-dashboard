@@ -796,6 +796,8 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
   /* 교환·반품: 도넛 아래로 막대 그래프(가로 폭 넘침 방지) */
   #return-chart-area .stock-card>div>div:first-child{flex-direction:column!important;align-items:stretch!important}
   #return-bar-canvas{max-width:100%}
+  /* 캘린더는 휴대폰에서 보기 전용: 등록·동기화·편집·저장·삭제·알림 버튼 숨김(일정을 누르면 내용만 확인) */
+  #cal-add,#cal-sync,.cal-edit-btn,#cal-modal-save,#cal-modal-del,#cal-modal-bell{display:none!important}
   /* 주간 상세: 선 그래프 아래로 플랫폼별 패널 */
   .wk5-t{flex-direction:column!important;align-items:stretch!important;gap:10px}
   .wk5-t>*{width:100%!important;max-width:100%!important}
