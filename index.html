@@ -4542,6 +4542,12 @@ function rsSearch(){
   var type=document.getElementById('rs-type').value,q=(document.getElementById('rs-q').value||'').trim();
   if(!type){_rsShow('검색 항목(이름 / 연락처 / IP / 주소)을 선택해 주세요.');return;}
   if(!q){_rsShow('검색어를 입력해 주세요.');return;}
+  // 연락처 검색은 숫자만 비교하므로, 주소처럼 글자가 섞이면 그 안의 숫자(예: '창신1길 42' → 142)로 엉뚱한 번호가 걸린다
+  // 한글이 섞여 있으면 주소로 보고 주소 검색으로 바꿔 찾는다(검색 항목 칸도 '주소'로 바꿔 보여 줌)
+  if(type==='phone'){
+    if(/[가-힣]/.test(q)){type='addr';var _ts=document.getElementById('rs-type');if(_ts)_ts.value='addr';}
+    else if(_rsDigits(q).length<4){_rsShow('연락처는 4자리 이상 입력해 주세요.');return;}
+  }
   var brand=document.getElementById('rs-brand').value;
   if(brand&&!_RS_GIDS[brand]){_rsShow(brand+' 리셀러 시트는 아직 연결되지 않았습니다.');return;}
   var gids=brand?[_RS_GIDS[brand]]:Object.keys(_RS_GIDS).map(function(k){return _RS_GIDS[k];}),tok=++_rsTok;
