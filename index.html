@@ -257,7 +257,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-svg .hc,.wk5-svg .hp,.wk5-svg.off-c .hb,.wk5-svg.off-p .hb,.wk5-svg.off-c.off-p .hc{display:none}
 .wk5-svg.off-p .hc,.wk5-svg.off-c .hp{display:inline}
 .wk5-svg.off-c.off-p .hp{display:none}
-.wk5-svg.off-c.off-p:not(.off-re) .hc{display:inline}
+.wk5-svg .hr,.wk5-svg.nop.off-c .hc{display:none}
+.wk5-svg.nop .hc,.wk5-svg.off-c.off-p:not(.off-re) .hr,.wk5-svg.nop.off-c:not(.off-re) .hr{display:inline}
 .wk5-svg text{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
@@ -4751,12 +4752,13 @@ function _wkTrend(list,color,kind,src,prev,withRe){
   // 클릭 영역: 날짜 칸마다 하나. 두 선이 다 보이면 칸을 두 점 사이 높이에서 위/아래로 나눠 가까운 쪽(이번 주 / 전주)을 고르고(hb),
   // 한쪽 선을 끄면 남은 선이 칸 전체를 쓴다(hc: 이번 주만, hp: 전주만)
   var hit=function(k,tip,y0,y1,i,p,cl){return '<rect class="wk5-hit '+cl+'" data-kind="'+kind+'" data-k="'+k+'"'+(p?' data-src="p"':'')+' data-tip="'+tip+'" x="'+(X(i)-cw/2)+'" y="'+y0+'" width="'+cw+'" height="'+(y1-y0)+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';};
-  var hits=list.map(function(x,i){var tip=_wkPlatTip(x,src);if(!pv)return hit(x.k,tip,0,H,i,0,'');
+  var rh=function(i){if(!rv)return '';var x=list[i];return hit(x.k,_rsEsc(x.l+' · 재구매 '+rv[i]+'건'+(x.v?' (취소 '+x.v+'건 중 '+Math.round(rv[i]/x.v*100)+'%)':'')),0,H,i,0,'hr');}; // 재구매만 켰을 때 쓰는 클릭·알림 칸
+  var hits=list.map(function(x,i){var tip=_wkPlatTip(x,src);if(!pv)return hit(x.k,tip,0,H,i,0,'hc')+rh(i);
     var mid=(Y(x.v)+Y(pv[i]))/2,up=tAbove(i),pl=(+pk[i].slice(5,7))+'/'+(+pk[i].slice(8)),ptip=_rsEsc('전주 '+pl+' · '+pv[i]+'건');
     return (up?hit(x.k,tip,0,mid,i,0,'hb')+hit(pk[i],ptip,mid,H,i,1,'hb'):hit(pk[i],ptip,0,mid,i,1,'hb')+hit(x.k,tip,mid,H,i,0,'hb'))
-      +hit(x.k,tip,0,H,i,0,'hc')+hit(pk[i],ptip,0,H,i,1,'hp');}).join('');
+      +hit(x.k,tip,0,H,i,0,'hc')+hit(pk[i],ptip,0,H,i,1,'hp')+rh(i);}).join('');
   var off=(window._wkOff||{})[kind]||{},oc=Object.keys(off).filter(function(s){return off[s]&&LG.some(function(it){return it[0]===s;});}).map(function(s){return ' off-'+s;}).join('');
-  return '<svg class="wk5-svg'+oc+'" data-kind="'+kind+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;max-height:170px;display:block" role="img"><title>일자별 건수</title>'+g+axis
+  return '<svg class="wk5-svg'+oc+(pv?'':' nop')+'" data-kind="'+kind+'" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;max-height:170px;display:block" role="img"><title>일자별 건수</title>'+g+axis
     +'<g data-s="p">'+pline+pdots+'</g><g data-s="re">'+rel+'</g><g data-s="c">'+line+dots+'</g>'+hits+lg+'</svg>';
 }
 // 범례 누르면 선 켜기/끄기. 상태는 다시 그려도 유지
@@ -5139,17 +5141,32 @@ function rsSearch(){
       else if(String(r[type]||'').toLowerCase().indexOf(ql)>=0)lab=_RS_LABEL[type]+' 일치';
       if(lab)items.push({r:r,m:lab});
     });
+    // 아이디 검색: 그 아이디의 연락처·주소·IP와 겹치는 다른 계정도 아래에 붙인다
+    if(type==='id'&&items.length){
+      var P={},A={},B={},I={};
+      items.forEach(function(it){var r=it.r,d=_rsDigits(r.phone),a=_rsAddrKey(r.addr),b=_rsAddrBase(r.addr),ip=String(r.ip||'').trim();
+        if(d.length>=8)P[d]=1;if(a.length>=6)A[a]=1;if(b)B[b]=1;if(ip)I[ip]=1;});
+      all.forEach(function(r){
+        if(String(r.id||'').toLowerCase()===ql)return;
+        var m=[],a=_rsAddrKey(r.addr),b=_rsAddrBase(r.addr);
+        if(P[_rsDigits(r.phone)])m.push('연락처 일치');
+        if(A[a])m.push('주소 일치');else if(b&&B[b])m.push('주소 유사');
+        if(I[String(r.ip||'').trim()])m.push('IP 일치');
+        if(m.length)items.push({r:r,m:m});
+      });
+    }
     if(!items.length){_rsShow('일치하는 결과가 없습니다.');return;}
     var groups={},order=[];
     items.forEach(function(it){
       var k=(it.r.brand||'')+'|'+(it.r.id||('_'+order.length)),g=groups[k];
       if(!g){g=groups[k]={rows:[],tags:{}};order.push(k);}
-      g.rows.push(it.r);g.tags[it.m]=1;
+      g.rows.push(it.r);[].concat(it.m).forEach(function(t){g.tags[t]=1;});
     });
     var list=order.map(function(k){return groups[k];});
     list.sort(function(a,b){
+      var ai=a.tags['아이디 일치']?0:1,bi=b.tags['아이디 일치']?0:1;
       var as=a.tags['주소 유사']&&Object.keys(a.tags).length===1?1:0,bs=b.tags['주소 유사']&&Object.keys(b.tags).length===1?1:0;
-      return as-bs||b.rows.length-a.rows.length;
+      return ai-bi||as-bs||b.rows.length-a.rows.length;
     });
     function more(rows,key,shown){var n={};rows.forEach(function(r){n[r[key]]=1;});var c=Object.keys(n).length;return _rsEsc(shown)+(c>1?' <span class="rs-more">외 '+(c-1)+'</span>':'');}
     var shown=list.slice(0,200);
