@@ -257,6 +257,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .wk5-svg .hc,.wk5-svg .hp,.wk5-svg.off-c .hb,.wk5-svg.off-p .hb,.wk5-svg.off-c.off-p .hc{display:none}
 .wk5-svg.off-p .hc,.wk5-svg.off-c .hp{display:inline}
 .wk5-svg.off-c.off-p .hp{display:none}
+.wk5-svg.off-c.off-p:not(.off-re) .hc{display:inline}
+.wk5-svg text{paint-order:stroke;stroke:#fff;stroke-width:3px;stroke-linejoin:round}
 .wk6{margin-top:16px;border-top:1px solid var(--c-line);padding-top:10px;flex:1;display:flex;flex-direction:column}
 .wk6-sp{flex:1;min-height:10px}
 .wk-ttl{display:flex;align-items:center;gap:16px;flex-wrap:wrap}
@@ -4730,7 +4732,7 @@ function _wkTrend(list,color,kind,src,prev,withRe){
     if(y+14<=H-B-4)return 'x="'+x+'" y="'+(y+15)+'" text-anchor="middle"';
     return i===n-1?'x="'+(x-8)+'" y="'+(y+3.5)+'" text-anchor="end"':'x="'+(x+8)+'" y="'+(y+3.5)+'" text-anchor="start"';};
   if(pv){pline=n>1?'<polyline points="'+pv.map(function(v,i){return X(i)+','+Y(v);}).join(' ')+'" fill="none" stroke="'+PC+'" stroke-opacity=".45" stroke-width="1.8" stroke-linejoin="round"/>':'';
-    pdots=pv.map(function(v,i){return '<g class="wk5-pt wk5-pp" data-src="p" data-kind="'+kind+'" data-k="'+pk[i]+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(v)+'" r="6" fill="none" stroke="'+PC+'"/><circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.8" fill="'+PC+'" fill-opacity=".6"/><text '+lab(i,v,!tAbove(i))+' font-size="9.5" fill="'+PC+'">'+(v||'')+'</text></g>';}).join('');
+    pdots=pv.map(function(v,i){return '<g class="wk5-pt wk5-pp" data-src="p" data-kind="'+kind+'" data-k="'+pk[i]+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(v)+'" r="6" fill="none" stroke="'+PC+'"/><circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.8" fill="'+PC+'" fill-opacity=".6"/><text '+lab(i,v,!tAbove(i))+' font-size="12" font-weight="700" fill="#e08a3c">'+(v||'')+'</text></g>';}).join('');
   }
   // 범례: 항목을 누르면 그 선을 켜고 끈다(오른쪽 정렬, 글자 폭은 어림)
   var LG=[['c','이번 주',color,1,2.2]];if(pv)LG.push(['p','전주',PC,.6,1.8]);if(rv)LG.push(['re','재구매',RC,1,2]);
@@ -4738,11 +4740,14 @@ function _wkTrend(list,color,kind,src,prev,withRe){
     lg=LG.map(function(it){var x0=lx;lx+=18+it[1].length*10+12;return '<g class="wk5-lg" data-s="'+it[0]+'" style="cursor:pointer"><rect x="'+(x0-4)+'" y="0" width="'+(it[1].length*10+26)+'" height="14" fill="rgba(0,0,0,0.001)"/><line x1="'+x0+'" x2="'+(x0+14)+'" y1="6" y2="6" stroke="'+it[2]+'" stroke-opacity="'+it[3]+'" stroke-width="'+it[4]+'"/><text x="'+(x0+18)+'" y="9.5" font-size="10" fill="#8a9099">'+it[1]+'</text></g>';}).join('');}
   var lc=function(){return color;}; // 점 위 숫자는 선 색 그대로(증감 색은 '전주 대비' 글자에만)
   var axis=list.map(function(x,i){return '<text x="'+X(i)+'" y="'+(H-6)+'" text-anchor="middle" font-size="10" fill="#6b7076">'+x.l+'</text>';}).join('');
-  var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"></circle><text '+lab(i,x.v,tAbove(i))+' font-size="11" font-weight="700" fill="'+lc(i)+'">'+(x.v||'')+'</text></g>';}).join('');
-  // 재구매 선: 점 아래(자리가 없으면 옆)에 작은 숫자. 0 은 쓰지 않음
+  var dots=list.map(function(x,i){return '<g class="wk5-pt" data-kind="'+kind+'" data-k="'+x.k+'"><circle class="wk5-ring" cx="'+X(i)+'" cy="'+Y(x.v)+'" r="7" fill="none" stroke="'+color+'"/><circle cx="'+X(i)+'" cy="'+Y(x.v)+'" r="3.2" fill="'+color+'"></circle><text '+lab(i,x.v,tAbove(i))+' font-size="13.5" font-weight="800" fill="'+lc(i)+'">'+(x.v||'')+'</text></g>';}).join('');
+  // 재구매 선: 숫자는 점 오른쪽(마지막 날은 왼쪽)에 둬서 위아래 다른 선 숫자와 겹치지 않게. 0 은 쓰지 않음
   var rel='';
   if(rv)rel=(n>1?'<polyline points="'+rv.map(function(v,i){return X(i)+','+Y(v);}).join(' ')+'" fill="none" stroke="'+RC+'" stroke-width="2" stroke-linejoin="round" stroke-dasharray=""/>':'')
-    +rv.map(function(v,i){var t=list[i].v?' · '+Math.round(v/list[i].v*100)+'%':'';return '<g><title>'+list[i].l+' 재구매 '+v+'건'+t+'</title><circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.8" fill="'+RC+'"/>'+(v?'<text '+lab(i,v,false)+' font-size="9.5" font-weight="700" fill="'+RC+'">'+v+'</text>':'')+'</g>';}).join('');
+    +rv.map(function(v,i){var t=list[i].v?' · '+Math.round(v/list[i].v*100)+'%':'';
+      // 이번 주 숫자가 점 아래나 옆에 있고 높이가 가까우면 재구매 숫자를 그 아래로 내린다
+      var yb=Y(list[i].v),by=yb+14<=H-B-4?yb+15:yb+3.5,gy=Y(v)+4;if(list[i].v&&!tAbove(i)&&Math.abs(by-gy)<13)gy=by+13;
+      return '<g><title>'+list[i].l+' 재구매 '+v+'건'+t+'</title><circle cx="'+X(i)+'" cy="'+Y(v)+'" r="2.8" fill="'+RC+'"/>'+(v?'<text '+(i===n-1?'x="'+(X(i)-7)+'" y="'+gy+'" text-anchor="end"':'x="'+(X(i)+7)+'" y="'+gy+'" text-anchor="start"')+' font-size="12" font-weight="800" fill="'+RC+'">'+v+'</text>':'')+'</g>';}).join('');
   // 클릭 영역: 날짜 칸마다 하나. 두 선이 다 보이면 칸을 두 점 사이 높이에서 위/아래로 나눠 가까운 쪽(이번 주 / 전주)을 고르고(hb),
   // 한쪽 선을 끄면 남은 선이 칸 전체를 쓴다(hc: 이번 주만, hp: 전주만)
   var hit=function(k,tip,y0,y1,i,p,cl){return '<rect class="wk5-hit '+cl+'" data-kind="'+kind+'" data-k="'+k+'"'+(p?' data-src="p"':'')+' data-tip="'+tip+'" x="'+(X(i)-cw/2)+'" y="'+y0+'" width="'+cw+'" height="'+(y1-y0)+'" fill="rgba(0,0,0,0.001)" pointer-events="all" style="cursor:pointer"/>';};
@@ -4759,6 +4764,10 @@ if(!window._wkLgB){window._wkLgB=1;document.addEventListener('click',function(e)
   var it=e.target&&e.target.closest?e.target.closest('.wk5-lg'):null;if(!it)return;
   var sv=it.closest('svg'),s=it.getAttribute('data-s'),kd=sv.getAttribute('data-kind'),O=window._wkOff||(window._wkOff={}),o=O[kd]||(O[kd]={});
   o[s]=!o[s];sv.classList.toggle('off-'+s,o[s]);
+  // 고른 날짜는 풀고, 남은 선 기준으로 아래 숫자 · 플랫폼 · 내역을 다시 그린다
+  (window._wkSel||(window._wkSel={}))[kd]=null;(window._wkPS||(window._wkPS={}))[kd]=null;
+  sv.classList.remove('has-sel');sv.querySelectorAll('.wk5-pt.sel').forEach(function(g){g.classList.remove('sel');});
+  _wkShow(kd,null,false);
 });}
 function _wkAgeSort(a,b){
   if(a==='확인 불가')return 1;if(b==='확인 불가')return -1;
@@ -4880,7 +4889,7 @@ function _cssWeekHTML(wk,label,pd){
   // 전주 대비(건수 · 금액). 날짜를 눌러 숫자가 바뀌어도 이 줄은 주간 전체 기준으로 남는다
   var pw=wk.pw,pwLine=function(n,a,kn,ka){if(!pw)return '';var p=[_wkDl(n,pw[kn],'건수'),_wkDl(a,pw[ka],'금액')].filter(Boolean);return p.length?'<div style="margin-top:2px">전주 대비 '+p.join(' · ')+'</div>':'';};
   var rateLine=function(v,k){if(!pw||v==null||pw[k]==null)return '';var d=_wkDl(v,pw[k],'');return d?'<div style="margin-top:2px">전주 대비 '+d+' <span style="margin-left:4px">전주 '+(pw[k]*100).toFixed(1)+'%</span></div>':'';};
-  window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,retSub:retSubTxt,cRows:rows,rRows:rr,pc:wk.pw?wk.pw.cRows:null,pr:wk.pw?wk.pw.rRows:null};window._wkSel={};window._wkPS={};
+  window._wkOff={};window._wkRowsK={};window._wkD={c:cday,ct:{c:tot,a:sum},r:rday,ra:raday,rt:rr.length,retSub:retSubTxt,cRows:rows,rRows:rr,pc:wk.pw?wk.pw.cRows:null,pr:wk.pw?wk.pw.rRows:null};window._wkSel={};window._wkPS={};
   var cmin=cdays.concat(rr.map(function(r){return r.cd||'';})).filter(Boolean).sort()[0]||'',axisStart=cmin||(wk.iso?wk.iso[0]:'');
   var kpis='<div class="wk5">'
     +'<div class="wk5-c"><div class="wk5-k">'
@@ -4903,38 +4912,51 @@ if(!window._wkClkB){window._wkClkB=1;document.addEventListener('click',function(
   if(pr&&window._wkD){
     var bx=pr.closest('.wk6'),kd=bx&&bx.id==='wk-c-list'?'c':'r',DD=window._wkD,PS=window._wkPS||(window._wkPS={}),pp=pr.getAttribute('data-p');
     PS[kd]=PS[kd]===pp?null:pp;
-    var SP=window._wkSrcP; // 전주 날짜를 보고 있으면 전주 행 기준
-    bx.innerHTML=_wkList(kd==='c'?(SP?DD.pc||[]:DD.cRows):(SP?DD.pr||[]:DD.rRows),(window._wkSel||{})[kd]||'',(kd==='c'?'취소 내역':'반품 내역')+(SP?' (전주)':''),PS[kd]);
+    var B=(window._wkRowsK||{})[kd]||_wkBase(kd); // 지금 보이는 선 기준 행(전주 / 재구매만 등)
+    bx.innerHTML=_wkList(B.rows,(window._wkSel||{})[kd]||'',(kd==='c'?'취소 내역':'반품 내역')+B.t,PS[kd]);
     return;
   }
   var h=e.target&&e.target.closest?e.target.closest('.wk5-hit,.wk5-pt'):null;if(!h)return;
   var D=window._wkD;if(!D)return;
   var kind=h.getAttribute('data-kind'),k=h.getAttribute('data-k'),S=window._wkSel||(window._wkSel={}),on=S[kind]===k;
   var sel=on?null:k;
-  function $(id){return document.getElementById(id);}
   // 전주 점을 누르면 전주 행으로 그날을 보여 준다(두 카드 모두)
-  var P=!!sel&&h.getAttribute('data-src')==='p';window._wkSrcP=P;
-  var cR=P?(D.pc||[]):D.cRows,rR=P?(D.pr||[]):D.rRows,pt=P?' (전주)':'';
-  var agg=function(l){var f=l.filter(function(r){return r.cd===sel;});return {c:f.length,a:f.reduce(function(s,r){return s+r.amt;},0)};};
+  var P=!!sel&&h.getAttribute('data-src')==='p';
   ['c','r'].forEach(function(kd){
     S[kd]=sel;(window._wkPS||(window._wkPS={}))[kd]=null;
-    document.querySelectorAll('.wk5-t svg').forEach(function(sv){var hh=sv.querySelector('.wk5-hit');if(!hh||hh.getAttribute('data-kind')!==kd)return;
+    document.querySelectorAll('.wk5-svg[data-kind="'+kd+'"]').forEach(function(sv){
       sv.querySelectorAll('.wk5-pt').forEach(function(g){g.classList.toggle('sel',!!sel&&g.getAttribute('data-k')===sel);});sv.classList.toggle('has-sel',!!sel);});
-    if(kd==='c'){
-      var o=sel?agg(cR):D.ct;
-      if($('wk-c-n'))$('wk-c-n').textContent=_cssN(o.c);
-      if($('wk-c-s'))$('wk-c-s').textContent=(P?'전주 ':'')+'취소금액 '+_cssN(o.a)+'원 · 건당 '+_cssN(o.c?Math.round(o.a/o.c):0)+'원';
-      if($('wk-c-plat'))$('wk-c-plat').innerHTML=_wkPlatPanel(cR,sel);
-      if($('wk-c-list'))$('wk-c-list').innerHTML=_wkList(cR,sel,'취소 내역'+pt);
-    }else{
-      var ro=sel?agg(rR):{c:D.rt};
-      if($('wk-ret-n'))$('wk-ret-n').textContent=_cssN(ro.c);
-      if($('wk-ret-s'))$('wk-ret-s').textContent=sel?(P?'전주 ':'')+'반품금액 '+_cssN(ro.a)+'원':D.retSub;
-      if($('wk-r-plat'))$('wk-r-plat').innerHTML=_wkPlatPanel(rR,sel);
-      if($('wk-r-list'))$('wk-r-list').innerHTML=_wkList(rR,sel,'반품 내역'+pt);
-    }
+    _wkShow(kd,sel,P);
   });
 });}
+// 지금 켜 둔 선 기준으로 아래(숫자 · 플랫폼 · 내역)에 쓸 행: 이번 주가 켜져 있으면 이번 주,
+// 이번 주를 끄고 전주가 켜져 있으면 전주, 둘 다 끄고 재구매만 켜져 있으면 이번 주 재구매 건만
+function _wkBase(kd){
+  var D=window._wkD,o=(window._wkOff||{})[kd]||{},cur=kd==='c'?D.cRows:D.rRows,pv=kd==='c'?D.pc:D.pr;
+  if(!o.c)return {rows:cur,t:''};
+  if(!o.p&&pv)return {rows:pv,t:' (전주)',p:1};
+  if(kd==='c'&&!o.re)return {rows:cur.filter(function(r){return r.re;}),t:' (재구매)'};
+  return {rows:cur,t:''};
+}
+function _wkShow(kd,sel,P){
+  var D=window._wkD;if(!D)return;
+  var b=P?{rows:(kd==='c'?D.pc:D.pr)||[],t:' (전주)',p:1}:_wkBase(kd);
+  (window._wkRowsK||(window._wkRowsK={}))[kd]=b;
+  var R=sel?b.rows.filter(function(r){return r.cd===sel;}):b.rows,a=R.reduce(function(s,r){return s+r.amt;},0),pre=b.p?'전주 ':'',$=function(id){return document.getElementById(id);};
+  if(kd==='c'){
+    if($('wk-c-l'))$('wk-c-l').textContent='취소'+b.t;
+    if($('wk-c-n'))$('wk-c-n').textContent=_cssN(R.length);
+    if($('wk-c-s'))$('wk-c-s').textContent=pre+'취소금액 '+_cssN(a)+'원 · 건당 '+_cssN(R.length?Math.round(a/R.length):0)+'원';
+    if($('wk-c-plat'))$('wk-c-plat').innerHTML=_wkPlatPanel(b.rows,sel);
+    if($('wk-c-list'))$('wk-c-list').innerHTML=_wkList(b.rows,sel,'취소 내역'+b.t);
+  }else{
+    if($('wk-r-l'))$('wk-r-l').textContent='반품'+b.t;
+    if($('wk-ret-n'))$('wk-ret-n').textContent=_cssN(R.length);
+    if($('wk-ret-s'))$('wk-ret-s').textContent=pre+'반품금액 '+_cssN(a)+'원';
+    if($('wk-r-plat'))$('wk-r-plat').innerHTML=_wkPlatPanel(b.rows,sel);
+    if($('wk-r-list'))$('wk-r-list').innerHTML=_wkList(b.rows,sel,'반품 내역'+b.t);
+  }
+}
 if(!window._wkTipB){window._wkTipB=1;
   var tp=document.createElement('div');tp.id='wk-tip';document.body.appendChild(tp);
   function place(e){var z=parseFloat(getComputedStyle(document.body).zoom)||1,w=tp.offsetWidth*z,h=tp.offsetHeight*z,x=e.clientX-w/2,y=e.clientY-h-14;if(y<4)y=e.clientY+20;x=Math.min(Math.max(4,x),window.innerWidth-w-4);tp.style.left=(x/z)+'px';tp.style.top=(y/z)+'px';}
