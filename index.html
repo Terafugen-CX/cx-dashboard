@@ -147,6 +147,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 #rs-result .csd-empty{text-align:left;margin:10px 2px 0;font-size:13px}
 .rs-tag.rs-tag-ok{color:var(--accent);background:var(--accent-soft);border-color:transparent}
 .rs-tag.rs-tag-sim{color:#8a6100;background:rgba(250,204,21,.28);border-color:transparent}
+.rs-tag.rs-tag-id{color:#d6203a;background:rgba(214,32,58,.12);border-color:transparent}
+.rs-tags{display:flex;flex-direction:column;align-items:center;gap:3px}.rs-tags .rs-tag{margin-right:0}
 @media(max-width:1100px){.rs-layout{grid-template-columns:minmax(0,1fr)}.rs-left{padding-right:0}.rs-right{display:none}}
 .rs-more{font-size:11px;color:var(--muted);margin-left:2px}
 .rs-count{font-size:13px;color:var(--muted);margin:0 2px 8px}
@@ -5172,7 +5174,9 @@ function rsSearch(){
     var shown=list.slice(0,200);
     var tb=shown.map(function(g){
       var v=_rsView(g.rows[0]);
-      var tags=Object.keys(g.tags).map(function(t){return '<span class="rs-tag '+(t.indexOf('유사')>=0?'rs-tag-sim':'rs-tag-ok')+'">'+_rsEsc(t)+'</span>';}).join('');
+      // 일치 먼저, 유사는 맨 아래. 한 줄에 하나씩
+      var TO=['아이디 일치','연락처 일치','IP 일치','주소 일치','이름 일치','주소 유사'];
+      var tags='<div class="rs-tags">'+Object.keys(g.tags).sort(function(a,b){var x=TO.indexOf(a),y=TO.indexOf(b);return (x<0?9:x)-(y<0?9:y);}).map(function(t){return '<span class="rs-tag '+(t==='아이디 일치'?'rs-tag-id':t.indexOf('유사')>=0?'rs-tag-sim':'rs-tag-ok')+'">'+_rsEsc(t)+'</span>';}).join('')+'</div>';
       return '<tr><td>'+_rsEsc(g.rows[0].brand)+'</td><td>'+more(g.rows,'name',v.name)+'</td><td>'+_rsEsc(v.id)+'</td><td><b>'+g.rows.length+'</b>건</td><td>'+more(g.rows,'phone',v.phone)+'</td><td>'+more(g.rows,'addr',v.addr)+'</td><td>'+more(g.rows,'ip',v.ip)+'</td><td>'+tags+'</td></tr>';
     }).join('');
     _rsShow('','리셀러 추정 <b>'+list.length+'</b>계정 · 주문 <b>'+items.length+'</b>건',tb);
