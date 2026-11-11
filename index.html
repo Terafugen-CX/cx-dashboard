@@ -5188,11 +5188,38 @@ function rsRecover(){
   var info=BRAND_CAFE24[b];
   if(!info||!info.mallId||info.mallId==='___'){note.textContent='이 브랜드는 저장된 카페24 계정이 없습니다.';return;}
   var nm=sel.options[sel.selectedIndex].text;
-  note.style.color='';note.textContent=nm+' 카페24 로그인 창을 여는 중…';
-  fetch('http://localhost:3355/cafe24-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info})})
-  .then(function(r){return r.json();})
-  .then(function(d){if(!d.ok)throw new Error(d.error||'실패');note.style.color='';note.textContent=nm+' 카페24 로그인 창이 열렸습니다. 캡차를 체크하고 로그인해 주세요. 로그인하면 회수가 자동으로 진행됩니다.';rsWatch(nm);})
-  .catch(function(e){loginCafe24(b);note.style.color='#d6203a';note.textContent='동기화 서버가 꺼져 있어 일반 창으로 열었습니다(쇼핑몰 아이디는 비어 있고 부운영자 아이디만 채워져요). 쇼핑몰 아이디: '+info.mallId+'  ·  전체 자동 입력: sync-server 폴더의 start-server.bat 을 실행한 뒤 다시 눌러 주세요.';});
+  var S='http://localhost:3355';
+  function off(){loginCafe24(b);note.style.color='#d6203a';note.textContent='동기화 서버가 꺼져 있어 일반 창으로 열었습니다(쇼핑몰 아이디는 비어 있고 부운영자 아이디만 채워져요). 쇼핑몰 아이디: '+info.mallId+'  ·  전체 자동 입력: sync-server 폴더의 start-server.bat 을 실행한 뒤 다시 눌러 주세요.';}
+  function fail(m){note.style.color='#d6203a';note.textContent=m;}
+  function open(retried){
+    note.style.color='';note.textContent=nm+' 카페24 로그인 창을 여는 중…';
+    fetch(S+'/cafe24-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info})})
+    .then(function(r){return r.json().then(function(d){
+      if(d.ok){note.style.color='';note.textContent=nm+' 카페24 로그인 창이 열렸습니다. 캡차를 체크하고 로그인해 주세요. 로그인하면 회수가 자동으로 진행됩니다.';rsWatch(nm);return;}
+      // 409(회수 진행 중)·계정 정보 없음은 재시작으로 안 풀린다
+      if(retried||r.status===409||/계정 정보/.test(d.error||''))return fail(d.error||'실패');
+      return _rsRestart(note).then(function(){open(true);},function(e){fail((d.error||'실패')+' · 자동 복구 실패: '+e.message);});
+    });},off);
+  }
+  // 지난 회수가 오류로 끝났으면 서버부터 다시 켜고 시작
+  note.style.color='';note.textContent='동기화 서버 확인 중…';
+  fetch(S+'/cafe24-recover/status').then(function(r){return r.json();}).then(function(s){
+    if(s.job&&s.job.phase==='error')return _rsRestart(note).then(function(){open(true);},function(e){fail('자동 복구 실패: '+e.message);});
+    open(false);
+  },off);
+}
+// 동기화 서버 재시작(pm2가 다시 켬). pid가 바뀌면 완료
+function _rsRestart(note){
+  var S='http://localhost:3355';
+  note.style.color='';note.textContent='오류 복구: 동기화 서버를 다시 켜는 중…';
+  return fetch(S+'/restart',{method:'POST'}).then(function(r){return r.json();}).then(function(d){
+    if(!d.ok)throw new Error(d.error||'재시작 거절');
+    var t0=Date.now();
+    return new Promise(function(ok,no){(function poll(){
+      if(Date.now()-t0>20000)return no(new Error('서버가 다시 켜지지 않았습니다'));
+      fetch(S+'/ping').then(function(r){return r.json();}).then(function(p){if(p.pid&&p.pid!==d.pid)ok();else setTimeout(poll,700);},function(){setTimeout(poll,700);});
+    })();});
+  });
 }
 var _rsPoll=null;
 var _rsHistRows=null,_rsHistRaw=null,_rsHistMsg='';
