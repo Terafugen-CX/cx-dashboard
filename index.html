@@ -816,7 +816,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
   .cal-ml-item small{color:var(--muted);font-size:12px}
   .cal-ml-empty{text-align:center;color:var(--muted);font-size:13px;padding:20px 0}
   /* 일정 보기 카드(휴대폰): 입력칸 없이 내용만 → 확대되지 않고 한 화면에 */
-  #cal-msheet{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px}
+  #cal-msheet{position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;padding:16px 46px} /* 양옆 46px 은 화살표 자리 */
   #cal-msheet[hidden]{display:none}
   .cal-ms-box{background:#fff;border-radius:16px;width:100%;max-width:420px;max-height:80vh;overflow-y:auto;padding:16px 16px 14px;box-shadow:0 12px 32px rgba(0,0,0,.2)}
   .cal-ms-head{display:flex;align-items:flex-start;gap:8px;margin-bottom:10px}
@@ -827,6 +827,11 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
   .cal-ms-row em{font-style:normal;color:var(--muted);flex:0 0 44px}
   .cal-ms-row span{flex:1;min-width:0;white-space:pre-wrap;word-break:break-all}
   .cal-ms-row a{color:var(--accent);word-break:break-all}
+  .cal-ms-cnt{text-align:center;font-size:12px;color:var(--muted);margin-top:8px}
+  /* 좌우 화살표: 카드 양옆, 반투명 흰 원 */
+  .cal-ms-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:50%;border:none;background:rgba(255,255,255,.72);color:#1c1f24;font-size:24px;line-height:1;display:flex;align-items:center;justify-content:center;box-shadow:0 2px 8px rgba(0,0,0,.18);padding:0 0 3px}
+  .cal-ms-nav.prev{left:4px}.cal-ms-nav.next{right:4px}
+  .cal-ms-nav:disabled{opacity:.3}
   /* 주간 상세: 선 그래프 아래로 플랫폼별 패널 */
   .wk5-t{flex-direction:column!important;align-items:stretch!important;gap:10px}
   .wk5-t>*{width:100%!important;max-width:100%!important}
@@ -2046,7 +2051,7 @@ function _ghWrite(path, data, sha, msg, cb) {
         evs.forEach(ev=>{ const it=document.createElement('button'); it.type='button'; it.className='cal-ml-item';
           const dot=document.createElement('i'); dot.style.background=ev.color||'#4a90d9'; const nm=document.createElement('span'); nm.textContent=ev.name||ev.text||'일정';
           it.appendChild(dot); it.appendChild(nm); if(ev.time){ const t=document.createElement('small'); t.textContent=ev.time; it.appendChild(t); }
-          it.addEventListener('click',()=>showSheet(ev)); g.appendChild(it); });
+          it.addEventListener('click',()=>showSheet(ev,evs)); g.appendChild(it); });
         ml.appendChild(g); }
       if(!ml.children.length) ml.innerHTML='<div class="cal-ml-empty">이번 달 일정이 없습니다.</div>'; }
     document.getElementById('cal-title').textContent = curYear+'년 '+MONTHS[curMonth];
@@ -2086,7 +2091,7 @@ function _ghWrite(path, data, sha, msg, cb) {
           chip.draggable=true;
           chip.addEventListener('dragstart',e=>{ _dragEvId=ev.id; _dragFromKey=key; e.dataTransfer.effectAllowed='move'; e.stopPropagation(); });
           chip.addEventListener('dragend',()=>{ _dragEvId=null; _dragFromKey=null; });
-          chip.addEventListener('click',e=>{e.stopPropagation(); if(matchMedia('(max-width:820px)').matches){ showSheet(ev); return; } openEdit(ev.id);});
+          chip.addEventListener('click',e=>{e.stopPropagation(); if(matchMedia('(max-width:820px)').matches){ showSheet(ev,dayEvs); return; } openEdit(ev.id);});
           const chipWrap=document.createElement('div'); chipWrap.className='cal-chip-wrap';
           chipWrap.dataset.evid=ev.id;
           chipWrap.addEventListener('dragover',e=>{
@@ -2165,10 +2170,16 @@ function _ghWrite(path, data, sha, msg, cb) {
   });
 
   /* ---- 휴대폰 일정 보기 카드: 입력칸 없는 읽기 전용 카드라 확대(줌) 없이 한 화면에 보임 ---- */
-  function showSheet(ev){
+  // list: 같은 날 일정들. 좌우 화살표(또는 옆으로 밀기)로 넘겨 본다
+  function showSheet(ev,list){
+    list=list&&list.length?list:[ev]; let idx=Math.max(0,list.findIndex(x=>x.id===ev.id));
     let sh=document.getElementById('cal-msheet');
     if(!sh){ sh=document.createElement('div'); sh.id='cal-msheet'; sh.hidden=true; document.body.appendChild(sh);
-      sh.addEventListener('click',e=>{ if(e.target===sh||e.target.closest('.cal-ms-x')) sh.hidden=true; }); }
+      sh.addEventListener('click',e=>{ if(e.target===sh||e.target.closest('.cal-ms-x')) sh.hidden=true; });
+      let x0=null; sh.addEventListener('touchstart',e=>{x0=e.touches[0].clientX;},{passive:true});
+      sh.addEventListener('touchend',e=>{ if(x0==null) return; const dx=e.changedTouches[0].clientX-x0; x0=null; if(Math.abs(dx)>50&&sh._go) sh._go(dx<0?1:-1); }); }
+    sh._go=d=>{ const n=idx+d; if(n<0||n>=list.length) return; idx=n; draw(); };
+    function draw(){ ev=list[idx];
     const esc=t=>String(t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     const md=k=>(+k.slice(5,7))+'/'+(+k.slice(8));
     const per=ev.start===ev.end?md(ev.start):md(ev.start)+' ~ '+md(ev.end);
@@ -2177,8 +2188,13 @@ function _ghWrite(path, data, sha, msg, cb) {
     const row=(k,v)=>v?'<div class="cal-ms-row"><em>'+k+'</em><span>'+v+'</span></div>':'';
     sh.innerHTML='<div class="cal-ms-box"><div class="cal-ms-head"><i style="background:'+esc(ev.color||'#4a90d9')+'"></i><b>'+esc(ev.name||'일정')+'</b><button type="button" class="cal-ms-x" aria-label="닫기">✕</button></div>'
       +row('기간',esc(per))+row('시간',esc(tm))+row('브랜드',esc(br))+row('내용',esc(ev.text))
-      +(ev.url?row('링크','<a href="'+esc(ev.url)+'" target="_blank" rel="noopener">'+esc(ev.url)+'</a>'):'')+'</div>';
-    sh.hidden=false;
+      +(ev.url?row('링크','<a href="'+esc(ev.url)+'" target="_blank" rel="noopener">'+esc(ev.url)+'</a>'):'')
+      +(list.length>1?'<div class="cal-ms-cnt">'+(idx+1)+' / '+list.length+'</div>':'')+'</div>'
+      +(list.length>1?'<button type="button" class="cal-ms-nav prev" aria-label="이전 일정"'+(idx===0?' disabled':'')+'>‹</button><button type="button" class="cal-ms-nav next" aria-label="다음 일정"'+(idx===list.length-1?' disabled':'')+'>›</button>':'');
+      const pv=sh.querySelector('.cal-ms-nav.prev'),nx=sh.querySelector('.cal-ms-nav.next');
+      if(pv) pv.onclick=e=>{e.stopPropagation();sh._go(-1);}; if(nx) nx.onclick=e=>{e.stopPropagation();sh._go(1);};
+    }
+    draw(); sh.hidden=false;
   }
   /* ---- 일정별 알림(벨) ---- */
   let calAlarm=false;
