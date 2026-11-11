@@ -1880,7 +1880,10 @@ function _ghWrite(path, data, sha, msg, cb) {
   _nameEl.addEventListener('input',()=>{ if(!_nameComposing) formatNameEl(); });
 
   document.getElementById('cal-modal-close').addEventListener('click',()=>{ document.getElementById('cal-modal').hidden=true; });
-  document.getElementById('cal-modal').addEventListener('click',e=>{ if(e.target===document.getElementById('cal-modal')) document.getElementById('cal-modal').hidden=true; });
+  // 바깥(어두운 배경)을 눌렀다 뗐을 때만 닫는다. 입력칸에서 드래그하다 바깥에서 손을 떼면 닫히지 않게
+  let _calDownOut=false;
+  document.getElementById('cal-modal').addEventListener('mousedown',e=>{ _calDownOut=(e.target===document.getElementById('cal-modal')); });
+  document.getElementById('cal-modal').addEventListener('click',e=>{ if(_calDownOut&&e.target===document.getElementById('cal-modal')) document.getElementById('cal-modal').hidden=true; _calDownOut=false; });
   document.getElementById('cal-add').addEventListener('click',openAdd);
   document.getElementById('cal-sync').addEventListener('click',function(){
     var btn=this;
