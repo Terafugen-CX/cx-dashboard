@@ -2064,7 +2064,7 @@ $$(".brand-nav").forEach((a,i)=>{
     }
 
     runQuery();
-    if(window._vocQueried) _fetchVocData(); // 이전 브랜드 VOC 결과가 남지 않게 바뀐 브랜드로 다시 조회
+    _fetchVocData(); // 브랜드를 바꾸면 그 브랜드 VOC 로 바로 다시 조회(비워 두지 않음)
   });
 });
 
@@ -2408,6 +2408,8 @@ function _clearReturnChart(){
   _retHovSeg=-1; _retHovBar=-1; _retSelProd=null; _retReasonBars=[]; _retReasonBarHov=-1;
   _hideRetTip();
 }
+// 교환·반품을 비워 두지 않고 재고 현황처럼 바로 보이게: 화면 갱신이 끝난 뒤 한 번 조회
+function _retAutoQuery(){ setTimeout(function(){ if(typeof _fetchReturnData==="function") _fetchReturnData(); },0); }
 function _updateReturnHeader(brand){
   var s   = document.getElementById('return-start-date');
   var sep = document.getElementById('return-date-sep');
@@ -2424,7 +2426,7 @@ function _updateReturnHeader(brand){
     var _rsg=document.getElementById('return-seg-group'); if(_rsg) _rsg.style.display='';
     if(rw){ rw.style.maxHeight=''; rw.style.paddingBottom='4px'; _returnCollapsed=false; }
     if(brandChanged){
-      if(!_retRestoreView(brand)){ _clearReturnChart(); _setReturnWeekDates(); }
+      if(!_retRestoreView(brand)){ _clearReturnChart(); _setReturnWeekDates(); _retAutoQuery(); } // 저장된 결과가 없으면 이번 주로 자동 조회
     } else if(!s||!s.value) _setReturnWeekDates();
   } else {
     // 총합 뷰: 날짜+조회만 표시, 접기 버튼 숨김
@@ -2432,7 +2434,7 @@ function _updateReturnHeader(brand){
     var _rsg2=document.getElementById('return-seg-group'); if(_rsg2) _rsg2.style.display='';
     if(rw){ rw.style.maxHeight=''; rw.style.paddingBottom='4px'; _returnCollapsed=false; }
     if(brandChanged){
-      if(!_retRestoreView(null)){ _clearReturnChart(); _setReturnWeekDates(); }
+      if(!_retRestoreView(null)){ _clearReturnChart(); _setReturnWeekDates(); _retAutoQuery(); }
     } else if(!s||!s.value) _setReturnWeekDates();
   }
 }
@@ -2641,6 +2643,8 @@ function _fetchReturnData(){
       dataRows=_dedupeByOrderNo(dataRows);
       prevRows=_dedupeByOrderNo(prevRows);
       _retSaveView(brand,sEl.value,eEl.value,isTotalMode,dataRows,prevRows);
+      // 조회 중 브랜드를 바꿨으면 결과는 저장만 하고 화면엔 그리지 않는다(지금 브랜드 화면을 덮지 않게)
+      if(brand!==((typeof activeBrand!=='undefined')?activeBrand:null)) return;
       if(!isTotalMode){
         if(brand&&dataRows.length){ var _ck2=brand+'|'+(sEl.value||'')+'~'+(eEl.value||''); _retChartCache[_ck2]=dataRows; }
         _renderReturnCharts(dataRows);
@@ -4758,6 +4762,8 @@ function _setReturnSeg(mode){
   ['cal-modal-start','cal-modal-end'].forEach(function(id){_hook(id,true);});
   // VOC 초기 날짜 자동 설정 (이번 주)
   if(typeof _setVocWeekDates==='function') _setVocWeekDates();
+  // VOC 도 처음부터 이번 주 내용으로 바로 표시
+  setTimeout(function(){ if(typeof _fetchVocData==='function') _fetchVocData(); },0);
 })();
 </script>
 </div></html>
