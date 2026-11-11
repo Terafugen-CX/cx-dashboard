@@ -596,6 +596,16 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 .cal-modal-box{background:var(--surface);border-radius:20px;padding:22px 24px;width:440px;max-width:94vw;max-height:90vh;overflow-y:auto;display:flex;flex-direction:column;gap:14px;box-shadow:var(--shadow-lg)}
 .cal-modal-head{display:flex;align-items:center;justify-content:space-between;font-size:16px;font-weight:700}
 #cal-modal-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);line-height:1}
+/* 일정별 알림 벨: 켜짐 파랑 / 꺼짐 회색(사선) */
+.cal-head-r{display:flex;align-items:center;gap:10px}
+.cal-bell{background:none;border:none;cursor:pointer;padding:2px;display:flex;color:#9aa1ab;border-radius:6px}
+.cal-bell:hover{background:var(--surface-2)}
+.cal-bell.on{color:var(--accent)}
+#cal-alarm-toasts{position:fixed;right:20px;bottom:20px;z-index:10000;display:flex;flex-direction:column;gap:8px}
+.cal-alarm-toast{display:grid;grid-template-columns:1fr auto;gap:2px 12px;background:#fff;border:1px solid var(--line);border-left:4px solid var(--accent);border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,.14);padding:10px 12px;min-width:240px;max-width:340px;font-size:13px}
+.cal-alarm-toast b{grid-column:1}
+.cal-alarm-toast span{grid-column:1;color:var(--muted);font-size:12px}
+.cal-alarm-toast button{grid-column:2;grid-row:1/3;align-self:start;background:none;border:none;cursor:pointer;color:var(--muted)}
 .cal-field{display:flex;flex-direction:column;gap:6px}
 .cal-label{font-size:12px;font-weight:600;color:var(--fg)}
 .cal-opt{font-weight:400;color:var(--muted);margin-left:4px}
@@ -1201,7 +1211,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       <div class="cal-modal-box">
         <div class="cal-modal-head">
           <span id="cal-modal-title">일정 등록</span>
-          <button id="cal-modal-close">✕</button>
+          <div class="cal-head-r"><button type="button" id="cal-modal-bell" class="cal-bell" title="알림 꺼짐" aria-pressed="false"></button><button id="cal-modal-close">✕</button></div>
         </div>
         <div class="cal-field">
           <label class="cal-label">일정명</label>
@@ -1749,6 +1759,55 @@ function _ghWrite(path, data, sha, msg, cb) {
     }
   });
 
+  /* ---- 일정별 알림(벨) ---- */
+  let calAlarm=false;
+  const _BELL='<path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/>';
+  function setBell(on){
+    calAlarm=!!on; const b=document.getElementById('cal-modal-bell'); if(!b) return;
+    // 켜짐: 파란 벨 / 꺼짐: 회색 벨 + 오른쪽 위→왼쪽 아래 사선
+    b.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+_BELL+(calAlarm?'':'<line x1="21" y1="3" x2="3" y2="21"/>')+'</svg>';
+    b.classList.toggle('on',calAlarm); b.setAttribute('aria-pressed',calAlarm?'true':'false'); b.title=calAlarm?'알림 켜짐':'알림 꺼짐';
+  }
+  document.getElementById('cal-modal-bell').addEventListener('click',()=>{
+    setBell(!calAlarm);
+    if(calAlarm&&window.Notification&&Notification.permission==='default') Notification.requestPermission();
+  });
+
+  /* ---- 알림 발송: 대시보드가 열려 있는 동안 30초마다 확인 ---- */
+  // 알림 시각: 시간이 있으면 그 시각(기간 일정은 종료일·종료 시간, 없으면 시작 시간), 시간이 없으면 그날(기간 일정은 종료일) 10:00·15:00
+  function alarmTimes(ev){
+    const isRange=ev.end&&ev.end!==ev.start, day=isRange?ev.end:ev.start, t=isRange?(ev.timeEnd||ev.time):ev.time;
+    const at=(d,hm)=>{const p=d.split('-'),q=hm.split(':');return new Date(+p[0],p[1]-1,+p[2],+q[0],+q[1]).getTime();};
+    return t?[at(day,t)]:[at(day,'10:00'),at(day,'15:00')];
+  }
+  function _alarmToast(title,body){
+    let w=document.getElementById('cal-alarm-toasts');
+    if(!w){w=document.createElement('div');w.id='cal-alarm-toasts';document.body.appendChild(w);}
+    const t=document.createElement('div');t.className='cal-alarm-toast';
+    t.innerHTML='<b></b><span></span><button type="button" aria-label="닫기">✕</button>';
+    t.querySelector('b').textContent=title;t.querySelector('span').textContent=body;
+    t.querySelector('button').onclick=()=>t.remove();w.appendChild(t);
+  }
+  function checkAlarms(){
+    let fired={};try{fired=JSON.parse(localStorage.getItem('cx-cal-alarm-fired')||'{}');}catch(e){}
+    const now=Date.now();let changed=false;
+    loadEvents().forEach(ev=>{ if(!ev.alarm||!ev.start) return;
+      alarmTimes(ev).forEach(t=>{ const k=ev.id+'|'+t;
+        if(fired[k]||now<t||now-t>15*60000) return; // 놓친 지 15분 넘은 알림은 보내지 않음
+        fired[k]=1;changed=true;
+        const d=new Date(t),hm=String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');
+        const title='일정 알림',body=(ev.name||'일정')+' · '+(d.getMonth()+1)+'/'+d.getDate()+' '+hm;
+        try{ if(window.Notification&&Notification.permission==='granted') new Notification(title,{body:body,tag:k}); }catch(e){}
+        _alarmToast(title,body);
+      });
+    });
+    if(changed){ // 오래된 기록 정리(7일 지난 것)
+      Object.keys(fired).forEach(k=>{ if(now-(+k.split('|')[1])>7*864e5) delete fired[k]; });
+      try{localStorage.setItem('cx-cal-alarm-fired',JSON.stringify(fired));}catch(e){}
+    }
+  }
+  checkAlarms(); setInterval(checkAlarms,30000);
+
   /* ---- 모달 공통 초기화 ---- */
   function resetModal(){
     document.getElementById('cal-modal-range').checked=false;
@@ -1773,6 +1832,7 @@ function _ghWrite(path, data, sha, msg, cb) {
     document.getElementById('cal-modal-text').value='';
     document.getElementById('cal-modal-del').style.display='none';
     resetModal();
+    setBell(false);
     selectedColor=COLORS[0];
     renderColors();
     document.getElementById('cal-modal').hidden=false;
@@ -1801,6 +1861,7 @@ function _ghWrite(path, data, sha, msg, cb) {
     if(ev.brands) ev.brands.forEach(b=>{ const cb=document.querySelector(`#cal-brands input[value="${b}"]`); if(cb) cb.checked=true; });
     if(ev.url){ document.getElementById('cal-modal-url').value=ev.url; document.getElementById('cal-link-row').style.display=''; document.getElementById('cal-link-toggle').classList.add('active'); }
     document.getElementById('cal-modal-del').style.display='';
+    setBell(!!ev.alarm);
     selectedColor=ev.color||COLORS[0];
     renderColors();
     document.getElementById('cal-modal').hidden=false;
@@ -1823,9 +1884,9 @@ function _ghWrite(path, data, sha, msg, cb) {
     const events=loadEvents();
     if(editingId){
       const idx=events.findIndex(e=>e.id===editingId);
-      if(idx>-1) events[idx]={...events[idx],name,start,end,text,time,timeEnd,url,brands,color:selectedColor};
+      if(idx>-1) events[idx]={...events[idx],name,start,end,text,time,timeEnd,url,brands,color:selectedColor,alarm:calAlarm};
     } else {
-      events.push({id:Date.now()+'',name,start,end,text,time,timeEnd,url,brands,color:selectedColor});
+      events.push({id:Date.now()+'',name,start,end,text,time,timeEnd,url,brands,color:selectedColor,alarm:calAlarm});
     }
     saveEvents(events); renderCal();
     document.getElementById('cal-modal').hidden=true;
