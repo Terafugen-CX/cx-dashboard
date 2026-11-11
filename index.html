@@ -974,7 +974,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <button type="button" class="dp-btn" id="voc-start-date-btn" onclick="dpOpen('voc-start-date')">날짜</button><input type="hidden" id="voc-start-date" value="">
         <span style="font-size:12px;color:var(--muted)">~</span>
         <button type="button" class="dp-btn" id="voc-end-date-btn" onclick="dpOpen('voc-end-date')">날짜</button><input type="hidden" id="voc-end-date" value="">
-        <button class="stock-sync-btn" id="voc-query-btn" onclick="_fetchVocData()">조회</button>
+        <button class="stock-sync-btn" id="voc-query-btn" onclick="_fetchVocData(true)">조회</button>
         <div class="seg-group">
           <button class="seg-btn on" id="voc-seg-week" onclick="_setVocSeg('week')">주간</button>
           <button class="seg-btn" id="voc-seg-month" onclick="_setVocSeg('month')">월간</button>
@@ -3986,7 +3986,13 @@ function _vocCSV(csv){
   return rows;
 }
 // 브랜드 화면 VOC 조회: 상품명 / 유형(F열) / 내용. 내용은 '운영 · 프로세스' 면 H열, 그 외는 G열 상세 유형
-function _fetchVocData(){
+// VOC 시트는 한 번 받아 두고(5분) 브랜드 전환·처음 열 때는 그걸로 바로 그린다. 조회 버튼은 항상 새로 받음
+var _vocCsvC=null;
+function _vocGetCsv(force){
+  if(!force&&_vocCsvC&&Date.now()-_vocCsvC.at<300000)return Promise.resolve(_vocCsvC.t);
+  return fetch(_CSS_VOC_URL+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(t){_vocCsvC={t:t,at:Date.now()};return t;});
+}
+function _fetchVocData(force){
   var box=document.getElementById('voc-content'),qb=document.getElementById('voc-query-btn');if(!box)return;
   var s=(document.getElementById('voc-start-date')||{}).value||'',en=(document.getElementById('voc-end-date')||{}).value||'';
   var bn=activeBrand?BRAND_LABELS[activeBrand]:'',nk=function(x){return String(x||'').replace(/[\s·]+/g,'');};
@@ -3994,8 +4000,10 @@ function _fetchVocData(){
   var st=document.getElementById('voc-status'),card=document.getElementById('voc-card');
   // 안내 문구 모양. 다시 조회할 때는 기존 표를 그대로 두고 결과가 오면 바꿔서 칸 크기가 출렁이지 않게 한다
   var ph=function(msg){if(card)card.style.padding='16px 18px';box.style.cssText='font-size:12px;color:var(--muted);text-align:center;padding:20px 0';if(st)st.textContent='';box.textContent=msg;};
-  if(qb){qb.disabled=true;qb.textContent='조회 중...';}
-  fetch(_CSS_VOC_URL+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}).then(function(csv){
+  // 다른 브랜드로 바뀌었으면 이전 브랜드 표를 남기지 않고 바로 비운다(같은 브랜드 재조회만 표 유지)
+  if(window._vocLastBrand!==(activeBrand||'')){ph('불러오는 중…');window._vocLastBrand=activeBrand||'';}
+  if(qb&&force){qb.disabled=true;qb.textContent='조회 중...';}
+  _vocGetCsv(force).then(function(csv){
     if(tok!==window._vocTok)return;
     var rows=_vocCSV(csv),H=null,hi=-1,blk='',out=[];
     for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('상세 유형')>=0||t.indexOf('상세유형')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;}}
