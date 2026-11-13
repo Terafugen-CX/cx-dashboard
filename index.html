@@ -1111,7 +1111,7 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     <section id="ai-bot-view" style="display:none;padding:24px 0">
       <!-- 덴티플라_상담봇_정리.md 기준(2026-11-10, 지식 c67…). 내용이 바뀌면 md 를 다시 변환해 이 블록을 교체 -->
       <!-- 브랜드 선택: data-bot 이 같은 블록만 보인다. 정리가 없는 브랜드는 준비 중 문구 -->
-      <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px"><select class="css-sel" id="bot-brand" onchange="var b=this.value,f=0;document.querySelectorAll('#ai-bot-view [data-bot]').forEach(function(d){var on=d.getAttribute('data-bot')===b;d.style.display=on?'':'none';if(on)f=1;});document.getElementById('bot-none').style.display=f?'none':'';"><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla" selected>덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select><a class="bot-link" href="https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit?gid=1540406561#gid=1540406561" target="_blank" rel="noopener">CS RAW<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/></svg></a></div>
+      <div style="margin-bottom:14px;display:flex;align-items:center;gap:8px"><select class="css-sel" id="bot-brand" onchange="var b=this.value,f=0;document.querySelectorAll('#ai-bot-view [data-bot]').forEach(function(d){var on=d.getAttribute('data-bot')===b;d.style.display=on?'':'none';if(on)f=1;});document.getElementById('bot-none').style.display=f?'none':'';"><option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla" selected>덴티플라</option><option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option></select><a class="bot-link" href="https://docs.google.com/spreadsheets/d/1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit?gid=1540406561#gid=1540406561" target="_blank" rel="noopener">CS RAW<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6h-6a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/><path d="M11 13l9-9"/><path d="M15 4h5v5"/></svg></a><span id="bot-status" style="margin-left:auto;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end"><span class="bot-link" id="bot-st-server" title="Cloudflare에서 도는 상담봇 서버">● 봇 서버 확인 중</span><span class="bot-link" id="bot-st-log" title="이 PC에서 봇 로그를 파일로 기록하는 프로그램">● 로그 기록 확인 중</span><button type="button" class="bot-link" id="bot-st-start" style="display:none;cursor:pointer" onclick="botLogStart()">로그 기록 켜기</button></span></div>
       <div id="bot-none" class="stock-card" style="display:none;padding:40px 20px;text-align:center;font-size:12px;color:var(--muted)">이 브랜드의 AI 상담봇 정리는 아직 없습니다.</div>
       <!-- BOT:START -->
 <!-- 프로즌랩_상담봇_정리.md -->
@@ -5411,6 +5411,30 @@ function _setReturnSeg(mode){
 })();
 </script>
 </div>
+<script>
+/* AI 상담봇 화면 우측 상단: 봇 서버(Cloudflare)·로그 기록(이 PC, 동기화 서버 3355 경유) 상태. 1분마다 확인 */
+function _botPill(id,state,text){var e=document.getElementById(id);if(!e)return;var c=state==='on'?'#1a9e5a':state==='off'?'#d6203a':'var(--muted)';e.innerHTML='<span style="color:'+c+'">●</span> '+text;}
+function botStatusCheck(){
+  if(!document.getElementById('bot-status'))return;
+  fetch('https://cs-bot.terafugen-cs.workers.dev/?t='+Date.now()).then(function(r){return r.json();}).then(function(d){
+    var ok=d&&d.knowledge&&d.knowledge.ok;
+    _botPill('bot-st-server',ok?'on':'off',ok?('봇 서버 켜짐'+(d.in_hours===false?' · 운영 시간 외':d.in_hours?' · 응대 중':'')):'봇 서버 이상');
+  }).catch(function(){_botPill('bot-st-server','off','봇 서버 응답 없음');});
+  var btn=document.getElementById('bot-st-start');
+  fetch('http://localhost:3355/cs-bot-log/status').then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(d){
+    _botPill('bot-st-log',d.running?'on':'off',d.running?'로그 기록 켜짐':'로그 기록 꺼짐');
+    if(btn&&!btn.disabled)btn.style.display=d.running?'none':'';
+  }).catch(function(){_botPill('bot-st-log','off','PC 동기화 서버 꺼짐');if(btn)btn.style.display='none';});
+}
+function botLogStart(){
+  var b=document.getElementById('bot-st-start');if(!b)return;
+  b.disabled=true;b.textContent='켜는 중…';
+  fetch('http://localhost:3355/cs-bot-log/start',{method:'POST'}).then(function(r){return r.json();}).catch(function(){return null;}).then(function(){
+    setTimeout(function(){b.disabled=false;b.textContent='로그 기록 켜기';botStatusCheck();},4000);
+  });
+}
+botStatusCheck();setInterval(function(){if(!document.hidden)botStatusCheck();},60000);
+</script>
 <script>
 /* 모바일 메뉴: 사이드바를 덮개 메뉴로 열고 닫는다 */
 (function(){
