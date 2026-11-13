@@ -3826,34 +3826,6 @@ var viewMode = 'stock'; // 'stock' | 'expiry'
 var expiryCache = {};
 try { expiryCache = JSON.parse(localStorage.getItem('cx-expiry-cache') || '{}'); } catch(e) {}
 
-// 월말 유통기한별 재고 기록 { 'YYYY-MM': { 'brand|제품|유통기한': 수량 } }
-// '재고 관리' 시트의 N월 재고 칸과 같은 뜻: N월 말 재고를 다음 달 첫 금요일에 적는다. 8~10월은 시트 값을 옮겨 넣었다.
-var expMonthly = {};
-_ghRead('data/expiry-monthly.json', function(d){ if (d) expMonthly = d; if (viewMode === 'expiry') updateExpiryTable(typeof activeBrand !== 'undefined' ? activeBrand : null); });
-function _expMonths() { // 표에 보일 최근 3개월(지난달까지)
-  var n = new Date(), a = [];
-  for (var i = -3; i <= -1; i++) { var d = new Date(n.getFullYear(), n.getMonth() + i, 1); a.push(d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0')); }
-  return a;
-}
-// 이달 첫 금요일 이후 처음 조회한 결과를 지난달 말 재고로 기록한다(브랜드별로 그 달 첫 조회만 남김). 저장은 GitHub 토큰이 있는 PC 에서만.
-var _expQ = Promise.resolve();
-function _expRecord(b, rows) {
-  var n = new Date(), ff = new Date(n.getFullYear(), n.getMonth(), 1);
-  while (ff.getDay() !== 5) ff.setDate(ff.getDate() + 1);
-  if (n < ff || !GH_TOKEN) return;
-  var p = new Date(n.getFullYear(), n.getMonth() - 1, 1), mk = p.getFullYear() + '-' + String(p.getMonth() + 1).padStart(2, '0');
-  if (Object.keys(expMonthly[mk] || {}).some(function(k){ return k.indexOf(b + '|') === 0; })) return;
-  // 브랜드를 연달아 조회하면 저장이 겹쳐 서로 덮어쓰므로 한 번에 하나씩 저장한다
-  _expQ = _expQ.then(function(){ return new Promise(function(done){
-    _ghRead('data/expiry-monthly.json', function(d, sha){
-      d = d || {}; var m = d[mk] = d[mk] || {};
-      if (Object.keys(m).some(function(k){ return k.indexOf(b + '|') === 0; })) { expMonthly = d; return done(); }
-      rows.forEach(function(r){ if (r.expiry && r.qty > 0) { var k = b + '|' + r.name + '|' + r.expiry; m[k] = (m[k] || 0) + r.qty; } });
-      expMonthly = d;
-      _ghWrite('data/expiry-monthly.json', d, sha, mk + ' 월말 유통기한 재고 기록 (' + b + ')', function(){ done(); });
-    });
-  }); });
-}
 
 function syncCurrent() {
   if (viewMode === 'expiry') syncExpiry();
@@ -3885,8 +3857,6 @@ function updateExpiryTable(brand) {
   var thead = document.querySelector('#stock-table thead tr');
   if (thead) {
     var hdrs = '<th>브랜드</th><th>제품명</th><th class="num">유통 기한</th><th class="num">남은 유통 기한</th>';
-    // 시트처럼 최근 3개월 월말 재고 + 지금 조회한 재고
-    _expMonths().forEach(function(m){ hdrs += '<th class="num">' + parseInt(m.split('-')[1]) + '월 재고</th>'; });
     hdrs += '<th class="num">현재 재고</th>';
     _updateScrollWrapMode(!brand);  // _stockCollapsed 상태 먼저 확정
     thead.innerHTML = hdrs + (!brand ? _CHEV_TH() : '');
@@ -3904,10 +3874,9 @@ function updateExpiryTable(brand) {
     var isFirstOfBrand = (item.brand !== lastBrand);
     lastBrand = item.brand;
 
-    // 유통기한별 1행: 지금 조회한 로트(입고월이 달라도 합산) + 최근 3개월 기록에만 있는 로트
-    var mons = _expMonths(), pre = item.brand + '|' + item.name + '|', byExp = {};
+    // 유통기한별 1행: 지금 조회한 로트(입고월·제조번호가 달라도 합산)
+    var byExp = {};
     rows.forEach(function(r){ if (r.expiry) byExp[r.expiry] = (byExp[r.expiry] || 0) + (r.qty || 0); });
-    mons.forEach(function(m){ Object.keys(expMonthly[m] || {}).forEach(function(k){ if (k.indexOf(pre) === 0 && !(k.slice(pre.length) in byExp)) byExp[k.slice(pre.length)] = null; }); });
     var allLots = Object.keys(byExp).sort().map(function(e){ return { expiry: e, qty: byExp[e] }; });
 
     // 데이터 없으면 빈 행 1개
@@ -3930,7 +3899,6 @@ function updateExpiryTable(brand) {
       var html = '<td>' + brandCell + '</td><td>' + nameCell + '</td>'
         + '<td class="num">' + (lot.expiry || '—') + '</td>'
         + '<td class="' + warnCls + '">' + daysLeft + '</td>';
-      mons.forEach(function(m){ var v = lot.expiry ? (expMonthly[m] || {})[pre + lot.expiry] : null; html += '<td class="num">' + (v > 0 ? fmtNum(v) : '—') + '</td>'; });
       html += '<td class="num">' + (lot.qty > 0 ? fmtNum(lot.qty) : '—') + '</td>';
       tr.innerHTML = html;
       tbody.appendChild(tr);
@@ -3965,7 +3933,7 @@ function syncExpiry() {
       body: JSON.stringify({ brand: b, cred: BRAND_EZYADMIN[b], products: STOCK_PRODUCTS[b] })
     })
     .then(function(r){ return r.json(); })
-    .then(function(data){ if (data.ok){ expiryCache[b] = data.rows; anyOk=true; _expRecord(b, data.rows); updateExpiryTable(brand); } })
+    .then(function(data){ if (data.ok){ expiryCache[b] = data.rows; anyOk=true; updateExpiryTable(brand); } })
     .catch(function(){ serverErr=true; })
     .finally(nextBrand);
   }
