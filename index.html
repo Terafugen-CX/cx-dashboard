@@ -1764,44 +1764,19 @@ const BRAND_ZEROTOK_URLS = {
   cellofit:"https://talk.zeroworks.ai/w/324bc847-c9d4-4b88-9e6f-da145fe55af9",
   pamicogen:"https://talk.zeroworks.ai/w/c9b8431f-ad0f-47c7-9d15-6684cc6d1253/conversations/69febd9f-de07-5835-8559-5a85921cf825"
 };
-const BRAND_CAFE24 = {
-  terafugen:{mallId:"terafugenbio",userId:"staff",passwd:"terafugen1!!"},
-  frozenlab:{mallId:"frozenlab",userId:"staff",passwd:"frozenlab1!!"},
-  dentipla:{mallId:"dentipla",userId:"staff",passwd:"dentipla1!"},
-  mediglow:{mallId:"medigrow",userId:"staff",passwd:"medigrow1!!"},
-  cellofit:{mallId:"cellofit",userId:"staff",passwd:"cellofit1!!"},
-  pamicogen:{mallId:"pamicogen",userId:"staff",passwd:"pamicogen1!!"}
-};
-const BRAND_EZYADMIN = {
-  terafugen:{domain:"hanaondm",userId:"terafugen",passwd:"terafugen1!!"},
-  frozenlab:{domain:"hanaondm",userId:"frozenlab",passwd:"frozenlab1!!"},
-  dentipla:{domain:"hanaondm",userId:"lillied",passwd:"lillied1!!"},
-  mediglow:{domain:"hanaondm",userId:"frozenlab",passwd:"frozenlab1!!"},
-  cellofit:{domain:"hanaondm",userId:"lillied",passwd:"lillied1!!"},
-  pamicogen:{domain:"hanaondm",userId:"immunecell",passwd:"immunecell1!!"}
-};
-const BRAND_COUPANG = {
-  terafugen:{userId:"terafugenstaff",passwd:"terafugen1!!"},
-  frozenlab:{userId:"frozenlab_staff",passwd:"frozenlab1!!"},
-  dentipla:{userId:"lilledstaff_1",passwd:"lilliedstaff1!"},
-  mediglow:{userId:"frozenlab_staff",passwd:"frozenlab1!!"},
-  cellofit:{userId:"lilledstaff_1",passwd:"lilliedstaff1!"},
-  pamicogen:{userId:"vimunelabstaff",passwd:"vimunelab1!!"}
-};
-const BRAND_ESM = {
-  terafugen:{userId:"terafugen",passwd:"Qkrdnwls1!"},
-  frozenlab:{userId:"frozenlab",passwd:"Qkrdnwls1!!"},
-  dentipla:{userId:"lillied",passwd:"Qkrdnwls1!"},
-  mediglow:{userId:"frozenlab",passwd:"Qkrdnwls1!!"},
-  cellofit:{userId:"lillied",passwd:"Qkrdnwls1!"},
-  pamicogen:{userId:"immunecell",passwd:"Qkrdnwls1!!"}
-};
-const BRAND_ALWAYZ = {
-  terafugen:{userId:"terafugen",passwd:"Qkrdnwls1!"}
-};
-const BRAND_INNOPAY = {
-  terafugen:{userId:"staff",passwd:"terafugen1!"}
-};
+// 플랫폼 계정은 페이지에 두지 않는다(저장소·사이트에 남지 않게). 이 PC 의 동기화 서버(sync-server/accounts.json)에서 받아 채운다.
+// 서버가 꺼져 있거나 다른 PC 에서는 계정 팝업·자동 로그인·재고 조회가 동작하지 않는다
+const BRAND_CAFE24 = {}, BRAND_EZYADMIN = {}, BRAND_COUPANG = {}, BRAND_ESM = {}, BRAND_ALWAYZ = {}, BRAND_INNOPAY = {};
+window._acctReady = fetch('http://localhost:3355/accounts', {cache:'no-store'})
+  .then(function(r){ return r.json(); })
+  .then(function(d){
+    if(!d || !d.ok || !d.accounts) return false;
+    [[BRAND_CAFE24,'cafe24'],[BRAND_EZYADMIN,'ezadmin'],[BRAND_COUPANG,'coupang'],[BRAND_ESM,'esm'],[BRAND_ALWAYZ,'alwayz'],[BRAND_INNOPAY,'innopay']]
+      .forEach(function(p){ Object.assign(p[0], d.accounts[p[1]] || {}); });
+    try { if(typeof rsRcChange==='function') rsRcChange(); } catch(e){}
+    return true;
+  })
+  .catch(function(){ return false; });
 function loginCafe24(brand){
   const info=BRAND_CAFE24[brand];
   if(!info||!info.mallId||info.mallId==="___") return;
@@ -1914,16 +1889,17 @@ var GH_TOKEN = (function(){ try{ return localStorage.getItem('cx-gh-token')||'';
 var _calGHSha   = null;
 var _stockGHSha = null;
 function _ghRead(path, cb) {
-  // GitHub API 는 로그인 없이 IP 당 시간 60회 제한(휴대폰 통신망은 여러 사람이 같은 IP 라 자주 걸림).
-  // API 가 실패하면 원본 파일 주소(raw)로 다시 읽는다. 이때는 sha 를 모르므로 null(읽기 전용 화면엔 문제 없음)
+  // 저장소는 비공개라 로그인 없이는 GitHub 에서 못 읽는다.
+  // 토큰이 있으면 API 로 읽고(쓰기에 필요한 sha 도 받음), 없거나 실패하면 대시보드 사이트에 함께 배포된 파일을 읽는다(sha 없음, 읽기 전용).
   function raw(){
-    fetch('https://raw.githubusercontent.com/'+GH_OWNER+'/'+GH_REPO+'/main/'+path+'?t='+Date.now())
+    fetch(path+'?t='+Date.now(),{cache:'no-store'})
     .then(function(r){ return r.ok ? r.json() : null; })
     .then(function(d){ cb(d||null, null); })
     .catch(function(){ cb(null,null); });
   }
-  fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+path, {
-    headers: {'Accept':'application/vnd.github+json'}
+  if (!GH_TOKEN) { raw(); return; }
+  fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/'+path+'?ref=main&t='+Date.now(), {
+    headers: {'Accept':'application/vnd.github+json','Authorization':'token '+GH_TOKEN}
   })
   .then(function(r){ return r.ok ? r.json() : null; })
   .then(function(d){
@@ -2406,13 +2382,7 @@ function _ghWrite(path, data, sha, msg, cb) {
       if(t){GH_TOKEN=t.trim();try{localStorage.setItem('cx-gh-token',GH_TOKEN);}catch(e){}}
     }
     btn.classList.add('busy');
-    fetch('https://api.github.com/repos/'+GH_OWNER+'/'+GH_REPO+'/contents/data/calendar.json?ref=main&t='+Date.now(),{headers:{'Accept':'application/vnd.github+json'}})
-    .then(function(r){return r.ok?r.json():null;})
-    .then(function(d){
-      var remote=null,sha=d&&d.sha?d.sha:null;
-      if(d&&d.content){try{remote=JSON.parse(decodeURIComponent(escape(atob(d.content.replace(/\s/g,'')))));}catch(e){}}
-      return {remote:remote,sha:sha};
-    },function(){return {remote:null,sha:null};})
+    new Promise(function(res){_ghRead('data/calendar.json',function(d,sha){res({remote:d,sha:sha});});})
     .then(function(o){var remote=o.remote,sha=o.sha;
       if(!GH_TOKEN){
         btn.classList.remove('busy');
@@ -3933,7 +3903,9 @@ function updateExpiryTable(brand) {
       var nameCell  = lotIdx === 0 ? item.name : '';
       var daysLeft = '—'; var warnCls = 'num';
       if (lot.expiry) {
-        var diff = Math.round((new Date(lot.expiry + 'T00:00:00') - new Date()) / 86400000);
+        // 시트(TODAY 기준)와 맞춘다: 지금 시각이 아니라 오늘 0시부터 센다
+        var t0 = new Date(); t0.setHours(0, 0, 0, 0);
+        var diff = Math.round((new Date(lot.expiry + 'T00:00:00') - t0) / 86400000);
         daysLeft = diff + '일';
         if (diff < 90) warnCls = 'num warn';
       }
