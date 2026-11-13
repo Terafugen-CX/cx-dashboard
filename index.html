@@ -3852,26 +3852,12 @@ function updateExpiryTable(brand) {
   var table = document.getElementById('stock-table');
   if (table) { brand ? table.classList.add('hide-brand-col') : table.classList.remove('hide-brand-col'); }
 
-  // 고정 월 열: 현재 월 기준 최근 3개월 (예: 8·9·10월)
-  // 6·7월 등 이전 입고분은 해당 열이 없으므로 자동으로 — 표시
-  var now = new Date();
-  var months = [];
-  for (var _mi = -2; _mi <= 0; _mi++) {
-    var _md = new Date(now.getFullYear(), now.getMonth() + _mi, 1);
-    months.push(_md.getFullYear() + '-' + String(_md.getMonth() + 1).padStart(2, '0'));
-  }
-
   // 헤더 동적 구성
   var thead = document.querySelector('#stock-table thead tr');
   if (thead) {
     var hdrs = '<th>브랜드</th><th>제품명</th><th class="num">유통 기한</th><th class="num">남은 유통 기한</th>';
-    if (months.length) {
-      months.forEach(function(m) {
-        hdrs += '<th class="num">' + parseInt(m.split('-')[1]) + '월 재고</th>';
-      });
-    } else {
-      hdrs += '<th class="num">재고수량</th>';
-    }
+    // 로트(유통기한·입고월)마다 입고월과 그 재고 수량을 보여준다
+    hdrs += '<th class="num">입고월</th><th class="num">재고 수량</th>';
     _updateScrollWrapMode(!brand);  // _stockCollapsed 상태 먼저 확정
     thead.innerHTML = hdrs + (!brand ? _CHEV_TH() : '');
   }
@@ -3914,14 +3900,8 @@ function updateExpiryTable(brand) {
       var html = '<td>' + brandCell + '</td><td>' + nameCell + '</td>'
         + '<td class="num">' + (lot.expiry || '—') + '</td>'
         + '<td class="' + warnCls + '">' + daysLeft + '</td>';
-      if (months.length) {
-        months.forEach(function(m) {
-          var qty = (lot.inboundMonth === m && lot.qty != null) ? lot.qty : 0;
-          html += '<td class="num">' + (qty > 0 ? fmtNum(qty) : '—') + '</td>';
-        });
-      } else {
-        html += '<td class="num">' + (lot.qty > 0 ? fmtNum(lot.qty) : '—') + '</td>';
-      }
+      var im = lot.inboundMonth ? lot.inboundMonth.replace(/^(\d{4})-(\d{2})$/, function(_, y, m){ return y.slice(2) + '년 ' + parseInt(m) + '월'; }) : '—';
+      html += '<td class="num">' + im + '</td><td class="num">' + (lot.qty > 0 ? fmtNum(lot.qty) : '—') + '</td>';
       tr.innerHTML = html;
       tbody.appendChild(tr);
     });
