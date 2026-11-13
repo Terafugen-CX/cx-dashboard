@@ -5423,6 +5423,7 @@ function botStatusCheck(){
     _botPill('server',ok?'on':'off',ok?('봇 서버 켜짐'+(d.in_hours===false?' · 운영 시간 외':d.in_hours?' · 응대 중':'')):'봇 서버 이상 · 눌러서 복구');
   }).catch(function(){_botPill('server','off','봇 서버 꺼짐 · 눌러서 복구');});
   if(!_botBusy.log)fetch('http://localhost:3355/cs-bot-log/status').then(function(r){if(!r.ok)throw new Error(r.status);return r.json();}).then(function(d){
+    if(!d.running&&d.logPc&&d.thisPc&&d.logPc!==d.thisPc){_botPill('log','other','로그 기록은 '+d.logPc+' PC 담당');return;}
     _botPill('log',d.running?'on':'off',d.running?'로그 기록 켜짐':'로그 기록 꺼짐 · 눌러서 켜기');
   }).catch(function(){_botPill('log','nosync','PC 동기화 서버 꺼짐');});
 }
