@@ -4636,12 +4636,14 @@ function _cssWkRows(csv){
 }
 var _CSS_RATE_EXCL=[];
 // 같은 계정을 쓰는 플랫폼: 시트에서 앞 브랜드 칸에 합산 숫자를 넣는다(쿠팡 프로즌랩=프로즌랩+메디그로우, 셀로핏=셀로핏+덴티플라)
-var _CSS_SHARED={'쿠팡':{'프로즌랩':['메디그로우'],'셀로핏':['덴티플라']}};
+// 쿠팡 같은 계정: 시트에서 합친 칸이 어느 브랜드 줄에 적히든(위쪽 브랜드 줄) 짝 브랜드를 함께 묶는다
+var _CSS_SHARED={'쿠팡':{'프로즌랩':['메디그로우'],'메디그로우':['프로즌랩'],'셀로핏':['덴티플라'],'덴티플라':['셀로핏']}};
 function _cssWkOrders(csv){
   var rows=_parseCSV(csv),c=-1,h=-1,out=[],cb='';
   // 표 양식(2026-11 2주차~): 머리글 '자사몰 · 쿠팡 · …' 행, 그 왼쪽 칸이 브랜드. 칸 값 = 브랜드·플랫폼 주문 수
   // 플랫폼 칸에도 '자사몰'이 있으므로, 같은 행에 '쿠팡'도 머리글로 있는 행만 표로 본다
-  for(var a1=0;a1<rows.length&&h<0;a1++){var t1=rows[a1].map(function(x){return String(x||'').trim();}),j1=t1.indexOf('자사몰');if(j1>=1&&t1.indexOf('쿠팡')>j1){h=a1;c=j1;}}
+  // 주문 표 머리줄: '자사몰' 바로 오른쪽이 '쿠팡'인 칸. 같은 줄에 취소 데이터(플랫폼 칸 '자사몰')가 있어도 헷갈리지 않게 붙어 있는 것만 본다
+  for(var a1=0;a1<rows.length&&h<0;a1++){var t1=rows[a1].map(function(x){return String(x||'').trim();});for(var j1=1;j1<t1.length-1;j1++){if(t1[j1]==='자사몰'&&t1[j1+1]==='쿠팡'){h=a1;c=j1;break;}}}
   if(h>=0){
     var P=[];for(var p1=c;p1<rows[h].length&&(rows[h][p1]||'').trim();p1++)P.push((rows[h][p1]||'').trim());
     for(var k1=h+1;k1<rows.length&&k1<h+20;k1++){var r1=rows[k1],bn1=(r1[c-1]||'').trim();if(!bn1)break;
