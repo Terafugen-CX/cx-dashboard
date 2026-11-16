@@ -661,6 +661,10 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 #cancel-tool[hidden]{display:none}
 #cancel-tool .cal-modal-box{width:380px}
 #cancel-tool-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);line-height:1}
+.cancel-tool-row{display:flex;align-items:center;gap:12px}
+.cancel-tool-row .cal-input{width:50%;flex:none}
+.cancel-tool-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--fg);cursor:pointer;white-space:nowrap}
+.cancel-tool-chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
 .cancel-tool-dates{display:flex;align-items:center;gap:8px}
 .cancel-tool-dates .cal-input{flex:1;min-width:0}
 .cancel-tool-msg{font-size:12px;color:var(--muted);min-height:1em}
@@ -1733,10 +1737,13 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         </div>
         <div class="cal-field">
           <label class="cal-label" for="cancel-tool-brand">브랜드</label>
-          <select id="cancel-tool-brand" class="cal-input">
-            <option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option>
-            <option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option>
-          </select>
+          <div class="cancel-tool-row">
+            <select id="cancel-tool-brand" class="cal-input">
+              <option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option>
+              <option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option>
+            </select>
+            <label class="cancel-tool-chk"><input type="checkbox" id="cancel-tool-reorder"> 재주문 조회</label>
+          </div>
         </div>
         <div class="cal-field">
           <label class="cal-label" for="cancel-tool-from">날짜</label>
@@ -1853,13 +1860,23 @@ document.addEventListener('DOMContentLoaded',function(){
     var b=sel.value, info=BRAND_CAFE24[b];
     if(from.value&&to.value&&from.value>to.value){ msg.textContent='시작일이 종료일보다 늦습니다.'; return; }
     if(!info||!info.mallId||info.mallId==='___'){ msg.textContent='이 브랜드의 카페24 계정을 불러오지 못했습니다. 동기화 서버가 켜져 있는지 확인하세요.'; return; }
+    if(!from.value||!to.value){ msg.textContent='날짜를 선택하세요.'; return; }
     go.disabled=true; msg.textContent='카페24 로그인 창을 여는 중...';
-    // 브랜드 카드 더블클릭과 같은 방식: 동기화 서버가 쇼핑몰ID·아이디·비밀번호까지 입력(캡차만 직접). 서버가 없으면 새 탭으로 로그인
-    fetch('http://localhost:3355/ping').then(function(r){return r.json();}).then(function(p){ if(!p.loginOnly) throw new Error('old');
-      return fetch('http://localhost:3355/cafe24-login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info,recover:false})}); })
-      .then(function(r){return r.json();}).then(function(d){ if(!d.ok) throw new Error(d.error||'실패'); msg.textContent='로그인 창을 열었습니다. 캡차를 입력해 로그인하세요.'; })
-      .catch(function(){ loginCafe24(b); msg.textContent='새 탭에서 카페24 로그인을 열었습니다.'; })
-      .finally(function(){ go.disabled=false; });
+    // 동기화 서버가 로그인 창에 계정까지 입력(캡차·로그인은 직접) → 로그인되면 취소완료 목록·사유·재주문을 읽어 CS 시트에 기록
+    var S='http://localhost:3355';
+    fetch(S+'/cancel-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info,brandLabel:sel.options[sel.selectedIndex].text,products:STOCK_PRODUCTS[b]||[],from:from.value,to:to.value,reorder:document.getElementById('cancel-tool-reorder').checked})})
+      .then(function(r){ if(r.status===404) throw new Error('old'); return r.json(); })
+      .then(function(d){
+        if(!d.ok){ msg.textContent=d.error||'시작하지 못했습니다'; go.disabled=false; return; }
+        msg.textContent=d.loggedIn?'로그인된 창으로 조회를 시작합니다...':'로그인 창을 열었습니다. 캡차를 입력해 로그인하세요.';
+        var t=setInterval(function(){
+          fetch(S+'/cancel-lookup/status').then(function(r){return r.json();}).then(function(s){
+            var j=s.job||{}; msg.textContent=j.message||'';
+            if(!j.running){ clearInterval(t); go.disabled=false; }
+          }).catch(function(){ clearInterval(t); go.disabled=false; msg.textContent='동기화 서버와 연결이 끊겼습니다.'; });
+        },2000);
+      })
+      .catch(function(){ go.disabled=false; loginCafe24(b); msg.textContent='동기화 서버가 꺼져 있어 새 탭에서 카페24 로그인만 열었습니다.'; });
   });
 });
 function updateBrandLinks(brand){
