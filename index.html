@@ -657,19 +657,6 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 .cal-modal-btns{display:flex;gap:8px;flex-wrap:nowrap;align-items:center}
 .cal-modal-btns button{padding:7px 18px;border-radius:9px;border:1px solid var(--line);cursor:pointer;font-size:13px;font-weight:600}
 #cal-modal-save{background:var(--accent);color:#fff;border-color:var(--accent)}
-#cancel-tool{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:700;display:flex;align-items:center;justify-content:center}
-#cancel-tool[hidden]{display:none}
-#cancel-tool .cal-modal-box{width:380px}
-#cancel-tool-close{background:none;border:none;cursor:pointer;font-size:18px;color:var(--muted);line-height:1}
-.cancel-tool-row{display:flex;align-items:center;gap:12px}
-.cancel-tool-row .cal-input{width:50%;flex:none}
-.cancel-tool-chk{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--fg);cursor:pointer;white-space:nowrap}
-.cancel-tool-chk input{width:16px;height:16px;accent-color:var(--accent);margin:0}
-.cancel-tool-dates{display:flex;align-items:center;gap:8px}
-.cancel-tool-dates .cal-input{flex:1;min-width:0}
-.cancel-tool-msg{font-size:12px;color:var(--muted);min-height:1em}
-#cancel-tool-go{border:1px solid var(--accent);background:var(--accent);color:#fff;border-radius:9px;padding:8px 22px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer}
-#cancel-tool-go:disabled{opacity:.6;cursor:default}
 #cal-modal-del{background:none;color:var(--muted)}
 
 /* 플랫폼 섹션 */
@@ -930,9 +917,11 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     <div class="navgroup" style="margin-top:auto"><!-- 도구는 사이드바 맨 아래에 붙인다 -->
       <div class="navlabel">도구</div>
       <nav class="nav">
-        <a href="#" id="nav-cancel-tool" aria-haspopup="dialog">
+        <!-- 누르면 크롬 확장 'cs summary' 압축 파일을 내려받는다 -->
+        <a href="download/cs-summary.zip" download="cs summary.zip" id="nav-cancel-tool" title="cs summary 확장 프로그램 내려받기">
           <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/><line x1="15" y1="15" x2="21" y2="21"/></svg></span>
           <span><b>자사몰 취소 조회</b></span>
+          <svg style="margin-left:auto;flex:none;color:var(--muted)" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-label="다운로드"><path d="M12 4v11"/><path d="M7 10l5 5 5-5"/><path d="M5 20h14"/></svg>
         </a>
       </nav>
     </div>
@@ -1729,32 +1718,6 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
       </div>
     </div>
 
-    <!-- 도구: 자사몰 취소 조회 (카페24 로그인 창 열기) -->
-    <div id="cancel-tool" hidden role="dialog" aria-modal="true" aria-labelledby="cancel-tool-title">
-      <div class="cal-modal-box">
-        <div class="cal-modal-head">
-          <span id="cancel-tool-title">자사몰 취소 조회</span>
-          <button type="button" id="cancel-tool-close" aria-label="닫기">✕</button>
-        </div>
-        <div class="cal-field">
-          <label class="cal-label" for="cancel-tool-brand">브랜드</label>
-          <div class="cancel-tool-row">
-            <select id="cancel-tool-brand" class="cal-input">
-              <option value="terafugen">테라퓨젠</option><option value="frozenlab">프로즌랩</option><option value="dentipla">덴티플라</option>
-              <option value="mediglow">메디그로우</option><option value="cellofit">셀로핏</option><option value="pamicogen">파미코젠</option>
-            </select>
-            <label class="cancel-tool-chk"><input type="checkbox" id="cancel-tool-reorder"> 재주문 조회</label>
-          </div>
-        </div>
-        <div class="cal-field">
-          <label class="cal-label" for="cancel-tool-from">날짜</label>
-          <div class="cancel-tool-dates"><input type="date" id="cancel-tool-from" class="cal-input" aria-label="시작일"><span>~</span><input type="date" id="cancel-tool-to" class="cal-input" aria-label="종료일"></div>
-        </div>
-        <div class="cancel-tool-msg" id="cancel-tool-msg" role="status"></div>
-        <div class="cal-modal-btns" style="justify-content:flex-end"><button type="button" id="cancel-tool-go">조회</button></div>
-      </div>
-    </div>
-
   </main>
 </div>
 
@@ -1840,46 +1803,6 @@ function loginCafe24(brand){
   });
   document.body.appendChild(f); f.submit(); f.remove();
 }
-/* ---------- 도구: 자사몰 취소 조회 팝업 ---------- */
-document.addEventListener('DOMContentLoaded',function(){
-  var box=document.getElementById('cancel-tool'), nav=document.getElementById('nav-cancel-tool');
-  if(!box||!nav) return;
-  var sel=document.getElementById('cancel-tool-brand'), from=document.getElementById('cancel-tool-from'), to=document.getElementById('cancel-tool-to');
-  var go=document.getElementById('cancel-tool-go'), msg=document.getElementById('cancel-tool-msg');
-  function ymd(d){ return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-  function close(){ box.hidden=true; nav.focus(); }
-  nav.addEventListener('click',function(e){
-    e.preventDefault();
-    if(typeof activeBrand!=='undefined'&&activeBrand&&sel.querySelector('option[value="'+activeBrand+'"]')) sel.value=activeBrand;
-    if(!from.value){ var t=new Date(); to.value=ymd(t); from.value=ymd(t); }
-    msg.textContent=''; box.hidden=false; sel.focus();
-  });
-  document.getElementById('cancel-tool-close').addEventListener('click',close);
-  box.addEventListener('click',function(e){ if(e.target===box) close(); });
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape'&&!box.hidden) close(); });
-  go.addEventListener('click',function(){
-    var b=sel.value, info=BRAND_CAFE24[b];
-    if(from.value&&to.value&&from.value>to.value){ msg.textContent='시작일이 종료일보다 늦습니다.'; return; }
-    if(!info||!info.mallId||info.mallId==='___'){ msg.textContent='이 브랜드의 카페24 계정을 불러오지 못했습니다. 동기화 서버가 켜져 있는지 확인하세요.'; return; }
-    if(!from.value||!to.value){ msg.textContent='날짜를 선택하세요.'; return; }
-    go.disabled=true; msg.textContent='카페24 로그인 창을 여는 중...';
-    // 동기화 서버가 로그인 창에 계정까지 입력(캡차·로그인은 직접) → 로그인되면 취소완료 목록·사유·재주문을 읽어 CS 시트에 기록
-    var S='http://localhost:3355';
-    fetch(S+'/cancel-lookup',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({cred:info,brandLabel:sel.options[sel.selectedIndex].text,products:STOCK_PRODUCTS[b]||[],from:from.value,to:to.value,reorder:document.getElementById('cancel-tool-reorder').checked})})
-      .then(function(r){ if(r.status===404) throw new Error('old'); return r.json(); })
-      .then(function(d){
-        if(!d.ok){ msg.textContent=d.error||'시작하지 못했습니다'; go.disabled=false; return; }
-        msg.textContent=d.loggedIn?'로그인된 창으로 조회를 시작합니다...':'로그인 창을 열었습니다. 캡차를 입력해 로그인하세요.';
-        var t=setInterval(function(){
-          fetch(S+'/cancel-lookup/status').then(function(r){return r.json();}).then(function(s){
-            var j=s.job||{}; msg.textContent=j.message||'';
-            if(!j.running){ clearInterval(t); go.disabled=false; }
-          }).catch(function(){ clearInterval(t); go.disabled=false; msg.textContent='동기화 서버와 연결이 끊겼습니다.'; });
-        },2000);
-      })
-      .catch(function(){ go.disabled=false; loginCafe24(b); msg.textContent='동기화 서버가 꺼져 있어 새 탭에서 카페24 로그인만 열었습니다.'; });
-  });
-});
 function updateBrandLinks(brand){
   const shopEl=$("#sc-link-shop"), ztEl=$("#sc-link-zerotok"), c24El=$("#sc-link-cafe24");
   const shopLogoEl=$("#sc-shop-logo");
@@ -4889,7 +4812,7 @@ function _wkList(rows,sel,title,psel){
     return '<div class="wk6-r'+(psel===o.p?' sel':'')+'"'+st+' data-p="'+_rsEsc(o.p)+'"><span class="nm">'+_rsEsc(o.p)+'</span><span class="am">'+_cssN(o.a)+'원</span><b>'+o.c+'건</b>'+_wkGenBar(o.gen,mx)+cells+'</div>';
   }).join('')+'<div class="wk6-sp"></div>'+_wkAgeText(f,psel);
 }
-function _wkPeriod(wk){var iso=wk.iso||[];return iso.length?iso[0].replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');}
+function _wkPeriod(wk){var iso=wk.iso||[];return iso.length?_cssWkFri(iso).replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');}
 function _wkView(){var v=window._wkViewMode;if(!v){try{v=localStorage.getItem('cx-wk-view');}catch(e){}}return v==='one'?'one':'detail';}
 function _wkSw(){var v=_wkView();return '<div class="wk-sw" data-v="'+v+'"><i class="th"></i><button type="button" data-v="one" class="'+(v==='one'?'on':'')+'">요약 보기</button><button type="button" data-v="detail" class="'+(v==='detail'?'on':'')+'">상세 보기</button></div>';}
 function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
@@ -4902,7 +4825,7 @@ function _wkOnePager(label,wk,rows,rr,noOrd,cur,prev,retCur,prevRet){
   var days=_wkDays(all.map(function(r){return r.cd||'';}),wk.iso?[(all.map(function(r){return r.cd||'';}).filter(Boolean).sort()[0]||wk.iso[0]),wk.iso[1]]:null).length||1;
   var byDay=topOf(all.filter(function(r){return r.cd;}),function(r){return r.cd;}),byProd=topOf(all,function(r){return r.prod;}),byReason=topOf(all,function(r){return _wkRK(r.reason);});
   var hot=byProd[0],hotRs=hot?topOf(all.filter(function(r){return r.prod===hot.k;}),function(r){return _wkRK(r.reason);})[0]:null;
-  var iso=wk.iso||[],period=iso.length?iso[0].replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');
+  var iso=wk.iso||[],period=iso.length?_cssWkFri(iso).replace(/-/g,'.')+' – '+iso[1].slice(5).replace('-','.'):(wk.disp||'');
   var rateMain=noOrd?'—':(cur*100).toFixed(1)+'<small>%</small> / '+(retCur*100).toFixed(1)+'<small>%</small>';
   var rateSub=noOrd?'주문 수량이 입력되면 취소율·반품율이 표시됩니다':'전월 '+(prev==null?'-':(prev*100).toFixed(1)+'%')+' / '+(prevRet===''?'-':(prevRet*100).toFixed(1)+'%');
   // 전주 대비(전주 시트가 있을 때만 한 줄 추가)
