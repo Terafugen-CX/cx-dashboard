@@ -4620,12 +4620,15 @@ function _cssWkVoc(csv,iso){
   return out;
 }
 function _cssWkRows(csv){
-  var rows=_parseCSV(csv),out=[],rets=[],blk='',H=null,hi=-1,cRM=-1;
+  var rows=_parseCSV(csv),out=[],rets=[],blk='',H=null,hi=-1,cRM=-1,cRA=-1;
   for(var i=0;i<rows.length&&!H;i++){var t=rows[i].map(function(x){return String(x||'').trim();});if(t.indexOf('주문번호')>=0&&t.indexOf('브랜드')>=0){H={};t.forEach(function(x,k){if(x&&H[x]==null)H[x]=k;});hi=i;
-    if(H['재주문번호']!=null)cRM=t.indexOf('제품',H['재주문번호']);}} // 재주문번호 오른쪽 '제품'(M열)은 재구매한 제품
+    if(H['재주문번호']!=null){cRM=t.indexOf('제품',H['재주문번호']);cRA=t.indexOf('실 결제금액',H['재주문번호']);} // 재주문번호 오른쪽 '제품'(M열)·'실 결제금액'(N열)은 재구매 정보
+    // 탭마다 머리글이 조금씩 다르다: A열 머리글이 비거나 바뀌어도 날짜로, K열이 '실 결제금액'이어도 취소 금액으로 읽는다
+    if(H['날짜']==null)H['날짜']=0;
+    if(H['금액']==null&&H['실 결제금액']!=null&&H['실 결제금액']!==cRA)H['금액']=H['실 결제금액'];}}
   if(!H)H={'날짜':0,'주문번호':1,'브랜드':2,'플랫폼':3,'성별':4,'나이':5,'제품':6,'사유':7,'금액':8};
   function g(r,k){return H[k]==null?'':String(r[H[k]]||'').trim();}
-  function re(r){var n=g(r,'재주문번호');return n?{ord:n,prod:(cRM>=0?String(r[cRM]||'').trim():'')||'미기재',amt:_cssAmt(g(r,'실 결제금액'))}:null;}
+  function re(r){var n=g(r,'재주문번호');return n?{ord:n,prod:(cRM>=0?String(r[cRM]||'').trim():'')||'미기재',amt:_cssAmt(cRA>=0?String(r[cRA]||'').trim():g(r,'실 결제금액'))}:null;}
   rows.forEach(function(r,i){
     if(i<=hi)return;
     var b=_cssWkDate(g(r,'날짜'));if(b)blk=b;
