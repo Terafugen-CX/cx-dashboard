@@ -51,6 +51,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .nav a{display:flex;gap:10px;align-items:center;padding:10px;border-radius:10px;text-decoration:none;color:var(--fg)}
 .nav a.on{background:var(--surface-2)}
 .nav a .ic{width:32px;height:32px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;flex:none}
+.nav a .ic.ic-end{width:26px;height:26px;border-radius:7px;margin-left:auto;background:var(--bg);color:var(--muted)} /* 도구 오른쪽 다운로드·링크 아이콘은 왼쪽보다 작게 */
+.nav a .ic.ic-end svg{width:16px;height:16px}
 .nav a b{display:block;font-size:14px}
 .nav a small{color:var(--muted);font-size:12px}
 .slot{border:1px dashed var(--line);border-radius:10px;padding:12px;color:var(--muted);font-size:12px;line-height:1.55}
@@ -917,17 +919,17 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
         <a href="download/cs-summary.zip" download="cs summary.zip" id="nav-cancel-tool" title="cs summary 확장 프로그램 내려받기">
           <span class="ic"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10" cy="10" r="6.5"/><line x1="15" y1="15" x2="21" y2="21"/></svg></span>
           <span><b>자사몰 취소 조회</b></span>
-          <span class="ic" style="margin-left:auto;background:var(--bg);color:var(--muted)" aria-label="다운로드"><svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg></span>
+          <span class="ic ic-end" aria-label="다운로드"><svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor"><path d="M480-320 280-520l56-58 104 104v-326h80v326l104-104 56 58-200 200ZM240-160q-33 0-56.5-23.5T160-240v-120h80v120h480v-120h80v120q0 33-23.5 56.5T720-160H240Z"/></svg></span>
         </a>
         <a href="https://terafugen-cx.github.io/formflow/" target="_blank" rel="noopener">
           <span class="ic"><svg width="20" height="20" viewBox="0 -960 960 960" fill="currentColor"><path d="M200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h357l-80 80H200v560h560v-278l80-80v358q0 33-23.5 56.5T760-120H200Zm280-360ZM360-360v-170l367-367q12-12 27-18t30-6q16 0 30.5 6t26.5 18l56 57q11 12 17 26.5t6 29.5q0 15-5.5 29.5T897-728L530-360H360Zm481-424-56-56 56 56ZM440-440h56l232-232-28-28-29-28-231 231v57Zm260-260-29-28 29 28 28 28-28-28Z"/></svg></span>
           <span><b>FORM</b></span>
-          <span class="ic" style="margin-left:auto;background:var(--bg);color:var(--muted)" aria-label="새 창으로 열기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"/></svg></span>
+          <span class="ic ic-end" aria-label="새 창으로 열기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"/></svg></span>
         </a>
         <a href="https://terafugen-cx.github.io/design_guide/" target="_blank" rel="noopener">
           <span class="ic"><svg width="20" height="20" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="8" r="6.5"/><line x1="8" y1="7" x2="8" y2="11.5"/><circle cx="8" cy="4.5" r="0.8" fill="currentColor" stroke="none"/></svg></span>
           <span><b>디자인 가이드</b></span>
-          <span class="ic" style="margin-left:auto;background:var(--bg);color:var(--muted)" aria-label="새 창으로 열기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"/></svg></span>
+          <span class="ic ic-end" aria-label="새 창으로 열기"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 15l6-6"/><path d="M11 6l.463-.536a5 5 0 0 1 7.071 7.072l-.534 .464"/><path d="M13 18l-.397 .534a5.068 5.068 0 0 1-7.127 0a4.972 4.972 0 0 1 0-7.071l.524-.463"/></svg></span>
         </a>
       </nav>
     </div>
