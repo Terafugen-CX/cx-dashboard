@@ -4493,11 +4493,11 @@ var _CSS_WEEK_SHEET='https://docs.google.com/spreadsheets/d/1Hd-7fGV10525r-CnMHf
 var _CSS_WEEK_GIDS={'2026-11-1':'542426019','2026-11-2':'990289810'};
 var _cssWkTok=0;
 var _CSS_WEEK_ISO={},_CSS_WEEK_DISP={};
-// 주차 = 토요일 시작 7일. 그 주의 화요일(시작+3일)이 속한 달의 주차로 센다 (11월 1주차 = 10/31~11/06)
+// 주차 = 토요일 ~ 목요일(6일). 그 주의 화요일(시작+3일)이 속한 달의 주차로 센다 (11월 1주차 = 10/31~11/05)
 function _cssWkRange(y,m,w){
   var d=new Date(+y,m-1,4),s=new Date(+y,m-1,4-((d.getDay()+1)%7)+7*(w-1)),mid=new Date(s.getFullYear(),s.getMonth(),s.getDate()+3);
   if(mid.getMonth()!==m-1)return null;
-  var e=new Date(s.getFullYear(),s.getMonth(),s.getDate()+6);
+  var e=new Date(s.getFullYear(),s.getMonth(),s.getDate()+5);
   return [_cssIso(s),_cssIso(e)];
 }
 function _cssIso(d){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');}
@@ -4634,6 +4634,14 @@ function _cssWkRows(csv){
     (isRet?rets:out).push({cd:isRet?blk:(_cssWkDate(g(r,'취소 접수일'))||blk),ord:g(r,'주문번호'),brand:g(r,'브랜드'),plat:g(r,'플랫폼')||'미기재',gender:g(r,'성별')||'확인 불가',age:g(r,'나이')||'확인 불가',prod:g(r,'제품')||'미기재',reason:g(r,'사유')||'미기재',amt:_cssAmt(g(r,'금액')),re:isRet?null:re(r)});
   });
   return {rows:out,retRows:rets,range:'',orders:_cssWkOrders(csv)};
+}
+// 주차 기간(토~목) + 시작 전날 금요일은 이번 주로 센다. 그 밖 날짜의 행은 빼고, 날짜가 없는 행은 그대로 둔다
+function _cssWkFri(iso){var d=new Date(iso[0]+'T00:00:00');d.setDate(d.getDate()-1);return _cssIso(d);}
+function _cssWkIn(wk,iso){
+  if(!iso)return wk;
+  var lo=_cssWkFri(iso),f=function(r){return !r.cd||(r.cd>=lo&&r.cd<=iso[1]);};
+  wk.rows=wk.rows.filter(f);wk.retRows=(wk.retRows||[]).filter(f);
+  return wk;
 }
 var _CSS_RATE_EXCL=[];
 // 같은 계정을 쓰는 플랫폼: 시트에서 앞 브랜드 칸에 합산 숫자를 넣는다(쿠팡 프로즌랩=프로즌랩+메디그로우, 셀로핏=셀로핏+덴티플라)
@@ -5086,11 +5094,14 @@ function _cssWeekLoad(box,y,m,w){
   })
   .then(function(tv){
     if(!tv||tok!==_cssWkTok)return;
-    var t=tv[0];
-    var wk=_cssWkRows(t);
-    wk.voc=_cssWkVoc(tv[1],iso);
+    var t=tv[0],pw2=_cssWkPrev(y,m,+w);
+    var wk=_cssWkIn(_cssWkRows(t),iso),pRaw=tv[2]?_cssWkRows(tv[2]):null;
+    // 전주 탭에 적힌 금요일(이번 주 시작 전날) 건은 이번 주로 가져온다
+    if(pRaw&&iso){var fri=_cssWkFri(iso),isF=function(r){return r.cd===fri;};wk.rows=wk.rows.concat(pRaw.rows.filter(isF));wk.retRows=wk.retRows.concat(pRaw.retRows.filter(isF));}
+    wk.voc=_cssWkVoc(tv[1],iso&&[_cssWkFri(iso),iso[1]]);
     if(!wk.rows.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
-    if(tv[2]){var pwk=_cssWkRows(tv[2]);if(pwk.rows.length||(pwk.retRows||[]).length){wk.pw=_wkSum(pwk);wk.pw.cRows=pwk.rows;wk.pw.rRows=pwk.retRows||[];}}
+    // shortcut: 전주 비교값에는 전전주 탭에 적힌 전주 금요일 건이 빠진다. 비교가 어긋나면 전전주 탭도 받아 합칠 것
+    if(pRaw){var pwk=_cssWkIn(pRaw,_cssWkRange(pw2[0],pw2[1],pw2[2]));if(pwk.rows.length||(pwk.retRows||[]).length){wk.pw=_wkSum(pwk);wk.pw.cRows=pwk.rows;wk.pw.rRows=pwk.retRows||[];}}
     var pm=m===1?[+y-1,12]:[+y,m-1],pd=_CSS_DATA[pm[0]+'-'+pm[1]];
     wk.disp=_CSS_WEEK_DISP[y+'-'+m+'-'+w];wk.iso=_CSS_WEEK_ISO[y+'-'+m+'-'+w]||iso;
     box.innerHTML=_cssWeekHTML(wk,m+'월 '+w+'주차',pd||null);
