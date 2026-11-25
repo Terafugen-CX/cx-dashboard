@@ -873,11 +873,12 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
 }
 #login-gate{position:fixed;inset:0;z-index:5000;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:16px}
 #login-gate[hidden]{display:none}
-.lg-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:32px 28px;width:100%;max-width:340px;text-align:center}
+.lg-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:40px 28px;width:100%;max-width:340px;text-align:center}
 .lg-box h1{font-size:18px;margin:14px 0 6px}
-.lg-box p{font-size:13px;color:var(--muted);margin:0 0 20px;word-break:keep-all}
+.lg-box p{font-size:13px;color:var(--muted);margin:0 0 32px;word-break:keep-all}
 #lg-btn{display:inline-flex;align-items:center;gap:10px;border:1px solid var(--line);background:#fff;color:#1f1f1f;border-radius:10px;padding:10px 18px;font:inherit;font-size:14px;font-weight:600;cursor:pointer}
-#lg-msg{font-size:12px;color:#e55;min-height:1em;margin-top:12px}
+#lg-msg{font-size:12px;color:#e55;margin-top:12px}
+#lg-msg:empty{display:none} /* 안내 문구가 없을 때 아래 여백이 생기지 않게(위아래 가운데) */
 </style>
 
 <!-- 로그인 화면: terafugen.com 구글 계정만 들어올 수 있게 가린다 (FormFlow 와 같은 구글 로그인 클라이언트 사용) -->
