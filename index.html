@@ -1070,10 +1070,10 @@ section .sub{color:var(--muted);font-size:12px;margin:2px 0 12px}
     <div id="stock-section-wrap" class="stock-section">
       <div class="stock-section-hd">
         <div class="plat-label" id="stock-view-label">재고 현황</div>
-        <button type="button" class="dp-btn" id="stock-start-date-btn" onclick="dpOpen('stock-start-date')">날짜</button><input type="hidden" id="stock-start-date" value="">
-        <span style="font-size:12px;color:var(--muted)">~</span>
-        <button type="button" class="dp-btn" id="stock-end-date-btn" onclick="dpOpen('stock-end-date')">날짜</button><input type="hidden" id="stock-end-date" value="">
-        <button class="stock-sync-btn" onclick="syncCurrent()">조회</button>
+        <button type="button" class="dp-btn pc-only" id="stock-start-date-btn" onclick="dpOpen('stock-start-date')">날짜</button><input type="hidden" id="stock-start-date" value="">
+        <span class="pc-only" style="font-size:12px;color:var(--muted)">~</span>
+        <button type="button" class="dp-btn pc-only" id="stock-end-date-btn" onclick="dpOpen('stock-end-date')">날짜</button><input type="hidden" id="stock-end-date" value="">
+        <button class="stock-sync-btn pc-only" onclick="syncCurrent()">조회</button>
         <label class="view-toggle-sw">
           <input type="checkbox" id="view-toggle-cb" onchange="toggleStockView()">
           <span class="view-toggle-track"><span class="view-toggle-thumb"></span></span>
@@ -1931,7 +1931,10 @@ window.addEventListener('DOMContentLoaded', () => {
   _ghRead('data/stock.json', function(data, sha){
     if (!data || typeof data !== 'object') return;
     _stockGHSha = sha;
-    if (!Object.keys(stockCache).length) {
+    // 모바일은 조회를 못 하므로 PC 가 올린 값을 항상 그대로 쓴다
+    var _mob = window.matchMedia('(max-width:820px)').matches;
+    if (_mob && data._at) { var _d=new Date(data._at); setStockStatus('PC 조회 '+(_d.getMonth()+1)+'/'+_d.getDate()+' '+String(_d.getHours()).padStart(2,'0')+':'+String(_d.getMinutes()).padStart(2,'0')+' 기준', 'var(--muted)'); }
+    if (!Object.keys(stockCache).length || _mob) {
       stockCache = data;
       try{ localStorage.setItem('cx-stock-cache', JSON.stringify(stockCache)); }catch(e){}
       updateStockTable(typeof activeBrand !== 'undefined' ? activeBrand : null);
@@ -3924,7 +3927,13 @@ var expiryCache = {};
 try { expiryCache = JSON.parse(localStorage.getItem('cx-expiry-cache') || '{}'); } catch(e) {}
 
 
+// 재고 조회 결과는 data/stock.json 으로 올려 모바일이 그대로 읽는다(모바일은 조회 버튼 없음). 올리려면 이 PC 브라우저에 GitHub 토큰이 필요
+function _stockStamp(){ stockCache._at = new Date().toISOString(); return stockCache; }
 function syncCurrent() {
+  if (!GH_TOKEN) { var _sk=''; try{ _sk=localStorage.getItem('cx-gh-skip')||''; }catch(e){}
+    if (!_sk) { var t=prompt('모바일에서도 재고 현황이 보이게 하려면 GitHub 토큰을 입력하세요.\n(cx-dashboard 저장소 Contents 읽기·쓰기 권한. 취소하면 이 PC에서만 보입니다)');
+      if (t && t.trim()) { GH_TOKEN=t.trim(); try{ localStorage.setItem('cx-gh-token',GH_TOKEN); }catch(e){} }
+      else { try{ localStorage.setItem('cx-gh-skip','1'); }catch(e){} } } }
   if (viewMode === 'expiry') syncExpiry();
   else syncStock();
 }
@@ -4172,7 +4181,7 @@ function syncStock() {
       if (data.ok) {
         stockCache[brand] = data.rows;
         try { localStorage.setItem('cx-stock-cache', JSON.stringify(stockCache)); } catch(e) {}
-        _ghWrite('data/stock.json', stockCache, _stockGHSha, '재고 업데이트', function(sha){ if(sha) _stockGHSha=sha; });
+        _ghWrite('data/stock.json', _stockStamp(), _stockGHSha, '재고 업데이트', function(sha){ if(sha) _stockGHSha=sha; });
         renderStock(data.rows);
         var now = new Date();
         setStockStatus(String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0')+' 업데이트', '#4caf50');
@@ -4204,7 +4213,7 @@ function syncStock() {
           products: STOCK_PRODUCTS[b], startDate: startDate, endDate: endDate })
       })
       .then(function(r){ return r.json(); })
-      .then(function(data){ if (data.ok){ stockCache[b] = data.rows; try { localStorage.setItem('cx-stock-cache', JSON.stringify(stockCache)); } catch(e) {} _ghWrite('data/stock.json', stockCache, _stockGHSha, '재고 업데이트', function(sha){ if(sha) _stockGHSha=sha; }); renderStock(data.rows); anyOk=true; } })
+      .then(function(data){ if (data.ok){ stockCache[b] = data.rows; try { localStorage.setItem('cx-stock-cache', JSON.stringify(stockCache)); } catch(e) {} _ghWrite('data/stock.json', _stockStamp(), _stockGHSha, '재고 업데이트', function(sha){ if(sha) _stockGHSha=sha; }); renderStock(data.rows); anyOk=true; } })
       .catch(function(){ serverErr=true; })
       .finally(nextBrand);
     }
@@ -5601,8 +5610,10 @@ botStatusCheck();setInterval(function(){if(!document.hidden)botStatusCheck();},6
 </script>
 <!-- ===== AI 어시스턴트: 우측 하단 버튼 → 작은 창. 시트 열기 · 메뉴 이동 · CS 집계 · 재고 질문을 키워드로 처리(외부 AI 없음) ===== -->
 <style>
+@media (max-width:820px){.stock-section-hd .pc-only{display:none!important}} /* 모바일 재고는 PC 조회 결과만 본다 */
 #ai-fab{position:fixed;right:36px;bottom:28px;z-index:4000;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}
 #ai-fab svg{width:24px;height:24px}
+#ai-fab[aria-expanded="false"] svg{transform:scaleX(-1)} /* 말풍선 꼬리를 오른쪽으로 */
 #ai-pop{position:fixed;right:36px;bottom:92px;z-index:4001;width:360px;height:min(620px,calc(100vh - 120px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
 #ai-pop[hidden],#ai-back[hidden]{display:none!important}
 #ai-back{display:none}
