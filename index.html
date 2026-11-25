@@ -439,8 +439,8 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-fill .csd-note{margin-top:auto;background:none;border-left:none;padding-left:0;border-radius:0}
 .csd-donut-top{flex-direction:column;align-items:flex-start;justify-content:flex-start;gap:34px}
 .csd-donut-top .csd-donut-svg{width:clamp(260px,30vw,400px);margin-left:6px}
-.csd-line{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;font-size:17px}
-.csd-line span{cursor:pointer;padding:5px 12px;border-radius:999px;transition:background .15s}
+.csd-line{display:flex;flex-wrap:wrap;justify-content:center;gap:6px 8px;font-size:17px}
+.csd-line span{cursor:pointer;padding:5px 9px;border-radius:999px;transition:background .15s}
 .csd-line span.sel{background:var(--c-line)}
 .csd-seg.dim{opacity:.38}
 .csd-seg.dim:hover{opacity:.7}
@@ -455,7 +455,7 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid var(-
 .csd-mid{flex:1;display:flex;align-items:center;gap:32px;flex-wrap:wrap}
 .csd-mid .csd-donut-svg{width:clamp(190px,18vw,250px);margin-left:6px}
 .csd-dl{font-style:normal;font-size:13px;font-weight:700;margin-left:8px;white-space:nowrap}
-.csd-col{font-size:13px;color:var(--c-fg);flex:1;min-width:0;text-align:center;font-style:normal}
+.csd-col{font-size:13px;color:var(--c-fg);flex:1;min-width:0;text-align:center;font-style:normal;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .csd-vcard .csd-vchart{min-height:0}
 .csd-vdem{flex:1;display:flex;flex-direction:column;justify-content:center;margin-top:8px}
 .csd-prow{cursor:pointer}
@@ -5123,14 +5123,19 @@ function cssUpdate(){
   var y=document.getElementById('css-year').value,m=+document.getElementById('css-month').value,w=document.getElementById('css-week').value;
   if(w!=='total'&&!(y==='2026'&&m===10)){_cssWeekLoad(box,y,m,w);return;}
   var d=_CSS_DATA[y+'-'+m];
+  // 11월부터 한달 통합은 주차 탭(1~N주차)을 모두 받아 합친다
+  if(!d&&w==='total'&&(+y>2026||m>=11)){_cssMonthLoad(box,y,m);return;}
   if(!d||w!=='total'){box.innerHTML='<div class="csd-empty">'+(d?'주차별 데이터는 준비 중입니다. “한달 통합”을 선택해 주세요.':'해당 기간의 CS SUMMARY 데이터가 없습니다.')+'</div>';return;}
+  _cssMonthRender(box,y,m,d);
+}
+function _cssMonthRender(box,y,m,d){
   var c=d.cancel,r=d.ret,mm=String(m).padStart(2,'0'),tones=['csd-lt','csd-lt'],ti=0;
   var S=[];
-  S.push('<div class="csd-slide csd-cover"><div class="csd-top"><span>브랜드팀</span><div class="csd-meta">데이터 범위<b>'+y+'.'+mm+'.01 ~ '+mm+'.31</b></div></div>'
+  S.push('<div class="csd-slide csd-cover"><div class="csd-top"><span>브랜드팀</span><div class="csd-meta">데이터 범위<b>'+(d.range||y+'.'+mm+'.01 ~ '+mm+'.31')+'</b></div></div>'
   +'<div class="csd-body"><h1>'+y+'년 '+m+'월,<br><span class="inv">월간 CS Summary</span></h1>'
   +'</div>'
-  +'<p class="csd-sub">주문취소 <b style="color:var(--c-fg)">'+c.total+'건</b>(입금 전 '+c.dep+'건 · 결제 후 '+c.paid+'건), 반품 <b style="color:var(--c-red)">'+r.ret+'건</b>, 교환 <b style="color:var(--c-blue)">'+r.exc+'건</b><br>총 주문 '+_cssN(c.orders)+'건 기준 취소율 <b style="color:var(--c-fg)">'+_cssPct(c.total,c.orders)+'</b>(쿠팡·EMS·CJ온스타일 제외)<br>결제 후 취소 사유의 '+c.pRe+'%는 재주문(재결제), '+c.pSim+'% 단순 변심.<br>반품 <b style="color:var(--c-fg)">1위</b>: 헬리코컷 19건</p>'
-  +'<div class="csd-bot"><div>대상 브랜드<b>테라퓨젠 · 프로즌랩 · 덴티플라 · 메디그로우 · 셀로핏 · 파미코젠</b></div></div></div>');
+  +'<p class="csd-sub">주문취소 <b style="color:var(--c-fg)">'+c.total+'건</b>(입금 전 '+c.dep+'건 · 결제 후 '+c.paid+'건), 반품 <b style="color:var(--c-red)">'+r.ret+'건</b>, 교환 <b style="color:var(--c-blue)">'+r.exc+'건</b><br>총 주문 '+_cssN(c.orders)+'건 기준 취소율 <b style="color:var(--c-fg)">'+_cssPct(c.total,c.orders)+'</b>'+(c.ex!=null?c.ex:'(쿠팡·EMS·CJ온스타일 제외)')+'<br>결제 후 취소 사유의 '+c.pRe+'%는 재주문(재결제), '+c.pSim+'% 단순 변심.'+(r.prod.length?'<br>반품 <b style="color:var(--c-fg)">1위</b>: '+r.prod[0][0]+' '+r.prod[0][1]+'건':'')+'</p>'
+  +'<div class="csd-bot"><div>대상 브랜드<b>'+(d.brandsTxt||'테라퓨젠 · 프로즌랩 · 덴티플라 · 메디그로우 · 셀로핏 · 파미코젠')+'</b></div></div></div>');
   var live=c.brands.filter(function(x){return x[1]>0}).map(function(x,i){return [x[0],x[1],_cssBrandCol[x[0]]||_cssPal[i]]});
   window._cssCur=c;window._cssSel=null;
   S.push('<div class="csd-slide '+tones[ti++%2]+' csd-fill"><div class="csd-head"><div><div class="csd-eb">01 · 취소 현황</div><h2>브랜드별 주문 취소</h2></div></div>'
@@ -5152,6 +5157,65 @@ function cssUpdate(){
   box.innerHTML='<div class="csd"><div class="csd-vp" id="csd-vp">'+S.join('')+'<div class="csd-dots">'+dots+'</div></div></div>';
   _cssIdx=0;_cssBusy=false;
   var vp=document.getElementById('csd-vp');_cssGo(0);_cssBind(vp);_cssShow(null);_cssShowR(null);
+}
+
+// 취소 사유 → 10월 통합과 같은 묶음. '[고객변심] …' 처럼 앞의 꺾쇠 분류는 떼고 본다
+var _CSS_RG=[['입금 전 취소 (사유 미기재)','var(--c-gold)'],['재주문','var(--c-blue)'],['단순 변심','var(--c-fg)'],['오주문','var(--c-red)'],['기타','var(--c-dim)']];
+function _cssRsnTxt(s){return String(s||'').replace(/^\[[^\]]*\]\s*/,'').replace(/단순변심/g,'단순 변심').replace(/입금전/g,'입금 전').trim()||'미기재';}
+function _cssRsnG(s){
+  var raw=String(s||''),k=_cssRsnTxt(raw).replace(/\s/g,'');
+  if(k.indexOf('입금')>=0)return 0;
+  if(/재주문|재구매|다시주문|재결제/.test(k))return 1;
+  if(/변심/.test(k)||/^\[고객변심\]/.test(raw))return 2;
+  if(/오주문|오구매|잘못/.test(k))return 3;
+  return 4;
+}
+function _cssMode(a){var m={},b='',n=0;a.forEach(function(v){if(!v||v==='확인 불가')return;m[v]=(m[v]||0)+1;if(m[v]>n){n=m[v];b=v;}});return b||'-';}
+function _cssCnt(a,key){var m={},o=[];a.forEach(function(x){var k=key(x);if(!(k in m)){m[k]=0;o.push(k);}m[k]++;});return o.map(function(k){return [k,m[k]];}).sort(function(p,q){return q[1]-p[1];});}
+function _cssMonthAgg(rows,rets,orders,weeks){
+  var sumA=function(l){return l.reduce(function(s,x){return s+x.amt;},0);};
+  var ord=orders.reduce(function(s,o){return s+o.n;},0),bo={};
+  orders.forEach(function(o){if(!(o.mates&&o.mates.length))bo[o.brand]=(bo[o.brand]||0)+o.n;});
+  var grp=function(l){return _CSS_RG.map(function(g,i){var s=l.filter(function(r){return _cssRsnG(r.reason)===i;});return [g[0],s.length,g[1],_cssMode(s.map(function(r){return r.age;})),_cssMode(s.map(function(r){return r.gender;})),s.length?_cssN(sumA(s))+'원':'-'];}).filter(function(x){return x[1];});};
+  var paidOf=function(l){return l.filter(function(r){return _cssRsnG(r.reason)!==0;});};
+  var paid=paidOf(rows),pc=function(i){return paid.length?Math.round(paid.filter(function(r){return _cssRsnG(r.reason)===i;}).length/paid.length*100):0;};
+  var brands=_cssCnt(rows,function(r){return r.brand;});
+  var cancel={orders:ord,total:rows.length,paid:paid.length,dep:rows.length-paid.length,pRe:pc(1),pSim:pc(2),ex:'',
+    brands:brands,reasons:grp(rows),
+    note:'주차별 시트('+weeks.join(' · ')+'주차) 합산. 주차는 토~목, 금요일 접수 건은 다음 주차로 집계.<br>취소율 = 전체 취소 ÷ 시트 플랫폼 주문 표 합계(전 플랫폼).',
+    byBrand:brands.map(function(b){var l=rows.filter(function(r){return r.brand===b[0];}),p=paidOf(l);
+      return {n:b[0],o:bo[b[0]]||0,t:l.length,p:p.length,g:grp(l).map(function(x){return x.slice(0,3);}),d:_cssCnt(p,function(r){return _cssRsnTxt(r.reason);})};})};
+  var prodOf=function(l,wb){return _cssCnt(l,function(r){return r.prod;}).map(function(p){var s=l.filter(function(r){return r.prod===p[0];}),a=[p[0],p[1],p[1],0,0];if(wb)a.push(s[0].brand);a[6]=sumA(s);return a;});};
+  var rsn=function(l){return _cssCnt(l,function(r){return _cssRsnTxt(r.reason);});};
+  var rb=_cssCnt(rets,function(r){return r.brand;}),rp=prodOf(rets,1),plat=_cssCnt(rets,function(r){return r.plat;});
+  var ret={total:rets.length,ret:rets.length,exc:0,gift:0,brands:rb,prod:rp,reasons:rsn(rets),
+    byBrand:rb.map(function(b){var l=rets.filter(function(r){return r.brand===b[0];});
+      return {n:b[0],t:l.length,ret:l.length,exc:0,gift:0,plat:_cssCnt(l.filter(function(r){return r.plat!=='미기재';}),function(r){return r.plat;}),prod:prodOf(l),reasons:rsn(l)};}),
+    note:rp.length?'반품 상위: '+rp.slice(0,3).map(function(p){return p[0]+' '+p[1]+'건';}).join(' · ')+(plat.length?'. 플랫폼은 '+plat[0][0]+'이 가장 많음('+plat[0][1]+'건).':''):''};
+  return {cancel:cancel,ret:ret,brandsTxt:brands.map(function(b){return b[0];}).join(' · ')};
+}
+function _cssMonthLoad(box,y,m){
+  var tok=++_cssWkTok,n=_cssWkCount(y,m),lo=_cssWkFri(_cssWkRange(y,m,1)),hi=_cssWkRange(y,m,n)[1];
+  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  var get=function(g){return g?fetch(_CSS_WEEK_SHEET+g+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}):Promise.resolve('');};
+  _cssWkTabs().then(function(tabs){
+    // 0번 = 전달 마지막 주차 탭(이번 달 1주차 전날 금요일 건이 거기 적힘). 실패해도 이번 달은 표시
+    var pw=_cssWkPrev(y,m,1),gids=[_cssWkGid(tabs,pw[0],pw[1],pw[2])];
+    for(var w=1;w<=n;w++)gids.push(_cssWkGid(tabs,y,m,w));
+    return Promise.all(gids.map(function(g,i){return get(g).catch(function(e){if(!i)return '';throw e;});}));
+  }).then(function(ts){
+    if(tok!==_cssWkTok)return;
+    var rows=[],rets=[],orders=[],weeks=[];
+    ts.forEach(function(t,i){if(!t)return;var wk=_cssWkRows(t),f=function(r){return r.cd?(r.cd>=lo&&r.cd<=hi):i>0;};
+      if(i){weeks.push(i);orders=orders.concat(wk.orders);}
+      rows=rows.concat(wk.rows.filter(f));rets=rets.concat(wk.retRows.filter(f));});
+    if(!weeks.length){box.innerHTML='<div class="csd-empty">'+m+'월 주차 시트가 아직 연결되지 않았습니다.</div>';return;}
+    if(!rows.length&&!rets.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
+    var d=_cssMonthAgg(rows,rets,orders,weeks),ds=rows.concat(rets).map(function(r){return r.cd;}).filter(Boolean).sort();
+    var f=function(s,full){var p=s.split('-');return (full?p[0]+'.':'')+p[1]+'.'+p[2];};
+    d.range=f(ds[0]||lo,1)+' ~ '+f(ds[ds.length-1]||hi);
+    _cssMonthRender(box,y,m,d);
+  }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
 }
 
 cssUpdate();
