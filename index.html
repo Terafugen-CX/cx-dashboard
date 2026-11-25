@@ -5799,23 +5799,11 @@ botStatusCheck();setInterval(function(){if(!document.hidden)botStatusCheck();},6
     var brand=hit[0][0],names=hit.filter(function(h){return h[0]===brand;}).map(function(h){return h[1];});
     var sheet='<div><a data-act="url" data-u="'+esc(T_STOCK.u)+'">재고 시트 열기</a></div>';
     var show=function(rows,note){return '<small>'+esc(LABELS[brand]||brand)+' · '+note+'</small>'+names.map(function(n){var r=(rows||[]).filter(function(x){return x.name===n;})[0];
-      return esc(n)+' 재고 <b>'+(r&&r.stockNow!=null?N(r.stockNow)+'개':'-')+'</b>'+(r&&r.avg1d!=null?' <span class="sub">(일 평균 출고 '+(+r.avg1d).toFixed(1)+')</span>':'');}).join('<br>');};
-    var box=add('ai-b','<small>'+esc(LABELS[brand]||brand)+'</small>재고 조회 중…');
-    // 계정은 동기화 서버에서 늦게 받아 오므로 다 받은 뒤에 조회한다
-    Promise.resolve(window._acctReady).catch(function(){}).then(function(){
-    var cred=(typeof BRAND_EZYADMIN!=='undefined')&&BRAND_EZYADMIN[brand];
-    var cached=function(why){var rows=(typeof stockCache!=='undefined')&&stockCache[brand];
-      box.innerHTML=(rows&&rows.length)?show(rows,'마지막 조회 값')+'<div class="sub">'+why+'</div>'+sheet:'재고 수량은 PC에서 동기화 서버가 켜져 있을 때만 조회됩니다.'+sheet;log.scrollTop=log.scrollHeight;};
-    if(!cred){cached('계정 정보가 없어 실시간 조회를 못 했습니다.');return;}
-    var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},90000);
-    fetch('http://localhost:3355/sync',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl?ctl.signal:undefined,
-      body:JSON.stringify({brand:brand,cred:cred,products:STOCK_PRODUCTS[brand]||[],startDate:null,endDate:null})})
-    .then(function(r){return r.json();}).then(function(d){clearTimeout(tm);if(!d.ok)throw new Error(d.error||'조회 실패');
-      stockCache[brand]=d.rows;try{localStorage.setItem('cx-stock-cache',JSON.stringify(stockCache));}catch(e){}
-      if(typeof activeBrand!=='undefined'&&activeBrand===brand&&typeof renderStock==='function')renderStock(d.rows);
-      box.innerHTML=show(d.rows,'EZAdmin 실시간');log.scrollTop=log.scrollHeight;})
-    .catch(function(){clearTimeout(tm);cached('동기화 서버에 연결되지 않아 마지막 조회 값을 보여 드립니다.');});
-    });
+      return esc(n)+' 재고 <b>'+(r&&r.stockNow!=null?N(r.stockNow)+'개':'-')+'</b>';}).join('<br>');};
+    // 재고 현황 표의 '현재고'와 같은 값(stockCache: PC 조회 결과 또는 data/stock.json)을 그대로 알려준다. 따로 조회하지 않는다
+    var rows=(typeof stockCache!=='undefined')&&stockCache[brand];
+    if(rows&&rows.length)add('ai-b',show(rows,'재고 현황 기준'));
+    else add('ai-b','재고 현황에 '+esc(LABELS[brand]||brand)+' 현재고가 아직 없습니다. 재고 현황에서 조회한 뒤 다시 물어봐 주세요.'+sheet);
   }
 
   /* ---------- 질문 분기 ---------- */
