@@ -5601,9 +5601,9 @@ botStatusCheck();setInterval(function(){if(!document.hidden)botStatusCheck();},6
 </script>
 <!-- ===== AI 어시스턴트: 우측 하단 버튼 → 작은 창. 시트 열기 · 메뉴 이동 · CS 집계 · 재고 질문을 키워드로 처리(외부 AI 없음) ===== -->
 <style>
-#ai-fab{position:fixed;right:20px;bottom:20px;z-index:4000;width:52px;height:52px;border-radius:50%;border:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+#ai-fab{position:fixed;right:36px;bottom:28px;z-index:4000;width:52px;height:52px;border-radius:50%;border:1px solid var(--line);background:#fff;color:#000;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}
 #ai-fab svg{width:24px;height:24px}
-#ai-pop{position:fixed;right:20px;bottom:84px;z-index:4001;width:360px;max-height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
+#ai-pop{position:fixed;right:36px;bottom:92px;z-index:4001;width:360px;max-height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
 #ai-pop[hidden],#ai-back[hidden]{display:none!important}
 #ai-back{display:none}
 .ai-grab{display:none}
