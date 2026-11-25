@@ -5194,26 +5194,33 @@ function _cssMonthAgg(rows,rets,orders,weeks){
     note:rp.length?'반품 상위: '+rp.slice(0,3).map(function(p){return p[0]+' '+p[1]+'건';}).join(' · ')+(plat.length?'. 플랫폼은 '+plat[0][0]+'이 가장 많음('+plat[0][1]+'건).':''):''};
   return {cancel:cancel,ret:ret,brandsTxt:brands.map(function(b){return b[0];}).join(' · ')};
 }
-function _cssMonthLoad(box,y,m){
-  var tok=++_cssWkTok,n=_cssWkCount(y,m),lo=_cssWkFri(_cssWkRange(y,m,1)),hi=_cssWkRange(y,m,n)[1];
-  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+// 한달 데이터: 그 달 주차 탭 전부 + 전달 마지막 주차 탭(1주차 전날 금요일 건). 서머리·AI 어시스턴트가 같이 쓴다
+function _cssMonthData(y,m){
+  var n=_cssWkCount(y,m),lo=_cssWkFri(_cssWkRange(y,m,1)),hi=_cssWkRange(y,m,n)[1];
   var get=function(g){return g?fetch(_CSS_WEEK_SHEET+g+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}):Promise.resolve('');};
-  _cssWkTabs().then(function(tabs){
-    // 0번 = 전달 마지막 주차 탭(이번 달 1주차 전날 금요일 건이 거기 적힘). 실패해도 이번 달은 표시
+  return _cssWkTabs().then(function(tabs){
     var pw=_cssWkPrev(y,m,1),gids=[_cssWkGid(tabs,pw[0],pw[1],pw[2])];
     for(var w=1;w<=n;w++)gids.push(_cssWkGid(tabs,y,m,w));
     return Promise.all(gids.map(function(g,i){return get(g).catch(function(e){if(!i)return '';throw e;});}));
   }).then(function(ts){
-    if(tok!==_cssWkTok)return;
     var rows=[],rets=[],orders=[],weeks=[];
     ts.forEach(function(t,i){if(!t)return;var wk=_cssWkRows(t),f=function(r){return r.cd?(r.cd>=lo&&r.cd<=hi):i>0;};
       if(i){weeks.push(i);orders=orders.concat(wk.orders);}
       rows=rows.concat(wk.rows.filter(f));rets=rets.concat(wk.retRows.filter(f));});
-    if(!weeks.length){box.innerHTML='<div class="csd-empty">'+m+'월 주차 시트가 아직 연결되지 않았습니다.</div>';return;}
+    return {rows:rows,rets:rets,orders:orders,weeks:weeks,lo:lo,hi:hi};
+  });
+}
+function _cssMonthLoad(box,y,m){
+  var tok=++_cssWkTok;
+  box.innerHTML='<div class="csd-empty">불러오는 중…</div>';
+  _cssMonthData(y,m).then(function(o){
+    if(tok!==_cssWkTok)return;
+    var rows=o.rows,rets=o.rets;
+    if(!o.weeks.length){box.innerHTML='<div class="csd-empty">'+m+'월 주차 시트가 아직 연결되지 않았습니다.</div>';return;}
     if(!rows.length&&!rets.length){box.innerHTML='<div class="csd-empty">시트에 집계할 데이터가 없습니다.</div>';return;}
-    var d=_cssMonthAgg(rows,rets,orders,weeks),ds=rows.concat(rets).map(function(r){return r.cd;}).filter(Boolean).sort();
+    var d=_cssMonthAgg(rows,rets,o.orders,o.weeks),ds=rows.concat(rets).map(function(r){return r.cd;}).filter(Boolean).sort();
     var f=function(s,full){var p=s.split('-');return (full?p[0]+'.':'')+p[1]+'.'+p[2];};
-    d.range=f(ds[0]||lo,1)+' ~ '+f(ds[ds.length-1]||hi);
+    d.range=f(ds[0]||o.lo,1)+' ~ '+f(ds[ds.length-1]||o.hi);
     _cssMonthRender(box,y,m,d);
   }).catch(function(e){if(tok===_cssWkTok)box.innerHTML='<div class="csd-empty">시트를 불러오지 못했습니다 ('+e.message+'). 시트 공유 설정을 확인하세요.</div>';});
 }
@@ -5590,6 +5597,246 @@ botStatusCheck();setInterval(function(){if(!document.hidden)botStatusCheck();},6
   side.addEventListener('click',function(e){var a=e.target.closest&&e.target.closest('.nav a,.brand-nav');if(a&&side.classList.contains('open'))setTimeout(function(){set(false);},0);});
   function sync(){if(cur&&pt)cur.textContent=pt.textContent==='CX 대시보드'?'':pt.textContent;}
   sync();if(pt&&window.MutationObserver)new MutationObserver(sync).observe(pt,{childList:true,characterData:true,subtree:true});
+})();
+</script>
+<!-- ===== AI 어시스턴트: 우측 하단 버튼 → 작은 창. 시트 열기 · 메뉴 이동 · CS 집계 · 재고 질문을 키워드로 처리(외부 AI 없음) ===== -->
+<style>
+#ai-fab{position:fixed;right:20px;bottom:20px;z-index:4000;width:52px;height:52px;border-radius:50%;border:0;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,.22)}
+#ai-fab svg{width:24px;height:24px}
+#ai-pop{position:fixed;right:20px;bottom:84px;z-index:4001;width:360px;max-height:min(560px,calc(100vh - 110px));background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:0 10px 32px rgba(0,0,0,.18);display:flex;flex-direction:column;overflow:hidden}
+#ai-pop[hidden],#ai-back[hidden]{display:none!important}
+#ai-back{display:none}
+.ai-grab{display:none}
+.ai-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--line);font-size:14px;font-weight:700}
+.ai-hd .t{display:flex;align-items:center;gap:8px}
+.ai-hd .t i{width:22px;height:22px;border-radius:6px;background:#000;display:inline-flex;align-items:center;justify-content:center}
+.ai-x{border:0;background:none;color:var(--muted);cursor:pointer;padding:4px;display:flex}
+#ai-log{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13px;line-height:1.55;min-height:200px}
+.ai-m{max-width:88%;padding:7px 11px;border-radius:12px;word-break:keep-all;overflow-wrap:anywhere}
+.ai-u{align-self:flex-end;background:var(--accent-soft);color:var(--accent)}
+.ai-b{align-self:flex-start;background:var(--surface-2);border:1px solid var(--line)}
+.ai-b small{display:block;color:var(--muted);font-size:11.5px}
+.ai-b .sub{color:var(--muted);font-size:12px}
+.ai-b a{color:var(--accent);cursor:pointer;text-decoration:none;font-size:12px}
+.ai-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:6px}
+.ai-chips button{font-size:12px;border:1px solid var(--line);background:var(--surface);color:inherit;border-radius:999px;padding:3px 10px;cursor:pointer}
+.ai-in{display:flex;gap:8px;padding:10px;border-top:1px solid var(--line);margin:0}
+.ai-in input{flex:1;min-width:0;height:36px;border:1px solid var(--line);border-radius:9px;padding:0 10px;background:var(--surface);color:inherit;font-size:13px}
+.ai-in button{border:0;background:#000;color:#fff;border-radius:9px;width:38px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+@media (max-width:820px){
+  #ai-fab{right:16px;bottom:16px}
+  #ai-back{display:block;position:fixed;inset:0;z-index:4000;background:rgba(0,0,0,.35)}
+  #ai-pop{left:0;right:0;bottom:0;width:auto;height:72vh;height:72dvh;max-height:none;border-radius:18px 18px 0 0;border-bottom:0;transition:transform .2s}
+  .ai-grab{display:block;width:38px;height:4px;border-radius:2px;background:var(--line);margin:8px auto 0}
+  .ai-hd{padding-top:8px}
+  .ai-in{padding-bottom:calc(10px + env(safe-area-inset-bottom))}
+  .ai-in input{font-size:16px} /* iOS 입력 시 확대 방지 */
+  body.ai-open #ai-fab{display:none}
+}
+</style>
+<button id="ai-fab" type="button" aria-label="AI 어시스턴트 열기" aria-expanded="false"></button>
+<div id="ai-back" hidden></div>
+<div id="ai-pop" hidden role="dialog" aria-label="AI 어시스턴트">
+  <div class="ai-grab"></div>
+  <div class="ai-hd"><span class="t"><i><svg width="14" height="14" viewBox="0 0 32 32"><path fill="#fff" d="M8 8h16v4h-6v13h-4V12H8z"/></svg></i>AI 어시스턴트</span>
+    <button class="ai-x" type="button" id="ai-x" aria-label="닫기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button></div>
+  <div id="ai-log" aria-live="polite"></div>
+  <form class="ai-in" id="ai-form" autocomplete="off"><input id="ai-q" type="text" placeholder="질문이나 명령 입력" aria-label="질문이나 명령"><button type="submit" aria-label="보내기"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4z"/></svg></button></form>
+</div>
+<script>
+(function(){
+  var ICON_CHAT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>',
+      ICON_X='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>';
+  var fab=document.getElementById('ai-fab'),pop=document.getElementById('ai-pop'),back=document.getElementById('ai-back'),log=document.getElementById('ai-log'),inp=document.getElementById('ai-q');
+  var esc=function(t){return String(t==null?'':t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');};
+  var nk=function(t){return String(t||'').replace(/\s+/g,'').toLowerCase();};
+  var N=function(n){return Number(n).toLocaleString('ko-KR');};
+  var mob=function(){return window.matchMedia('(max-width:820px)').matches;};
+  fab.innerHTML=ICON_CHAT;
+
+  function open(){pop.hidden=false;back.hidden=!mob();document.body.classList.add('ai-open');fab.innerHTML=ICON_X;fab.setAttribute('aria-expanded','true');fab.setAttribute('aria-label','AI 어시스턴트 닫기');if(!log.children.length)hello();if(!mob())inp.focus();}
+  function close(){pop.hidden=true;back.hidden=true;pop.style.transform='';pop.style.bottom='';document.body.classList.remove('ai-open');fab.innerHTML=ICON_CHAT;fab.setAttribute('aria-expanded','false');fab.setAttribute('aria-label','AI 어시스턴트 열기');}
+  fab.onclick=function(){pop.hidden?open():close();};
+  document.getElementById('ai-x').onclick=close;back.onclick=close;
+  document.addEventListener('keydown',function(e){if(e.key==='Escape'&&!pop.hidden)close();});
+  // 모바일: 머리 부분을 아래로 끌면 닫힌다
+  var y0=null;
+  [pop.querySelector('.ai-hd'),pop.querySelector('.ai-grab')].forEach(function(el){
+    el.addEventListener('touchstart',function(e){if(mob())y0=e.touches[0].clientY;},{passive:true});
+    el.addEventListener('touchmove',function(e){if(y0==null)return;var d=Math.max(0,e.touches[0].clientY-y0);pop.style.transition='none';pop.style.transform='translateY('+d+'px)';},{passive:true});
+    el.addEventListener('touchend',function(e){if(y0==null)return;var d=e.changedTouches[0].clientY-y0;y0=null;pop.style.transition='';if(d>80)close();else pop.style.transform='';});
+  });
+  // 모바일 키보드가 올라오면 입력창이 가려지지 않게 시트를 키보드 위로 올린다
+  if(window.visualViewport)visualViewport.addEventListener('resize',function(){if(!mob()||pop.hidden)return;var kb=window.innerHeight-visualViewport.height-visualViewport.offsetTop;pop.style.bottom=Math.max(0,kb)+'px';});
+
+  function add(cls,html){var d=document.createElement('div');d.className='ai-m '+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d;}
+  function chips(list){return '<div class="ai-chips">'+list.map(function(c){return '<button type="button" data-q="'+esc(c)+'">'+esc(c)+'</button>';}).join('')+'</div>';}
+  log.addEventListener('click',function(e){var b=e.target.closest('[data-q]');if(b){ask(b.getAttribute('data-q'));return;}
+    var a=e.target.closest('[data-act]');if(a){e.preventDefault();var f=ACT[a.getAttribute('data-act')];if(f)f(a);}});
+  function hello(){add('ai-b','시트 열기, 메뉴 이동, CS 집계, 재고 질문을 할 수 있습니다.'+chips(['재고 관리 시트 열어줘','이번 주 취소 몇 건이야','이번 달 반품','헬리코컷 재고']));}
+  document.getElementById('ai-form').onsubmit=function(e){e.preventDefault();var q=inp.value.trim();if(!q)return;inp.value='';ask(q);};
+
+  /* ---------- 열기 대상 ---------- */
+  var SH='https://docs.google.com/spreadsheets/d/';
+  var T_STOCK={k:['재고관리시트','재고시트','재고관리'],n:'재고 관리 시트',u:SH+'1Q8qk3Ztren2J-IA92vfHWDYqnvUuW_5cRkNuxKa3J5g/edit?gid=1059374994#gid=1059374994'};
+  var TARGETS=[
+    {k:['유통기한시트','유통기한'],n:'유통 기한 시트',u:SH+'1Q8qk3Ztren2J-IA92vfHWDYqnvUuW_5cRkNuxKa3J5g/edit?gid=1799969532#gid=1799969532'},
+    T_STOCK,
+    {k:['교환반품시트','반품시트','교환시트'],n:'교환 · 반품 시트',u:SH+'1PDlxObUPYwjjddk0XlAM3bj2qR7IKnRJF01vZT27FjY/edit?gid=1198818115#gid=1198818115'},
+    {k:['voc시트','voc'],n:'VOC 시트',u:SH+'1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit?gid=1595981393#gid=1595981393'},
+    {k:['리셀러시트'],n:'리셀러 시트',u:SH+'1ewL4dZ-vj0FoDjTXUBLg9a62IYPoI8weoPBZxLeHY7M/edit'},
+    {k:['cs시트','취소시트','서머리시트','summary시트','주차시트'],n:'CS 취소 · 반품 시트',u:SH+'1Hd-7fGV10525r-CnMHf0nXLneNWv5xjoktRi_NFPYT0/edit'},
+    {k:['form','폼'],n:'FORM',u:'https://terafugen-cx.github.io/formflow/'},
+    {k:['디자인가이드'],n:'디자인 가이드',u:'https://terafugen-cx.github.io/design_guide/'}
+  ];
+  var MENUS=[{k:['캘린더','일정'],n:'캘린더',id:'nav-calendar'},{k:['cssummary','서머리','summary','요약리포트'],n:'CS SUMMARY',id:'nav-cs-summary'},{k:['리셀러'],n:'리셀러',id:'nav-reseller'},{k:['ai상담봇','상담봇'],n:'AI 상담 봇',id:'nav-ai-bot'}];
+  var LABELS=(typeof BRAND_LABELS!=='undefined')?BRAND_LABELS:{};
+  // 메뉴 링크는 다시 누르면 닫히는 토글이라, 이미 열린 메뉴는 누르지 않는다
+  function goMenu(id){var a=document.getElementById(id);if(!a)return;if(a.getAttribute('aria-current')==='page'||a.classList.contains('on'))return;a.click();}
+  function goBrand(bid){var a=document.querySelector('.brand-nav[data-brand="'+bid+'"]');if(a)a.click();}
+  var ACT={
+    url:function(a){window.open(a.getAttribute('data-u'),'_blank','noopener');},
+    sum:function(a){var p=a.getAttribute('data-p').split(','),y=document.getElementById('css-year'),m=document.getElementById('css-month'),w=document.getElementById('css-week');
+      goMenu('nav-cs-summary');if(y&&m&&w){y.value=p[0];m.value=p[1];_cssPopWeek();w.value=p[2];cssUpdate();}if(mob())close();}
+  };
+
+  /* ---------- 기간 해석 ---------- */
+  var today=function(){return _cssIso(new Date());};
+  // 날짜가 속한 주차(토~목 + 전날 금요일)
+  function weekOf(iso){var d=new Date(iso+'T00:00:00');for(var k=-1;k<=1;k++){var x=new Date(d.getFullYear(),d.getMonth()+k,1),y=x.getFullYear(),m=x.getMonth()+1,n=_cssWkCount(y,m);
+    for(var w=1;w<=n;w++){var r=_cssWkRange(y,m,w);if(iso>=_cssWkFri(r)&&iso<=r[1])return [y,m,w];}}return null;}
+  function md(s){var p=s.split('-');return (+p[1])+'/'+(+p[2]);}
+  function period(t){
+    var now=new Date(),cy=now.getFullYear(),cm=now.getMonth()+1,mm=/(\d{1,2})\s*월/.exec(t),ww=/(\d)\s*주차/.exec(t),c=nk(t);
+    var rg=/(\d{1,2})[\/.](\d{1,2})\s*[~\-]\s*(?:(\d{1,2})[\/.])?(\d{1,2})/.exec(t);
+    var yOf=function(m){return m>cm?cy-1:cy;},p2=function(n){return String(n).padStart(2,'0');};
+    if(rg){var m1=+rg[1],m2=rg[3]?+rg[3]:m1,y=yOf(m1);return {kind:'range',y:y,m:m1,m2:m2,lo:y+'-'+p2(m1)+'-'+p2(+rg[2]),hi:y+'-'+p2(m2)+'-'+p2(+rg[4])};}
+    if(/지난주|저번주|전주/.test(c)){var w0=weekOf(today()),pw=_cssWkPrev(w0[0],w0[1],w0[2]);return {kind:'week',y:pw[0],m:pw[1],w:pw[2]};}
+    if(ww){var m=mm?+mm[1]:cm;return {kind:'week',y:yOf(m),m:m,w:+ww[1]};}
+    if(/지난달|저번달|전월/.test(c))return {kind:'month',y:cm===1?cy-1:cy,m:cm===1?12:cm-1};
+    if(mm)return {kind:'month',y:yOf(+mm[1]),m:+mm[1]};
+    if(/이번달|이달|금월|한달/.test(c))return {kind:'month',y:cy,m:cm};
+    var w1=weekOf(today());return {kind:'week',y:w1[0],m:w1[1],w:w1[2]};
+  }
+  function csvOf(g){return g?fetch(_CSS_WEEK_SHEET+g+'&t='+Date.now()).then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();}):Promise.resolve('');}
+  // 주간 데이터: 서머리 주간 화면과 같은 규칙(그 주 탭 + 전주 탭에 적힌 금요일 건)
+  function weekData(y,m,w){
+    var iso=_cssWkRange(y,m,w);
+    if(!iso)return Promise.reject(new Error(m+'월에는 '+w+'주차가 없습니다'));
+    return _cssWkTabs().then(function(tabs){var g=_cssWkGid(tabs,y,m,w),pw=_cssWkPrev(y,m,w),pg=_cssWkGid(tabs,pw[0],pw[1],pw[2]);
+      if(!g)throw new Error(m+'월 '+w+'주차 시트 탭이 아직 없습니다');
+      return Promise.all([csvOf(g),csvOf(pg).catch(function(){return '';})]);
+    }).then(function(t){var wk=_cssWkIn(_cssWkRows(t[0]),iso);
+      if(t[1]){var p=_cssWkRows(t[1]),fri=_cssWkFri(iso),f=function(r){return r.cd===fri;};wk.rows=wk.rows.concat(p.rows.filter(f));wk.retRows=wk.retRows.concat(p.retRows.filter(f));}
+      return {rows:wk.rows,rets:wk.retRows,orders:wk.orders,lo:_cssWkFri(iso),hi:iso[1],weekly:true};});
+  }
+  function load(p){
+    if(p.kind==='week')return weekData(p.y,p.m,p.w);
+    if(p.kind==='month'){
+      var st=_CSS_DATA[p.y+'-'+p.m];if(st)return Promise.resolve({fixed:st});
+      return _cssMonthData(p.y,p.m).then(function(o){if(!o.weeks.length)throw new Error(p.m+'월 주차 시트가 아직 없습니다');return {rows:o.rows,rets:o.rets,orders:o.orders,lo:o.lo,hi:o.hi};});}
+    // 날짜 범위: 그 달(들) 데이터를 접수일로 자른다. 주문 수는 주차 단위라 범위에는 취소율을 내지 않는다
+    var ms=[[p.y,p.m]];if(p.m2!==p.m)ms.push([p.y,p.m2]);
+    return Promise.all(ms.map(function(x){return _cssMonthData(x[0],x[1]);})).then(function(os){var f=function(r){return r.cd&&r.cd>=p.lo&&r.cd<=p.hi;},rows=[],rets=[];
+      os.forEach(function(o){rows=rows.concat(o.rows.filter(f));rets=rets.concat(o.rets.filter(f));});return {rows:rows,rets:rets,orders:[],lo:p.lo,hi:p.hi};});
+  }
+  function plabel(p,d){
+    var rg=d&&d.lo?' · '+md(d.lo)+' ~ '+md(d.hi):'';
+    if(p.kind==='week')return p.m+'월 '+p.w+'주차'+rg;
+    if(p.kind==='month')return p.m+'월 한달 통합'+(d&&d.fixed?'':rg);
+    return md(p.lo)+' ~ '+md(p.hi);
+  }
+
+  /* ---------- 집계 질문 ---------- */
+  function brandIn(t){var c=nk(t);for(var id in LABELS)if(c.indexOf(nk(LABELS[id]))>=0)return LABELS[id];return '';}
+  function prodIn(t,rows){var c=nk(t),best='',all=rows.map(function(r){return r.prod;});for(var b in STOCK_PRODUCTS)all=all.concat(STOCK_PRODUCTS[b]);
+    all.forEach(function(p){var k=nk(p);if(k&&k!=='미기재'&&c.indexOf(k)>=0&&k.length>nk(best).length)best=p;});return best;}
+  function top(list,key,n){var m={},o=[];list.forEach(function(x){var k=key(x);if(!(k in m)){m[k]=0;o.push(k);}m[k]++;});return o.map(function(k){return [k,m[k]];}).sort(function(a,b){return b[1]-a[1];}).slice(0,n||3);}
+  function pct(a,b){return b?(a/b*100).toFixed(1)+'%':'-';}
+  function stats(q,p){
+    var c=nk(q),wantRet=/반품|교환/.test(c),wantRate=/취소율|비율/.test(c),wantRe=/재주문|재구매|재결제/.test(c),wantRsn=/사유|이유/.test(c),wantOrd=/주문수|주문건|총주문|주문량/.test(c)&&!/취소/.test(c);
+    var box=add('ai-b','<small>'+esc(plabel(p))+'</small>불러오는 중…');
+    load(p).then(function(d){
+      var link=p.kind==='range'?'':'<div><a data-act="sum" data-p="'+p.y+','+p.m+','+(p.kind==='week'?p.w:'total')+'">서머리로 보기 →</a></div>';
+      if(d.fixed){ // 10월처럼 숫자로만 남은 달
+        var fc=d.fixed.cancel,fr=d.fixed.ret;
+        box.innerHTML='<small>'+esc(plabel(p,d))+'</small>취소 <b>'+N(fc.total)+'건</b> · 취소율 <b>'+pct(fc.total,fc.orders)+'</b><br>반품 <b>'+fr.ret+'건</b> · 교환 '+fr.exc+'건<div class="sub">이 달은 시트 원본이 없어 브랜드 · 제품별 질문은 서머리 화면에서 확인해 주세요.</div>'+link;return;}
+      var br=brandIn(q),pr=prodIn(q,d.rows.concat(d.rets)),f=function(r){return (!br||r.brand===br)&&(!pr||nk(r.prod)===nk(pr));};
+      var rows=d.rows.filter(f),rets=d.rets.filter(f),who=[br,pr].filter(Boolean).join(' · ');
+      var out='';
+      if(wantRet){
+        out='반품 <b>'+rets.length+'건</b>';
+        if(rets.length){if(!pr)out+='<div class="sub">제품: '+top(rets,function(r){return r.prod;}).map(function(x){return esc(x[0])+' '+x[1];}).join(' · ')+'</div>';
+          out+='<div class="sub">사유: '+top(rets,function(r){return _cssRsnTxt(r.reason);}).map(function(x){return esc(x[0])+' '+x[1];}).join(' · ')+'</div>';}
+      }else if(wantOrd){
+        var ot=d.orders.filter(function(o){return !br||o.brand===br;}).reduce(function(s,o){return s+o.n;},0);
+        out=ot?'주문 <b>'+N(ot)+'건</b>':'이 기간 주문 수가 시트에 없습니다.';
+      }else if(wantRe){
+        var re=_wkRe(rows);out='재주문 <b>'+re.n+'건</b> (취소 '+rows.length+'건 중 '+pct(re.n,rows.length)+')';
+        if(re.ca)out+='<div class="sub">취소 금액 '+N(re.ca)+'원 → 재결제 '+N(re.na)+'원</div>';
+      }else{
+        out='취소 <b>'+rows.length+'건</b>';
+        // 취소율: 주간은 주간 화면처럼 주문 표에 있는 브랜드·플랫폼 건만, 월간은 전체 취소 ÷ 전체 주문. 제품 조건이면 분모가 없어 생략
+        if(!pr&&d.orders.length){
+          var ot2=d.orders.filter(function(o){return !br||o.brand===br||(o.mates||[]).indexOf(br)>=0;}).reduce(function(s,o){return s+o.n;},0),num=rows.length;
+          if(d.weekly){var pairs=_cssWkPairs({orders:d.orders});num=rows.filter(function(r){return pairs[r.brand+'|'+r.plat]||pairs[r.brand+'|'];}).length;}
+          if(ot2)out+=' · 취소율 <b>'+pct(num,ot2)+'</b>';
+        }
+        if(rows.length&&(wantRsn||!wantRate)){var g=_CSS_RG.map(function(x,i){return [x[0].replace(' (사유 미기재)',''),rows.filter(function(r){return _cssRsnG(r.reason)===i;}).length];}).filter(function(x){return x[1];}).sort(function(a,b){return b[1]-a[1];});
+          out+='<div class="sub">사유: '+g.map(function(x){return esc(x[0])+' '+x[1];}).join(' · ')+'</div>';}
+        if(!br&&!pr&&rows.length&&!wantRsn&&!wantRate)out+='<div class="sub">브랜드: '+top(rows,function(r){return r.brand;}).map(function(x){return esc(x[0])+' '+x[1];}).join(' · ')+'</div>';
+      }
+      box.innerHTML='<small>'+esc(plabel(p,d))+(who?' · '+esc(who):'')+'</small>'+out+link;log.scrollTop=log.scrollHeight;
+    }).catch(function(e){box.innerHTML='<small>'+esc(plabel(p))+'</small>'+esc(e.message||'시트를 불러오지 못했습니다.');});
+  }
+
+  /* ---------- 재고 ---------- */
+  function stock(q){
+    var c=nk(q),hit=[],bid='';
+    for(var b in STOCK_PRODUCTS)STOCK_PRODUCTS[b].forEach(function(p){if(c.indexOf(nk(p))>=0)hit.push([b,p]);});
+    if(!hit.length){for(var id in LABELS)if(c.indexOf(nk(LABELS[id]))>=0&&STOCK_PRODUCTS[id])bid=id;if(bid)hit=STOCK_PRODUCTS[bid].map(function(p){return [bid,p];});}
+    if(!hit.length){add('ai-b','어떤 제품 재고인지 적어 주세요.'+chips(['헬리코컷 재고','테라퓨젠 재고']));return;}
+    var brand=hit[0][0],names=hit.filter(function(h){return h[0]===brand;}).map(function(h){return h[1];});
+    var sheet='<div><a data-act="url" data-u="'+esc(T_STOCK.u)+'">재고 시트 열기</a></div>';
+    var show=function(rows,note){return '<small>'+esc(LABELS[brand]||brand)+' · '+note+'</small>'+names.map(function(n){var r=(rows||[]).filter(function(x){return x.name===n;})[0];
+      return esc(n)+' 재고 <b>'+(r&&r.stockNow!=null?N(r.stockNow)+'개':'-')+'</b>'+(r&&r.avg1d!=null?' <span class="sub">(일 평균 출고 '+(+r.avg1d).toFixed(1)+')</span>':'');}).join('<br>');};
+    var box=add('ai-b','<small>'+esc(LABELS[brand]||brand)+'</small>재고 조회 중…');
+    // 계정은 동기화 서버에서 늦게 받아 오므로 다 받은 뒤에 조회한다
+    Promise.resolve(window._acctReady).catch(function(){}).then(function(){
+    var cred=(typeof BRAND_EZYADMIN!=='undefined')&&BRAND_EZYADMIN[brand];
+    var cached=function(why){var rows=(typeof stockCache!=='undefined')&&stockCache[brand];
+      box.innerHTML=(rows&&rows.length)?show(rows,'마지막 조회 값')+'<div class="sub">'+why+'</div>'+sheet:'재고 수량은 PC에서 동기화 서버가 켜져 있을 때만 조회됩니다.'+sheet;log.scrollTop=log.scrollHeight;};
+    if(!cred){cached('계정 정보가 없어 실시간 조회를 못 했습니다.');return;}
+    var ctl=window.AbortController?new AbortController():null,tm=setTimeout(function(){if(ctl)ctl.abort();},90000);
+    fetch('http://localhost:3355/sync',{method:'POST',headers:{'Content-Type':'application/json'},signal:ctl?ctl.signal:undefined,
+      body:JSON.stringify({brand:brand,cred:cred,products:STOCK_PRODUCTS[brand]||[],startDate:null,endDate:null})})
+    .then(function(r){return r.json();}).then(function(d){clearTimeout(tm);if(!d.ok)throw new Error(d.error||'조회 실패');
+      stockCache[brand]=d.rows;try{localStorage.setItem('cx-stock-cache',JSON.stringify(stockCache));}catch(e){}
+      if(typeof activeBrand!=='undefined'&&activeBrand===brand&&typeof renderStock==='function')renderStock(d.rows);
+      box.innerHTML=show(d.rows,'EZAdmin 실시간');log.scrollTop=log.scrollHeight;})
+    .catch(function(){clearTimeout(tm);cached('동기화 서버에 연결되지 않아 마지막 조회 값을 보여 드립니다.');});
+    });
+  }
+
+  /* ---------- 질문 분기 ---------- */
+  function ask(q){
+    add('ai-u',esc(q));
+    var c=nk(q).replace(/(열어|켜|띄워|보여|이동)(줘|주세요|줄래)?|해줘|좀/g,'');
+    var t=TARGETS.filter(function(x){return x.k.some(function(k){return c.indexOf(k)>=0;});})[0];
+    var isStat=/취소|반품|교환|재주문|재구매|주문수|주문건|총주문|사유/.test(c);
+    // '재고 관리 시트'·'재고 시트'는 열기, '헬리코컷 재고'처럼 시트·관리 없는 재고는 수량 질문
+    if(t===T_STOCK&&!/시트|관리/.test(c))t=null;
+    // '시트'가 들어가면 시트 열기가 먼저(예: 반품 시트 열어줘)
+    if(t&&(/시트/.test(c)||!isStat)){window.open(t.u,'_blank','noopener');
+      add('ai-b',esc(t.n)+'를 새 탭으로 열었습니다. <a data-act="url" data-u="'+esc(t.u)+'">다시 열기</a>');return;}
+    if(isStat){stats(q,period(q));return;}
+    if(/재고/.test(c)){stock(q);return;}
+    var mn=MENUS.filter(function(x){return x.k.some(function(k){return c.indexOf(k)>=0;});})[0];
+    if(mn){goMenu(mn.id);add('ai-b',esc(mn.n)+' 화면으로 이동했습니다.');if(mob())setTimeout(close,600);return;}
+    for(var id in LABELS)if(c.indexOf(nk(LABELS[id]))>=0){goBrand(id);add('ai-b',esc(LABELS[id])+' 화면으로 이동했습니다.');if(mob())setTimeout(close,600);return;}
+    add('ai-b','이 질문은 답할 수 없습니다. 기간과 항목을 같이 적어 주세요.'+chips(['이번 주 취소','지난주 반품','이번 달 취소 사유','재고 관리 시트 열어줘']));
+  }
+  window._aiAsk=ask; // 헤드리스 점검용
 })();
 </script>
 </html>
